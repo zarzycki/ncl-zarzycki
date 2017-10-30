@@ -14,8 +14,8 @@ output_type="png"
 
 RSIthresh=4
 
-trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.ALL.5e-9_11","/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.2071.ALL.5e-9_11"/)
-RSIfile = (/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.tempest.csv"/)
+trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.CAT"/)
+RSIfile = (/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
 ncols = 9                     ; assign number of columns
 
 delim = ","
@@ -23,7 +23,6 @@ delim = ","
 ncases = dimsizes(trajfile)
 print("Doing "+ncases+"  number of cases")
 
-ncases=1
 do z = 0,ncases-1
   
   maxLines = -1
