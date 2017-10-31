@@ -1,0 +1,15 @@
+ Copyright (C) 1995-2014 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.2.0-05Mar2014_1009
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+(0)	Getting lat lon and gw from CAM-SE grid
+(0)	Getting various fields from files
+warning:Dimension (2) has not been defined
+(0)	lonFlip: warning: last dimension is not named
+warning:Dimension (2) has not been defined
+input in flex scanner failed
+(0)	lonFlip: warning: last dimension is not named
+(0)	Starting linear interpolation
+(0)	Done with interpolation
+(0)	Writing file

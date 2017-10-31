@@ -1,0 +1,14 @@
+ Copyright (C) 1995-2014 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.2.0
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+Reading data
+Regridding the data
+Calculating differences
+V-R average is :0.00153932
+Uni average is :0.00153128
+Obs average is :13.6579
+Adding ttest pattern
+Adding outline
+obsString is: NCEP

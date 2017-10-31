@@ -1,0 +1,318 @@
+input in flex scanner failed
+ Copyright (C) 1995-2014 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.2.1
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+(0)	Using minwind: 32   maxwind: 999    latBox: 1
+(0)	Getting sfc wind correction factor using:    log      technique.
+(0)	Using CAM default lowest model level of: 64 m
+(0)	Using factor: 0.853559
+(0)	Read in TC locations from CAM
+(0)	Removing text headers from trajectories
+(0)	'cat_traj_slab2_8day.txt' has 25984 rows and 12 columns of data.
+(0)	Removing temporary file:traj_filt_clean.TMP.getSSTs
+(0)	done with 0 out of 25983 rows
+(0)	done with 100 out of 25983 rows
+(0)	done with 200 out of 25983 rows
+(0)	done with 300 out of 25983 rows
+(0)	done with 400 out of 25983 rows
+(0)	done with 500 out of 25983 rows
+(0)	done with 600 out of 25983 rows
+(0)	done with 700 out of 25983 rows
+(0)	done with 800 out of 25983 rows
+(0)	done with 900 out of 25983 rows
+(0)	done with 1000 out of 25983 rows
+(0)	done with 1100 out of 25983 rows
+(0)	done with 1200 out of 25983 rows
+(0)	done with 1300 out of 25983 rows
+(0)	done with 1400 out of 25983 rows
+(0)	done with 1500 out of 25983 rows
+(0)	done with 1600 out of 25983 rows
+(0)	done with 1700 out of 25983 rows
+(0)	done with 1800 out of 25983 rows
+(0)	done with 1900 out of 25983 rows
+(0)	done with 2000 out of 25983 rows
+(0)	done with 2100 out of 25983 rows
+(0)	done with 2200 out of 25983 rows
+(0)	done with 2300 out of 25983 rows
+(0)	done with 2400 out of 25983 rows
+(0)	done with 2500 out of 25983 rows
+(0)	done with 2600 out of 25983 rows
+(0)	done with 2700 out of 25983 rows
+(0)	done with 2800 out of 25983 rows
+(0)	done with 2900 out of 25983 rows
+(0)	done with 3000 out of 25983 rows
+(0)	done with 3100 out of 25983 rows
+(0)	done with 3200 out of 25983 rows
+(0)	done with 3300 out of 25983 rows
+(0)	done with 3400 out of 25983 rows
+(0)	done with 3500 out of 25983 rows
+(0)	done with 3600 out of 25983 rows
+(0)	done with 3700 out of 25983 rows
+(0)	done with 3800 out of 25983 rows
+(0)	done with 3900 out of 25983 rows
+(0)	done with 4000 out of 25983 rows
+(0)	done with 4100 out of 25983 rows
+(0)	done with 4200 out of 25983 rows
+(0)	done with 4300 out of 25983 rows
+(0)	done with 4400 out of 25983 rows
+(0)	done with 4500 out of 25983 rows
+(0)	done with 4600 out of 25983 rows
+(0)	done with 4700 out of 25983 rows
+(0)	done with 4800 out of 25983 rows
+(0)	done with 4900 out of 25983 rows
+(0)	done with 5000 out of 25983 rows
+(0)	done with 5100 out of 25983 rows
+(0)	done with 5200 out of 25983 rows
+(0)	done with 5300 out of 25983 rows
+(0)	done with 5400 out of 25983 rows
+(0)	done with 5500 out of 25983 rows
+(0)	done with 5600 out of 25983 rows
+(0)	done with 5700 out of 25983 rows
+(0)	done with 5800 out of 25983 rows
+(0)	done with 5900 out of 25983 rows
+(0)	done with 6000 out of 25983 rows
+(0)	done with 6100 out of 25983 rows
+(0)	done with 6200 out of 25983 rows
+(0)	done with 6300 out of 25983 rows
+(0)	done with 6400 out of 25983 rows
+(0)	done with 6500 out of 25983 rows
+(0)	done with 6600 out of 25983 rows
+(0)	done with 6700 out of 25983 rows
+(0)	done with 6800 out of 25983 rows
+(0)	done with 6900 out of 25983 rows
+(0)	done with 7000 out of 25983 rows
+(0)	done with 7100 out of 25983 rows
+(0)	done with 7200 out of 25983 rows
+(0)	done with 7300 out of 25983 rows
+(0)	done with 7400 out of 25983 rows
+(0)	done with 7500 out of 25983 rows
+(0)	done with 7600 out of 25983 rows
+(0)	done with 7700 out of 25983 rows
+(0)	done with 7800 out of 25983 rows
+(0)	done with 7900 out of 25983 rows
+(0)	done with 8000 out of 25983 rows
+(0)	done with 8100 out of 25983 rows
+(0)	done with 8200 out of 25983 rows
+(0)	done with 8300 out of 25983 rows
+(0)	done with 8400 out of 25983 rows
+(0)	done with 8500 out of 25983 rows
+(0)	done with 8600 out of 25983 rows
+(0)	done with 8700 out of 25983 rows
+(0)	done with 8800 out of 25983 rows
+(0)	done with 8900 out of 25983 rows
+(0)	done with 9000 out of 25983 rows
+(0)	done with 9100 out of 25983 rows
+(0)	done with 9200 out of 25983 rows
+(0)	done with 9300 out of 25983 rows
+(0)	done with 9400 out of 25983 rows
+(0)	done with 9500 out of 25983 rows
+(0)	done with 9600 out of 25983 rows
+(0)	done with 9700 out of 25983 rows
+(0)	done with 9800 out of 25983 rows
+(0)	done with 9900 out of 25983 rows
+(0)	done with 10000 out of 25983 rows
+(0)	done with 10100 out of 25983 rows
+(0)	done with 10200 out of 25983 rows
+(0)	done with 10300 out of 25983 rows
+(0)	done with 10400 out of 25983 rows
+(0)	done with 10500 out of 25983 rows
+(0)	done with 10600 out of 25983 rows
+(0)	done with 10700 out of 25983 rows
+(0)	done with 10800 out of 25983 rows
+(0)	done with 10900 out of 25983 rows
+(0)	done with 11000 out of 25983 rows
+(0)	done with 11100 out of 25983 rows
+(0)	done with 11200 out of 25983 rows
+(0)	done with 11300 out of 25983 rows
+(0)	done with 11400 out of 25983 rows
+(0)	done with 11500 out of 25983 rows
+(0)	done with 11600 out of 25983 rows
+(0)	done with 11700 out of 25983 rows
+(0)	done with 11800 out of 25983 rows
+(0)	done with 11900 out of 25983 rows
+(0)	done with 12000 out of 25983 rows
+(0)	done with 12100 out of 25983 rows
+(0)	done with 12200 out of 25983 rows
+(0)	done with 12300 out of 25983 rows
+(0)	done with 12400 out of 25983 rows
+(0)	done with 12500 out of 25983 rows
+(0)	done with 12600 out of 25983 rows
+(0)	done with 12700 out of 25983 rows
+(0)	done with 12800 out of 25983 rows
+(0)	done with 12900 out of 25983 rows
+(0)	done with 13000 out of 25983 rows
+(0)	done with 13100 out of 25983 rows
+(0)	done with 13200 out of 25983 rows
+(0)	done with 13300 out of 25983 rows
+(0)	done with 13400 out of 25983 rows
+(0)	done with 13500 out of 25983 rows
+(0)	done with 13600 out of 25983 rows
+(0)	done with 13700 out of 25983 rows
+(0)	done with 13800 out of 25983 rows
+(0)	done with 13900 out of 25983 rows
+(0)	done with 14000 out of 25983 rows
+(0)	done with 14100 out of 25983 rows
+(0)	done with 14200 out of 25983 rows
+(0)	done with 14300 out of 25983 rows
+(0)	done with 14400 out of 25983 rows
+(0)	done with 14500 out of 25983 rows
+(0)	done with 14600 out of 25983 rows
+(0)	done with 14700 out of 25983 rows
+(0)	done with 14800 out of 25983 rows
+(0)	done with 14900 out of 25983 rows
+(0)	done with 15000 out of 25983 rows
+(0)	done with 15100 out of 25983 rows
+(0)	done with 15200 out of 25983 rows
+(0)	done with 15300 out of 25983 rows
+(0)	done with 15400 out of 25983 rows
+(0)	done with 15500 out of 25983 rows
+(0)	done with 15600 out of 25983 rows
+(0)	done with 15700 out of 25983 rows
+(0)	done with 15800 out of 25983 rows
+(0)	done with 15900 out of 25983 rows
+(0)	done with 16000 out of 25983 rows
+(0)	done with 16100 out of 25983 rows
+(0)	done with 16200 out of 25983 rows
+(0)	done with 16300 out of 25983 rows
+(0)	done with 16400 out of 25983 rows
+(0)	done with 16500 out of 25983 rows
+(0)	done with 16600 out of 25983 rows
+(0)	done with 16700 out of 25983 rows
+(0)	done with 16800 out of 25983 rows
+(0)	done with 16900 out of 25983 rows
+(0)	done with 17000 out of 25983 rows
+(0)	done with 17100 out of 25983 rows
+(0)	done with 17200 out of 25983 rows
+(0)	done with 17300 out of 25983 rows
+(0)	done with 17400 out of 25983 rows
+(0)	done with 17500 out of 25983 rows
+(0)	done with 17600 out of 25983 rows
+(0)	done with 17700 out of 25983 rows
+(0)	done with 17800 out of 25983 rows
+(0)	done with 17900 out of 25983 rows
+(0)	done with 18000 out of 25983 rows
+(0)	done with 18100 out of 25983 rows
+(0)	done with 18200 out of 25983 rows
+(0)	done with 18300 out of 25983 rows
+(0)	done with 18400 out of 25983 rows
+(0)	done with 18500 out of 25983 rows
+(0)	done with 18600 out of 25983 rows
+(0)	done with 18700 out of 25983 rows
+(0)	done with 18800 out of 25983 rows
+(0)	done with 18900 out of 25983 rows
+(0)	done with 19000 out of 25983 rows
+(0)	done with 19100 out of 25983 rows
+(0)	done with 19200 out of 25983 rows
+(0)	done with 19300 out of 25983 rows
+(0)	done with 19400 out of 25983 rows
+(0)	done with 19500 out of 25983 rows
+(0)	done with 19600 out of 25983 rows
+(0)	done with 19700 out of 25983 rows
+(0)	done with 19800 out of 25983 rows
+(0)	done with 19900 out of 25983 rows
+(0)	done with 20000 out of 25983 rows
+(0)	done with 20100 out of 25983 rows
+(0)	done with 20200 out of 25983 rows
+(0)	done with 20300 out of 25983 rows
+(0)	done with 20400 out of 25983 rows
+(0)	done with 20500 out of 25983 rows
+(0)	done with 20600 out of 25983 rows
+(0)	done with 20700 out of 25983 rows
+(0)	done with 20800 out of 25983 rows
+(0)	done with 20900 out of 25983 rows
+(0)	done with 21000 out of 25983 rows
+(0)	done with 21100 out of 25983 rows
+(0)	done with 21200 out of 25983 rows
+(0)	done with 21300 out of 25983 rows
+(0)	done with 21400 out of 25983 rows
+(0)	done with 21500 out of 25983 rows
+(0)	done with 21600 out of 25983 rows
+(0)	done with 21700 out of 25983 rows
+(0)	done with 21800 out of 25983 rows
+(0)	done with 21900 out of 25983 rows
+(0)	done with 22000 out of 25983 rows
+(0)	done with 22100 out of 25983 rows
+(0)	done with 22200 out of 25983 rows
+(0)	done with 22300 out of 25983 rows
+(0)	done with 22400 out of 25983 rows
+(0)	done with 22500 out of 25983 rows
+(0)	done with 22600 out of 25983 rows
+(0)	done with 22700 out of 25983 rows
+(0)	done with 22800 out of 25983 rows
+(0)	done with 22900 out of 25983 rows
+(0)	done with 23000 out of 25983 rows
+(0)	done with 23100 out of 25983 rows
+(0)	done with 23200 out of 25983 rows
+(0)	done with 23300 out of 25983 rows
+(0)	done with 23400 out of 25983 rows
+(0)	done with 23500 out of 25983 rows
+(0)	done with 23600 out of 25983 rows
+(0)	done with 23700 out of 25983 rows
+(0)	done with 23800 out of 25983 rows
+(0)	done with 23900 out of 25983 rows
+(0)	done with 24000 out of 25983 rows
+(0)	done with 24100 out of 25983 rows
+(0)	done with 24200 out of 25983 rows
+(0)	done with 24300 out of 25983 rows
+(0)	done with 24400 out of 25983 rows
+(0)	done with 24500 out of 25983 rows
+(0)	done with 24600 out of 25983 rows
+(0)	done with 24700 out of 25983 rows
+(0)	done with 24800 out of 25983 rows
+(0)	done with 24900 out of 25983 rows
+(0)	done with 25000 out of 25983 rows
+(0)	done with 25100 out of 25983 rows
+(0)	done with 25200 out of 25983 rows
+(0)	done with 25300 out of 25983 rows
+(0)	done with 25400 out of 25983 rows
+(0)	done with 25500 out of 25983 rows
+(0)	done with 25600 out of 25983 rows
+(0)	done with 25700 out of 25983 rows
+(0)	done with 25800 out of 25983 rows
+(0)	done with 25900 out of 25983 rows
+(0)	LHFLUX avg: 364.497
+(0)	SHFLUX avg: 78.9317
+(0)	-0.8699241
+(0)	298.5881
+(0)	299.458
+(0)	5.215638
+(0)	64.01726
+(0)	69.23289
+(0)	 
+(0)	   ===> Robust Dispersion Statistics <===
+(0)	 [0]            Mean=5.21563815224957
+(0)	 [1]          StdDev=17.60492433995986
+(0)	 [2]             Min=-1.483619689941406
+(0)	 [3]          LowDec=0.9023971557617188
+(0)	 [4]          LowOct=1.147296905517578
+(0)	 [5]          LowSex=1.501472473144531
+(0)	 [6]     LowQuartile=2.176986694335938
+(0)	 [7]          LowTri=2.829307556152344
+(0)	 [8]          Median=4.226478576660156
+(0)	 [9]         HighTri=6.066333770751953
+(0)	 [10]   HighQuartile=7.293907165527344
+(0)	 [11]        HighSex=8.932098388671875
+(0)	 [12]        HighOct=9.999809265136719
+(0)	 [13]        HighDec=10.82365417480469
+(0)	 [14]            Max=29.62073516845703
+(0)	 [15]          Range=31.10435485839844
+(0)	 [16]     Dispersion=1.766798553504568
+(0)	 [17]    RMS Anomaly=4.19556742330137
+(0)	 [18]      #   Total=25984
+(0)	 [19]      #    Used=8233
+(0)	 [20]      # Missing=17751
+(0)	 [21]      % Missing=68.31511699507389
+(0)	 [22]     Lower 0.1%=-1.056522369384766
+(0)	 [23]     Lower 1.0%=-0.4212417602539062
+(0)	 [24]     Lower 5.0%=0.1151313781738281
+(0)	 [25]     Upper 5.0%=13.43611907958984
+(0)	 [26]     Upper 1.0%=19.2719612121582
+(0)	 [27]     Upper 0.1%=23.22486114501953
+(0)	 [28]       Skewness=1.304545602040354
+(0)	 [29]       Kurtosis=2.076079620658544
+(0)	 
+(0)	
+=====> Wall Clock Elapsed Time: Time to complete simulation: 3711 seconds <=====
+

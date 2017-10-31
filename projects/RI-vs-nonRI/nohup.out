@@ -1,0 +1,244 @@
+ Copyright (C) 1995-2015 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.3.0
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+(0)	SURFACEWINDCORRFACTOR: Getting sfc wind correction factor using:    log      technique.
+(0)	SURFACEWINDCORRFACTOR: Using CAM default lowest model level of: 64 m
+(0)	SURFACEWINDCORRFACTOR: Using factor: 0.853559
+(0)	GETTRAJECTORIES: Getting trajectories from: cam5_1_amip_run3.ens.txt
+(0)	GETTRAJECTORIES: Total number of storms = 892
+(0)	GETTRAJECTORIES: No max lines defined, trying to figure out!
+(0)	GETTRAJECTORIES: Allocating... 353 max lines per storm
+warning:Argument 0 of the current function or procedure was coerced to the appropriate type and thus will not change if the function or procedure modifies its value
+rm: cannot remove `RItraj_cam5_1_amip_run3.ens.txt': No such file or directory
+ Copyright (C) 1995-2015 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.3.0
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+(0)	SURFACEWINDCORRFACTOR: Getting sfc wind correction factor using:    log      technique.
+(0)	SURFACEWINDCORRFACTOR: Using CAM default lowest model level of: 64 m
+(0)	SURFACEWINDCORRFACTOR: Using factor: 0.853559
+(0)	GETTRAJECTORIES: Getting trajectories from: cam5_1_amip_run6.ens.txt
+(0)	GETTRAJECTORIES: Total number of storms = 1067
+(0)	GETTRAJECTORIES: No max lines defined, trying to figure out!
+(0)	GETTRAJECTORIES: Allocating... 156 max lines per storm
+warning:Argument 0 of the current function or procedure was coerced to the appropriate type and thus will not change if the function or procedure modifies its value
+rm: cannot remove `RItraj_cam5_1_amip_run6.ens.txt': No such file or directory
+ Copyright (C) 1995-2015 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.3.0
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+(0)	SURFACEWINDCORRFACTOR: Getting sfc wind correction factor using:    log      technique.
+(0)	SURFACEWINDCORRFACTOR: Using CAM default lowest model level of: 64 m
+(0)	SURFACEWINDCORRFACTOR: Using factor: 0.853559
+(0)	GETTRAJECTORIES: Getting trajectories from: cam5_1_amip_run8.ens.txt
+(0)	GETTRAJECTORIES: Total number of storms = 1111
+(0)	GETTRAJECTORIES: No max lines defined, trying to figure out!
+(0)	GETTRAJECTORIES: Allocating... 174 max lines per storm
+warning:Argument 0 of the current function or procedure was coerced to the appropriate type and thus will not change if the function or procedure modifies its value
+rm: cannot remove `RItraj_cam5_1_amip_run8.ens.txt': No such file or directory
+ Copyright (C) 1995-2015 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.3.0
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+(0)	SURFACEWINDCORRFACTOR: Getting sfc wind correction factor using:    log      technique.
+(0)	SURFACEWINDCORRFACTOR: Using CAM default lowest model level of: 64 m
+(0)	SURFACEWINDCORRFACTOR: Using factor: 0.853559
+(0)	GETTRAJECTORIES: Getting trajectories from: cam5_1_amip_run9.ens.txt
+(0)	GETTRAJECTORIES: Total number of storms = 1129
+(0)	GETTRAJECTORIES: No max lines defined, trying to figure out!
+(0)	GETTRAJECTORIES: Allocating... 134 max lines per storm
+warning:Argument 0 of the current function or procedure was coerced to the appropriate type and thus will not change if the function or procedure modifies its value
+rm: cannot remove `RItraj_cam5_1_amip_run9.ens.txt': No such file or directory
+
+
+Variable: perc_RI
+Type: float
+Total Size: 4 bytes
+            1 values
+Number of Dimensions: 1
+Dimensions and sizes:	[1]
+Coordinates: 
+(0)	0.08622306
+
+Variable: pdf2
+Type: double
+Total Size: 12800 bytes
+            1600 values
+Number of Dimensions: 2
+Dimensions and sizes:	[y | 40] x [x | 40]
+Coordinates: 
+            y: [-95.34997549057007..66.47837057113648]
+            x: [10.86132073402405..131.5018193721771]
+Number Of Attributes: 26
+  _FillValue :	1e+20
+  nMax :	36876
+  nUse :	36876
+  nOut :	0
+  pcUse :	100
+  pcOut :	 0
+  xMIN :	9.314647674560547
+  xMAX :	133.0484924316406
+  binx_center :	<ARRAY of 40 elements>
+  binx_bounds :	<ARRAY of 41 elements>
+  binx_bound_min :	9.314647674560547
+  binx_bound_max :	133.0484924316406
+  binx_spacing :	3.093346118927002
+  nbinsx :	40
+  pcxLoOut :	 0
+  pcxHiOut :	 0
+  yMIN :	-97.42469787597656
+  yMAX :	68.55309295654297
+  biny_center :	<ARRAY of 40 elements>
+  biny_bounds :	<ARRAY of 41 elements>
+  biny_bound_min :	-97.42469787597656
+  biny_bound_max :	68.55309295654297
+  biny_spacing :	4.149444770812988
+  nbinsy :	40
+  pcyLoOut :	 0
+  pcyHiOut :	 0
+
+
+Variable: perc_RI
+Type: float
+Total Size: 4 bytes
+            1 values
+Number of Dimensions: 1
+Dimensions and sizes:	[1]
+Coordinates: 
+(0)	0.09270927
+
+Variable: pdf2
+Type: double
+Total Size: 12800 bytes
+            1600 values
+Number of Dimensions: 2
+Dimensions and sizes:	[y | 40] x [x | 40]
+Coordinates: 
+            y: [-102.9371909141541..72.1721381187439]
+            x: [10.39238168001175..137.1759309649468]
+Number Of Attributes: 26
+  _FillValue :	1e+20
+  nMax :	37552
+  nUse :	37552
+  nOut :	0
+  pcUse :	100
+  pcOut :	 0
+  xMIN :	8.766951560974121
+  xMAX :	138.8013610839844
+  binx_center :	<ARRAY of 40 elements>
+  binx_bounds :	<ARRAY of 41 elements>
+  binx_bound_min :	8.766951560974121
+  binx_bound_max :	138.8013610839844
+  binx_spacing :	3.250860238075256
+  nbinsx :	40
+  pcxLoOut :	 0
+  pcxHiOut :	 0
+  yMIN :	-105.1821823120117
+  yMAX :	74.41712951660156
+  biny_center :	<ARRAY of 40 elements>
+  biny_bounds :	<ARRAY of 41 elements>
+  biny_bound_min :	-105.1821823120117
+  biny_bound_max :	74.41712951660156
+  biny_spacing :	4.489982795715332
+  nbinsy :	40
+  pcyLoOut :	 0
+  pcyHiOut :	 0
+
+
+Variable: perc_RI
+Type: float
+Total Size: 4 bytes
+            1 values
+Number of Dimensions: 1
+Dimensions and sizes:	[1]
+Coordinates: 
+(0)	0.0717449
+
+Variable: pdf2
+Type: double
+Total Size: 12800 bytes
+            1600 values
+Number of Dimensions: 2
+Dimensions and sizes:	[y | 40] x [x | 40]
+Coordinates: 
+            y: [-87.59611415863037..66.90611171722412]
+            x: [10.35076605081558..135.70005620718]
+Number Of Attributes: 26
+  _FillValue :	1e+20
+  nMax :	38015
+  nUse :	38015
+  nOut :	0
+  pcUse :	100
+  pcOut :	 0
+  xMIN :	8.74372386932373
+  xMAX :	137.3070983886719
+  binx_center :	<ARRAY of 40 elements>
+  binx_bounds :	<ARRAY of 41 elements>
+  binx_bound_min :	8.74372386932373
+  binx_bound_max :	137.3070983886719
+  binx_spacing :	3.214084362983704
+  nbinsx :	40
+  pcxLoOut :	 0
+  pcxHiOut :	 0
+  yMIN :	-89.57691192626953
+  yMAX :	68.88690948486328
+  biny_center :	<ARRAY of 40 elements>
+  biny_bounds :	<ARRAY of 41 elements>
+  biny_bound_min :	-89.57691192626953
+  biny_bound_max :	68.88690948486328
+  biny_spacing :	3.96159553527832
+  nbinsy :	40
+  pcyLoOut :	 0
+  pcyHiOut :	 0
+
+
+Variable: perc_RI
+Type: float
+Total Size: 4 bytes
+            1 values
+Number of Dimensions: 1
+Dimensions and sizes:	[1]
+Coordinates: 
+(0)	0.01233184
+
+Variable: pdf2
+Type: double
+Total Size: 12800 bytes
+            1600 values
+Number of Dimensions: 2
+Dimensions and sizes:	[y | 40] x [x | 40]
+Coordinates: 
+            y: [-83.71934666633607..40.4561592578888]
+            x: [10.92861944437027..141.9303387999535]
+Number Of Attributes: 26
+  _FillValue :	1e+20
+  nMax :	51763
+  nUse :	51763
+  nOut :	0
+  pcUse :	100
+  pcOut :	 0
+  xMIN :	9.249110221862793
+  xMAX :	143.6098480224609
+  binx_center :	<ARRAY of 40 elements>
+  binx_bounds :	<ARRAY of 41 elements>
+  binx_bound_min :	9.249110221862793
+  binx_bound_max :	143.6098480224609
+  binx_spacing :	3.359018445014954
+  nbinsx :	40
+  pcxLoOut :	 0
+  pcxHiOut :	 0
+  yMIN :	-85.31134033203125
+  yMAX :	42.04815292358398
+  biny_center :	<ARRAY of 40 elements>
+  biny_bounds :	<ARRAY of 41 elements>
+  biny_bound_min :	-85.31134033203125
+  biny_bound_max :	42.04815292358398
+  biny_spacing :	3.183987331390381
+  nbinsy :	40
+  pcyLoOut :	 0
+  pcyHiOut :	 0

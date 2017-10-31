@@ -1,0 +1,50 @@
+--- To reproduce cold wake by intensity for 1x1, 5x5, etc. grid boxes...
+
+ncl process_timeseries.ncl
+
+outFileName="/glade/p/work/zarzycki/slab/ncl/SST-traj_slab_10_4.7_900.txt_CATTED.nc"
+minWind=0.0
+maxWind=999.0
+latBox=1.0
+
+This will output a file in text called maxSSTanom_{latBox}.txt. This the table that goes
+into the xls file and subsequently, the paper
+
+
+OTHER NOTES:
+
+12/2/2015
+
+Changed minWind in process_timeseries.ncl  from 32.0 to 0.0. Unclear why. Maybe just double checking that C1-C5 worked?
+EDIT: Probably for the time evolution figure (stratify fast/slow moving hurricanes as in LV2011)
+
+1/14/2016
+
+To process...
+1.) Track and cat files in the tracking dir.
+2.) Find number of storms tracked.
+3.) Edit newSSTs.ncl to point to the catted tracking file
+4.) Edit parDriver.sh with the number of storms.
+5.) Run parDriver.sh to parallelize the data processing.
+6.) After all spawned parDriver scripts are done...
+
+STRHEAD=SST
+CONFIG=slab_NEW
+
+for f in *__*.nc
+do
+  ncpdq -a storm,time,latbox,stormtime ${f} ${f}_reordered.nc
+  ncks --mk_rec_dmn storm ${f}_reordered.nc ${f}_reorder_withDim.nc
+  mv ${f}_reorder_withDim.nc ${f}_reordered.nc
+done
+
+ncrcat *_reordered.nc ${STRHEAD}-traj_${CONFIG}.txt_CATTED.nc
+rm *_reordered.nc
+ncpdq -a time,dist,storm,stormtime ${STRHEAD}-traj_${CONFIG}.txt_CATTED.nc ${STRHEAD}-traj_${CONFIG}.txt_CATTED_NEWORDER.nc
+mv ${STRHEAD}-traj_${CONFIG}.txt_CATTED_NEWORDER.nc ${STRHEAD}-traj_${CONFIG}.txt_CATTED.nc
+
+-bash-4.1$ mkdir cat_traj_slab_08_11.75_900
+-bash-4.1$ mv *__*.nc cat_traj_slab_08_11.75_900/
+-bash-4.1$ mv SST-traj_slab_NEW.txt_CATTED.nc SST-traj_slab_08_11.75_900.txt_CATTED.nc
+
+7.) ncl process_timeseries.ncl (point to file in script)

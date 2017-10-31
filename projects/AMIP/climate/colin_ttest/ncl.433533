@@ -1,0 +1,12 @@
+ Copyright (C) 1995-2014 - All Rights Reserved
+ University Corporation for Atmospheric Research
+ NCAR Command Language Version 6.2.0
+ The use of this software is governed by a License Agreement.
+ See http://www.ncl.ucar.edu/ for more details.
+(0)	Get GW
+(0)	Reading data
+(0)	Regridding the data
+fatal:(reffile) not reference to a valid file
+fatal:["Execute.c":8567]:Execute: Error occurred at or near line 50 in file plot_diff_uni_ref.ncl
+
+

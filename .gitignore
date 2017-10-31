@@ -1,4 +1,8 @@
 *.pdf
+*.jpg
+*.gif
+*.eps
+*.ps
 *.png
 simple.nc
 out.*
