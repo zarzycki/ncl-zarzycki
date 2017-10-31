@@ -4,6 +4,7 @@
 *.eps
 *.ps
 *.png
+nohu*
 simple.nc
 out.*
 slice-*nc
