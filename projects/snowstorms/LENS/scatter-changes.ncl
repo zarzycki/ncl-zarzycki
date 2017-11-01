@@ -13,11 +13,11 @@ begin
 
 out_type="x11"
 
-MINCAT = 1
+MINCAT = 3
 MAXCAT = 5
 
-RSIlist1=systemfunc("ls /home/zarzycki/snow/LES-snow/stats/RSI.SNOW.LENS.1990.0*.5e-9_12.csv.SNOW.tempest.csv")
-RSIlist2=systemfunc("ls /home/zarzycki/snow/LES-snow/stats/RSI.SNOW.LENS.2071.0*.5e-9_12.csv.SNOW.tempest.csv")
+RSIlist1=systemfunc("ls /home/zarzycki/snow/LES-snow/stats/RSI.SNOW.LENS.1990.0*.5e-9_12.csv.PRECT.tempest.csv")
+RSIlist2=systemfunc("ls /home/zarzycki/snow/LES-snow/stats/RSI.SNOW.LENS.2071.0*.5e-9_12.csv.PRECT.tempest.csv")
 
 if (dimsizes(RSIlist1) .ne. dimsizes(RSIlist2)) then
   print("Sizes of RSI arrays not equal, exiting...")
@@ -73,7 +73,7 @@ maxmax = max((/max(x1),max(x2)/))
 print(maxmax)
 
 ; resampling
-nsamples=10000
+nsamples=25000
 x1r=new(nsamples,"float")
 x2r=new(nsamples,"float")
 x1rr=new(nsamples,"float")
@@ -81,6 +81,8 @@ x2rr=new(nsamples,"float")
 ratior=new(nsamples,"float")
 ratior=0.0
 ratiorr=ratior
+diffr=new(nsamples,"float")
+diffrr=diffr
 low  = 0
 high = nmembers1
 
@@ -93,9 +95,11 @@ do jj = 0,nsamples-1
   ; bootstraps one climatology regardless of ensemble member
   x1r(jj) = x1(unf(0))
   x2r(jj) = x2(unf(1))
+  diffr(jj) = x1r(jj) - x2r(jj)
   ; this bootstraps 3 non-consecutive "segments"
   x1rr(jj) = x1(unf(2)) + x1(unf(3)) + x1(unf(4))
   x2rr(jj) = x2(unf(5)) + x2(unf(6)) + x2(unf(7))
+  diffrr(jj) = x1rr(jj) - x2rr(jj)
   if (x1r(jj) .ge. x2r(jj)) then
     ratior(jj)=1.
   end if
@@ -103,6 +107,11 @@ do jj = 0,nsamples-1
     ratiorr(jj)=1.
   end if
 end do
+
+; Stats on bootstrapped differences!
+opt = True
+opt@PrintStat = True
+stats = stat_dispersion(diffrr, opt )
 
 ; Percentage of events in RSILIST1 > RSILIST2
 print(sum(ratior)/tofloat(nsamples))
