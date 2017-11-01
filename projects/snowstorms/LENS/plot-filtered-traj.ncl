@@ -6,16 +6,16 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
-load "/glade/u/home/zarzycki/ncl/functions/getTrajectories.ncl"
+load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
 output_type="png"
 
-RSIthresh=4
+RSIthresh=3
 
-trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.CAT"/)
-RSIfile = (/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
+trajfile=(/"/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.1990.CAT"/)
+RSIfile = (/"/home/zarzycki/snow/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
 ncols = 9                     ; assign number of columns
 
 delim = ","
@@ -33,7 +33,7 @@ do z = 0,ncases-1
   ;member   = str_get_field(lines,1,delim)
   ;stormID  = tointeger(str_get_field(lines,2,delim))
   ;RSIval   = tofloat(str_get_field(lines,3,delim))
-  RSIcat   = tointeger(str_get_field(lines,6,delim))
+  RSIcat   = tointeger(str_get_field(lines,7,delim))
 
   ndims = dimsizes(traj_data)
   nstorms = ndims(0)

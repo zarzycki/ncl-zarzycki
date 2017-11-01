@@ -41,7 +41,7 @@ do z = 0,ncases-1
   ;member   = str_get_field(lines,1,delim)
   ;stormID  = tointeger(str_get_field(lines,2,delim))
   ;RSIval   = tofloat(str_get_field(lines,3,delim))
-  RSIcat   = tointeger(str_get_field(lines,6,delim))
+  RSIcat   = tointeger(str_get_field(lines,7,delim))
 
   ndims = dimsizes(traj_data)
   nstorms = ndims(0)
