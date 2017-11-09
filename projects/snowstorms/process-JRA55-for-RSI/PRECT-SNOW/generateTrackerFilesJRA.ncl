@@ -14,7 +14,12 @@ begin
 ;SYMDIR="/glade/u/home/zarzycki/scratch/JRAsym/"
 ;OUTDIR=SYMDIR
 
-FILES = systemfunc ("ls "+SYMDIR+"/fcst_phy2m.*"+VAR+".reg_tl319*.grb2")
+if (VAR .eq. "prmsl")
+  FILES = systemfunc ("ls "+SYMDIR+"/fcst_surf.*"+VAR+".reg_tl319*.grb2")
+else
+  FILES = systemfunc ("ls "+SYMDIR+"/fcst_phy2m.*"+VAR+".reg_tl319*.grb2")
+end if
+
 FILE=addfiles(FILES, "r")   ; note the "s" of addfile
 ListSetType(FILE, "cat")             ; concatenate or "merge" (default)
 print("...done loading files")
@@ -25,9 +30,13 @@ if (VAR .eq. "tprat") then
 else if (VAR .eq. "srweq") then
   PRECVAR="SRWEQ_GDS4_SFC_ave3h"
   OUTVAR="PRECSN"
+else if (VAR .eq. "prmsl") then
+  PRECVAR="PRMSL_GDS4_MSL"
+  OUTVAR="PSL"
 else
   print("incorrect VAR... exiting...")
   exit
+end if
 end if
 end if
 
@@ -46,12 +55,15 @@ PRECSN=FILE[:]->$PRECVAR$(:,:,::-1,:)
 
 ms_to_mmday=8.64e7
 
-; Convert from mm/day to m/s to match CAM data
-PRECSN=PRECSN/ms_to_mmday
-
-; Sum the +3 and +6 forecast average for each cycle
-PRECSN_SUM = dim_sum_n_Wrap(PRECSN,1)
-PRECSN_SUM = PRECSN_SUM / 2.0
+if (VAR .eq. "prmsl")
+  PRECSN_SUM=PRECSN(:,1,:,:)
+else
+  ; Convert from mm/day to m/s to match CAM data
+  PRECSN=PRECSN/ms_to_mmday
+  ; Sum the +3 and +6 forecast average for each cycle
+  PRECSN_SUM = dim_sum_n_Wrap(PRECSN,1)
+  PRECSN_SUM = PRECSN_SUM / 2.0
+end if
 
 PRECSN_SUM!0="time"
 PRECSN_SUM!1="lat"

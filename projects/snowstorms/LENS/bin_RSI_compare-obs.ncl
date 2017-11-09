@@ -12,13 +12,13 @@ begin
 plot_log=False
 out_type="pdf"
 out_string="low-res-ASD-RSI"
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.PRECT.tempest.csv"/)
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.CAT.csv"/)
 ;modelfiles=(/"RSI-ne0conus30x8.csv","RSI-mp15a-120a-US.csv"/)
 ;modelfiles=(/"RSI-ne30.csv","RSI-mp120a.csv"/)
 ;modelcolors=(/"red","blue"/)
 modelcolors=(/"pink","lightblue"/)
 
-nyearsPerSample=(/30*16,30*10,115/)
+nyearsPerSample=(/30*16,58,117/)
 
 RSIcatArray=(/1,2,3,4,5/)
 nCases=3
@@ -26,7 +26,7 @@ RSInumArray=new((/nCases,dimsizes(RSIcatArray)/),"integer")
 RSInormArray=new((/nCases,dimsizes(RSIcatArray)/),"float")
 
 ; OBS
-RSInumArray(2,:)=(/117,54,15,9,4/)
+RSInumArray(2,:)=(/119,54,15,11,4/)
 
 do z = 0,1
 
@@ -118,7 +118,7 @@ lbres@lbPerimOn          = False
 lbres@lgPerimColor 	 = "white"
 tablabels=new((dimsizes(modelfiles)+1),"string")
 tablabels(0:dimsizes(modelfiles)-1)=modelfiles
-tablabels(dimsizes(modelfiles))="Obs 1900-2015"
+tablabels(dimsizes(modelfiles))="Obs 1900-2017"
 labels=tablabels
 ;labels = (/"ne0conus30x8","mp15a-120a","Obs 1900-2015"/)  ; labels in reverse
 gsn_labelbar_ndc(wks,3,labels(::-1),0.4,0.8,lbres)	; draw right labelbar column

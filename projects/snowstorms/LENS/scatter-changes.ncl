@@ -13,11 +13,11 @@ begin
 
 out_type="x11"
 
-MINCAT = 3
+MINCAT = 1
 MAXCAT = 5
 
-RSIlist1=systemfunc("ls /home/zarzycki/snow/LES-snow/stats/RSI.SNOW.LENS.1990.0*.5e-9_12.csv.PRECT.tempest.csv")
-RSIlist2=systemfunc("ls /home/zarzycki/snow/LES-snow/stats/RSI.SNOW.LENS.2071.0*.5e-9_12.csv.PRECT.tempest.csv")
+RSIlist1=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.1990.0*.5e-9_12.csv.SNOW.tempest.csv")
+RSIlist2=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.2071.0*.5e-9_12.csv.SNOW.tempest.csv")
 
 if (dimsizes(RSIlist1) .ne. dimsizes(RSIlist2)) then
   print("Sizes of RSI arrays not equal, exiting...")
@@ -108,10 +108,13 @@ do jj = 0,nsamples-1
   end if
 end do
 
+print("Mean x1: "+avg(x1))
+print("Mean x2: "+avg(x2))
+print("Difference stats")
 ; Stats on bootstrapped differences!
 opt = True
 opt@PrintStat = True
-stats = stat_dispersion(diffrr, opt )
+stats = stat_dispersion(diffr, opt )
 
 ; Percentage of events in RSILIST1 > RSILIST2
 print(sum(ratior)/tofloat(nsamples))
@@ -132,12 +135,15 @@ res@xyMarkers           = 16                     ; choose type of marker
 res@xyMarkerColor       = "red"                  ; Marker color
 res@xyMarkerSizeF       = 0.01                  ; Marker size (default 0.01)
 
-res@tiMainString        = "Output from regline"  ; title
+res@tiMainString        = "LENS snowstorms/decade (RSI>1)"  ; title
 
 res@trXMaxF  =  maxmax*1.05
 res@trYMaxF  =  maxmax*1.05
 res@trXMinF  =  -0.05
 res@trYMinF  =  -0.05
+
+res@tiXAxisString   = "1990-2015"  
+res@tiYAxisString   = "2071-2080"
 
 plot  = gsn_csm_xy (wks,x1,x2,res)        ; create plot
 
