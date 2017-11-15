@@ -12,13 +12,13 @@ begin
 plot_log=False
 out_type="pdf"
 out_string="low-res-ASD-RSI"
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.CAT.csv"/)
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_11.csv.SNOW.tempest.csv"/)
 ;modelfiles=(/"RSI-ne0conus30x8.csv","RSI-mp15a-120a-US.csv"/)
 ;modelfiles=(/"RSI-ne30.csv","RSI-mp120a.csv"/)
 ;modelcolors=(/"red","blue"/)
 modelcolors=(/"pink","lightblue"/)
 
-nyearsPerSample=(/30*16,58,117/)
+nyearsPerSample=(/35*16,35*16,117/)
 
 RSIcatArray=(/1,2,3,4,5/)
 nCases=3
@@ -27,6 +27,9 @@ RSInormArray=new((/nCases,dimsizes(RSIcatArray)/),"float")
 
 ; OBS
 RSInumArray(2,:)=(/119,54,15,11,4/)
+
+MMArray=(/1,2,3,4,5,6,7,8,9,10,11,12/)
+MMnumArray=new((/nCases,dimsizes(MMArray)/),"integer")
 
 do z = 0,1
 
@@ -42,10 +45,22 @@ if (z .eq. -1)
 else
   RSIcat  =   tointeger(str_get_field(lines,7,delim))
 end if
-;print(RSIcat)
+YYYYMMDDHH = str_get_field(lines,4,delim)
+
+
+; split times
+dtime_map = (/4,2,2,2/)
+tst_dtime = str_split_by_length(YYYYMMDDHH, dtime_map)
+YYYY=toint(tst_dtime(:,0))
+MM=toint(tst_dtime(:,1))
 
 do i = 0,dimsizes(RSIcatArray)-1
   RSInumArray(z,i) = num(RSIcat.eq.RSIcatArray(i))
+end do
+
+MM=where(RSIcat.ge.3,MM,MM@_FillValue)
+do jj = 0,dimsizes(MMArray)-1
+  MMnumArray(z,jj) = num(MM.eq.MMArray(jj))
 end do
 
 delete(lines)
@@ -54,7 +69,19 @@ delete(stormID)
 delete(RSIcat)
 delete(RSIval)
 
+delete(YYYYMMDDHH)
+delete(dtime_map)
+delete(tst_dtime)
+delete(YYYY)
+delete(MM)
+
 end do
+
+;print(dim_sum_n_Wrap(RSInumArray,1))
+
+print("Storms by month")
+;print(dim_sum_n_Wrap(MMnumArray,1))
+print(MMnumArray)
 
 ;======
 
@@ -118,7 +145,7 @@ lbres@lbPerimOn          = False
 lbres@lgPerimColor 	 = "white"
 tablabels=new((dimsizes(modelfiles)+1),"string")
 tablabels(0:dimsizes(modelfiles)-1)=modelfiles
-tablabels(dimsizes(modelfiles))="Obs 1900-2017"
+tablabels(dimsizes(modelfiles))="Obs 1900-2015"
 labels=tablabels
 ;labels = (/"ne0conus30x8","mp15a-120a","Obs 1900-2015"/)  ; labels in reverse
 gsn_labelbar_ndc(wks,3,labels(::-1),0.4,0.8,lbres)	; draw right labelbar column

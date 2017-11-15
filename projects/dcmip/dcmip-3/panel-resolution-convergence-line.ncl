@@ -132,7 +132,7 @@ do jj = 0,nres-1
     data_file = "/glade/p/vetssg/data/DCMIP_2016/tempest/publish/tempest.163."+resol+".L40.interp_latlon.nonhydro."+whatVar+".nc"
     time_units = "d"
     time_var_name="time"
-    prec_units="mms"
+    prec_units="ms"
   end if
   if (model .eq. "CSU_CP") then
     if (resol .eq. "r50") then
@@ -262,7 +262,7 @@ end do
     resw@trYMaxF = 70.0
   else
     resw@trYMinF = 0.0
-    resw@trYMaxF = 500.0
+    resw@trYMaxF = 300.0
   end if
 
   resw@tmXBMode = "Manual"

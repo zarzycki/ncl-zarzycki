@@ -10,66 +10,61 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="png"
+output_type="x11"
 
-RSIthresh=3
+; JRA
+;stormID=14
+;year=2010
+;trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.JRA."+year+"."+year
+;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
 
-; use running smoother over trajectory?
-do_smooth_traj=True
+;/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS.1990.035.5e-9_12.nc.tempest.nc,XXX,00233,1995020700,090, 32.61,5
+;/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS.1990.035.5e-9_12.nc.tempest.nc,XXX,00346,1997120612,126, 48.44,5
+;/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS.1990.001.5e-9_12.nc.tempest.nc	XXX	89	1991121806	90	16.8	4
 
-trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.ALL"/)
-RSIfile = (/"/glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
+stormID=89
+ensmem="001"
+year=1990
+trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
+stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
+
 ncols = 9                     ; assign number of columns
 
 delim = ","
 
 ncases = dimsizes(trajfile)
 print("Doing "+ncases+"  number of cases")
-
-do z = 0,ncases-1
   
-  maxLines = -1
-  traj_data = getTrajectories(trajfile(z),ncols,maxLines)
+maxLines = -1
+traj_data = getTrajectories(trajfile,ncols,maxLines)
 
-  lines = asciiread(RSIfile(z),-1,"string")
+ndims = dimsizes(traj_data)
+nstorms = ndims(0)
+ncols   = ndims(1)
+ntimes  = ndims(2)
 
-  ;member   = str_get_field(lines,1,delim)
-  ;stormID  = tointeger(str_get_field(lines,2,delim))
-  ;RSIval   = tofloat(str_get_field(lines,3,delim))
-  RSIcat   = tointeger(str_get_field(lines,7,delim))
+; need to be modified to 2,3,4 if using latlon data
+lon = traj_data(stormID,2,:)
+lat = traj_data(stormID,3,:)
+pres = traj_data(stormID,4,:)/100.
 
-  ndims = dimsizes(traj_data)
-  nstorms = ndims(0)
-  ncols   = ndims(1)
-  ntimes  = ndims(2)
+f = addfile(stormfile,"r")
 
-  do i = 0,nstorms-1
-    if (RSIcat(i) .lt. RSIthresh)
-      ;print("filling... "+RSIcat(i))
-      traj_data(i,:,:) = traj_data@_FillValue
-    end if
-  end do
+SNOW=f->CUM_SNOWFALL(stormID,:,:)
+SNOW=SNOW*12
+SNOW=where(SNOW.lt.1.0,SNOW@_FillValue,SNOW)
 
-  ; need to be modified to 2,3,4 if using latlon data
-  lon = traj_data(:,2,:)
-  lat = traj_data(:,3,:)
-  pres = traj_data(:,4,:)/100.
+; Smoother?
 
-  lon = where(lon .gt. 180.,lon-360.,lon)
-  
-  ; use running smoother over trajectories
-  if (do_smooth_traj) then
-    do kk = 0,nstorms-1
-      nave = 3
-      opt = 1
-      lon(kk,:) = runave_Wrap(lon(kk,:),nave,opt)
-      lat(kk,:) = runave_Wrap(lat(kk,:),nave,opt)
-    end do
-  end if
+nave = 3
+opt = 0
+lon = runave_Wrap(lon,nave,opt)
+lat = runave_Wrap(lat,nave,opt)
 
 ;--------------------------------------------------------
 print("Beginning plot sequence")
 wks  = gsn_open_wks(output_type,"latlon_traj_plot")
+gsn_define_colormap(wks,"MPL_BuPu")   ; choose colormap
 map = new(1,graphic)
   
 res  = True
@@ -84,83 +79,84 @@ res@mpInlandWaterFillColor = res@mpOceanFillColor
 res@mpGreatCircleLinesOn = True
 res@mpOutlineBoundarySets = "National"
  
-res@mpMinLatF             = 10
-res@mpMaxLatF             = 80
-res@mpMinLonF             = 220
-res@mpMaxLonF             = 340
+res@mpMinLatF             = 30
+res@mpMaxLatF             = 60
+res@mpMinLonF             = 260
+res@mpMaxLonF             = 300
 ;map = gsn_csm_map_ce(wks,res)
+
+res@gsnAddCyclic = False
 
 res@mpProjection = "Orthographic"
 res@mpLimitMode           = "LatLon"
 res@mpCenterLatF      =  45.
 res@mpCenterLonF      =  280.
-map = gsn_csm_map(wks,res)
 
+res@gsnSpreadColors     = True         ; Use full colormap, but start
+res@cnFillOn            = True         ; Turn on contour fill
+res@cnLinesOn           = False        ; Turn off contour lines
+res@cnLineLabelsOn      = False        ; Turn off contour line labels
+res@lbLabelAutoStride   = True         ; Clean up labelbar labels.
+res@cnFillMode          = "RasterFill"
 
- 
+map = gsn_csm_contour_map(wks,SNOW,res)
 
-gsn_define_colormap(wks,"rainbow+white+gray")
-  polyres               = True          ; poly marker mods desired 
-  polyres@gsMarkerIndex = 1            ; choose circle as polymarker
-  lineres = True
+;gsn_define_colormap(wks,"rainbow+white+gray")
+polyres               = True          ; poly marker mods desired 
+polyres@gsMarkerIndex = 1            ; choose circle as polymarker
+lineres = True
 
+dum = new((/ntimes/),graphic)
 
-
-
-
-dum = new((/nstorms,ntimes/),graphic)
-
-do i = 0,nstorms-1
 do j = 0,ntimes-1
 
-thisPres=pres(i,j)
+  thisPres=pres(j)
 
-;linethicknesses = (/1.5,1.5,1.5,1.5,2.0,2.5/)
-linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
+  ;linethicknesses = (/1.5,1.5,1.5,1.5,2.0,2.5/)
+  linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
+  linethicknesses = linethicknesses * 3.0
 
+  if (.not.ismissing(thisPres))
 
-if (.not.ismissing(thisPres))
-
-  if (thisPres .gt. 1010)
-    polyres@gsMarkerColor = (/"blue"/)
-    lineres@gsLineColor = (/"blue"/)
-    lineres@gsLineThicknessF = linethicknesses(0)
-  else if (thisPres .ge. 1000 .and. thisPres .lt. 1010)
-    polyres@gsMarkerColor = (/"green3"/)
-    lineres@gsLineColor = (/"green3"/)
-    lineres@gsLineThicknessF = linethicknesses(1)
-  else if (thisPres .ge. 990 .and. thisPres .lt. 1000)
-    polyres@gsMarkerColor = (/"yellow2"/)
-    lineres@gsLineColor = (/"yellow2"/)
-    lineres@gsLineThicknessF = linethicknesses(2)
-  else if (thisPres .ge. 975 .and. thisPres .lt. 990)
-    polyres@gsMarkerColor = (/"orange"/)
-    lineres@gsLineColor = (/"orange"/)
-    lineres@gsLineThicknessF = linethicknesses(3)
-  else if (thisPres .ge. 960 .and. thisPres .lt. 975)
-    polyres@gsMarkerColor = (/"darkorange3"/)
-    lineres@gsLineColor = (/"darkorange3"/)
-    lineres@gsLineThicknessF  = linethicknesses(4)
-  else
-    polyres@gsMarkerColor = (/"red"/) 
-    lineres@gsLineColor = (/"red"/)
-    lineres@gsLineThicknessF  = linethicknesses(5)
-  end if
-  end if
-  end if
-  end if
-  end if
+    if (thisPres .gt. 1010)
+      polyres@gsMarkerColor = (/"blue"/)
+      lineres@gsLineColor = (/"blue"/)
+      lineres@gsLineThicknessF = linethicknesses(0)
+    else if (thisPres .ge. 1000 .and. thisPres .lt. 1010)
+      polyres@gsMarkerColor = (/"green3"/)
+      lineres@gsLineColor = (/"green3"/)
+      lineres@gsLineThicknessF = linethicknesses(1)
+    else if (thisPres .ge. 990 .and. thisPres .lt. 1000)
+      polyres@gsMarkerColor = (/"yellow2"/)
+      lineres@gsLineColor = (/"yellow2"/)
+      lineres@gsLineThicknessF = linethicknesses(2)
+    else if (thisPres .ge. 975 .and. thisPres .lt. 990)
+      polyres@gsMarkerColor = (/"orange"/)
+      lineres@gsLineColor = (/"orange"/)
+      lineres@gsLineThicknessF = linethicknesses(3)
+    else if (thisPres .ge. 960 .and. thisPres .lt. 975)
+      polyres@gsMarkerColor = (/"darkorange3"/)
+      lineres@gsLineColor = (/"darkorange3"/)
+      lineres@gsLineThicknessF  = linethicknesses(4)
+    else
+      polyres@gsMarkerColor = (/"red"/) 
+      lineres@gsLineColor = (/"red"/)
+      lineres@gsLineThicknessF  = linethicknesses(5)
+    end if
+    end if
+    end if
+    end if
+    end if
   
- txres               = True                            
- txres@txFontHeightF = 0.01             ; Set the font height
+   txres               = True                            
+   txres@txFontHeightF = 0.01             ; Set the font height
   
-  if (j .ne. 0) then
-    dum(i,j) = gsn_add_polyline(wks,map,(/lon(i,j),lon(i,j-1)/),(/lat(i,j),lat(i,j-1)/),lineres)
+    if (j .ne. 0) then
+      dum(j) = gsn_add_polyline(wks,map,(/lon(j),lon(j-1)/),(/lat(j),lat(j-1)/),lineres)
+    end if
+  
   end if
-  
-end if
 
-end do
 end do
 
 
@@ -230,16 +226,6 @@ resP@gsnPanelFigureStringsFontHeightF = 0.027
 gsn_panel(wks,map,(/1,1/),resP)             ; now draw as one plot
 
 
-
-delete(lat)
-delete(lon)
-delete(pres)
-delete(traj_data)
-delete(lines)
-delete(RSIcat)
-delete(nstorms)
-
-end do
 
 
 
