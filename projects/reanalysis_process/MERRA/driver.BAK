@@ -1,0 +1,28 @@
+#!/bin/bash
+
+##=======================================================================
+#BSUB -a poe                     # use LSF openmp elim
+#BSUB -N
+#BSUB -n 1                      # yellowstone setting
+#BSUB -o out.%J                  # output filename
+#BSUB -e out.%J                  # error filename
+#BSUB -q geyser                # queue
+#BSUB -J h1_process
+#BSUB -W 12:00                    # wall clock limit
+#BSUB -P P35201098               # account number
+
+################################################################
+
+date
+
+dates=`ls /glade/u/home/zarzycki/scratch/MERRA/MERRA*2005*.nc | cut -c 74-81`
+shopt -s nullglob
+for f in $dates
+do
+  echo $f
+  ncl generateTrackerFilesMERRA.ncl 'YYYYMMDD="'$f'"'
+done
+
+date
+
+

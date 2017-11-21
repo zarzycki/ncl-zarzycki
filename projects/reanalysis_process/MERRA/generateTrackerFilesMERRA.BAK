@@ -1,0 +1,224 @@
+;========================================================
+;
+;========================================================
+load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
+load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
+;load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
+load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
+;========================================================
+begin
+
+;YYYYMMDD="20051231"
+write_output = True
+
+; Get YYYYMMDDHH from the initdate string
+dtime_map = (/4,2,2/)
+tst_dtime = str_split_by_length(YYYYMMDD, dtime_map)
+yyyy=tst_dtime(0)
+mm=tst_dtime(1)
+dd=tst_dtime(2)
+print("Processing: "+yyyy+" "+mm+" "+dd)
+
+presLevDir = "/glade/u/home/zarzycki/scratch/MERRA/"
+modlLevDir = "/glade/u/home/zarzycki/scratch/MERRA/"
+presLevFlName = "MERRA300.prod.assim.inst6_3d_ana_Np."+yyyy+mm+dd+".hdf"
+modlLevFlName = "MERRA300.prod.assim.inst6_3d_ana_Nv."+yyyy+mm+dd+".hdf"
+print("PRES LEVS:    "+presLevDir+"/"+presLevFlName)
+print("MODL LEVS:    "+modlLevDir+"/"+modlLevFlName)
+
+presLevFile = addfile(presLevDir+"/"+presLevFlName,"r")
+modlLevFile = addfile(modlLevDir+"/"+modlLevFlName,"r")
+
+timeOrig = presLevFile->TIME_EOSGRID
+; Cleaning up time
+
+utc_date = cd_calendar(timeOrig, 0)
+year   = tointeger(utc_date(:,0))
+month  = tointeger(utc_date(:,1))
+day    = tointeger(utc_date(:,2))
+hour   = tointeger(utc_date(:,3))
+minute = tointeger(utc_date(:,4))
+second = utc_date(:,5)
+newunits = "days since "+yyyy+"-"+mm+"-"+dd+" 00:00:00"
+time = cd_inv_calendar(year,month,day,hour,minute,second,newunits, 0) 
+  
+latitude  = presLevFile->YDim_EOSGRID
+longitude = presLevFile->XDim_EOSGRID
+preslevs = presLevFile->Height_EOSGRID
+
+U850 = presLevFile->U(:,{850},:,:)
+V850 = presLevFile->V(:,{850},:,:)
+
+T200 = presLevFile->T(:,{200},:,:)
+T300 = presLevFile->T(:,{300},:,:)
+T400 = presLevFile->T(:,{400},:,:)
+T500 = presLevFile->T(:,{500},:,:)
+
+Z1000= presLevFile->H(:,{1000},:,:)
+Z500 = presLevFile->H(:,{500},:,:)
+Z400 = presLevFile->H(:,{400},:,:)
+Z300 = presLevFile->H(:,{300},:,:)
+Z200 = presLevFile->H(:,{200},:,:)
+
+PSL  = presLevFile->SLP(:,:,:)
+
+modllevs = modlLevFile->Height_EOSGRID
+
+UBOT = modlLevFile->U(:,(dimsizes(modllevs)-1),:,:)
+VBOT = modlLevFile->V(:,(dimsizes(modllevs)-1),:,:)
+
+; Poisson grid filling since MERRA on pressure levels are not filled in
+guess     = 1                ; use zonal means
+is_cyclic = True             ; cyclic [global]
+nscan     = 1500             ; usually much less than this
+eps       = 1.e-2            ; variable dependent
+relc      = 0.6              ; relaxation coefficient
+opt       = 0                ; not used
+
+poisson_grid_fill(U850, is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(V850, is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(T200, is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(T300, is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(T400, is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(T500, is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(Z1000,is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(Z500, is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(Z400, is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(Z300, is_cyclic, guess, nscan, eps, relc, opt)
+poisson_grid_fill(Z200, is_cyclic, guess, nscan, eps, relc, opt)
+
+; we need to interpolate to 0.5deg by 0.5deg. this is only for longitude
+
+degRes = 0.5
+lonFloat = fspan(-180,180-degRes,toint(360/degRes))
+lon = todouble(lonFloat)
+copy_VarAtts(longitude,lon)
+lat = latitude ; we will keep lat and latitude the same
+
+U850_= linint2(longitude,latitude,U850,True,lon,lat,0)
+V850_= linint2(longitude,latitude,V850,True,lon,lat,0)
+UBOT_= linint2(longitude,latitude,UBOT,True,lon,lat,0)
+VBOT_= linint2(longitude,latitude,VBOT,True,lon,lat,0)
+PSL_ = linint2(longitude,latitude,PSL ,True,lon,lat,0)
+T200_= linint2(longitude,latitude,T200,True,lon,lat,0)
+T300_= linint2(longitude,latitude,T300,True,lon,lat,0)
+T400_= linint2(longitude,latitude,T400,True,lon,lat,0)
+T500_= linint2(longitude,latitude,T500,True,lon,lat,0)
+Z1000_=linint2(longitude,latitude,Z1000,True,lon,lat,0)
+Z500_= linint2(longitude,latitude,Z500,True,lon,lat,0)
+Z400_= linint2(longitude,latitude,Z400,True,lon,lat,0)
+Z300_= linint2(longitude,latitude,Z300,True,lon,lat,0)
+Z200_= linint2(longitude,latitude,Z200,True,lon,lat,0)
+
+
+U850_!0    = "time"
+U850_!1    = "lat"
+U850_!2    = "lon"
+U850_&time = time
+U850_&lat  = lat
+U850_&lon  = lon 
+V850_!0    = "time"
+V850_!1    = "lat"
+V850_!2    = "lon"
+V850_&time = time
+V850_&lat  = lat
+V850_&lon  = lon 
+UBOT_!0    = "time"
+UBOT_!1    = "lat"
+UBOT_!2    = "lon"
+UBOT_&time = time
+UBOT_&lat  = lat
+UBOT_&lon  = lon 
+VBOT_!0    = "time"
+VBOT_!1    = "lat"
+VBOT_!2    = "lon"
+VBOT_&time = time
+VBOT_&lat  = lat
+VBOT_&lon  = lon 
+PSL_!0    = "time"
+PSL_!1    = "lat"
+PSL_!2    = "lon"
+PSL_&time = time
+PSL_&lat  = lat
+PSL_&lon  = lon 
+T200_!0    = "time"
+T200_!1    = "lat"
+T200_!2    = "lon"
+T200_&time = time
+T200_&lat  = lat
+T200_&lon  = lon 
+T300_!0    = "time"
+T300_!1    = "lat"
+T300_!2    = "lon"
+T300_&time = time
+T300_&lat  = lat
+T300_&lon  = lon 
+T400_!0    = "time"
+T400_!1    = "lat"
+T400_!2    = "lon"
+T400_&time = time
+T400_&lat  = lat
+T400_&lon  = lon 
+T500_!0    = "time"
+T500_!1    = "lat"
+T500_!2    = "lon"
+T500_&time = time
+T500_&lat  = lat
+T500_&lon  = lon 
+Z200_!0    = "time"
+Z200_!1    = "lat"
+Z200_!2    = "lon"
+Z200_&time = time
+Z200_&lat  = lat
+Z200_&lon  = lon
+copy_VarMeta(Z200_,Z1000_)
+copy_VarMeta(U850_,Z300_)
+copy_VarMeta(U850_,Z400_)
+copy_VarMeta(U850_,Z500_)
+
+VR850 = V850_
+VR850 = uv2vrF(U850_,V850_)
+VR850SM = smth9_Wrap(VR850, 0.50, 0.50, True)
+guess     = 1                ; use zonal means
+is_cyclic = True             ; cyclic [global]
+nscan     = 50             ; usually much less than this
+eps       = 1.e-2            ; variable dependent
+relc      = 0.5              ; relaxation coefficient
+opt       = 0                ; not used
+poisson_grid_fill( VR850SM, is_cyclic, guess, nscan, eps, relc, opt)
+
+
+
+if (write_output) then
+	print("Writing output file!")
+	outDir = "/glade/scratch/zarzycki/h1files/MERRA/"
+	outFileName = "MERRA.h1."+yyyy+mm+dd+".nc"
+	system("/bin/rm -f "+outDir+"/"+outFileName)   ; remove any pre-existing file
+	ncdf     = addfile(outDir+"/"+outFileName ,"c")  ; open output netCDF file
+
+	; make time and UNLIMITED dimension      ; recommended  for most applications
+	filedimdef(ncdf,"time",-1,True) 
+
+	;ncdf->lat = lat
+	;ncdf->lon = lon
+
+	ncdf->U850 = U850_         
+	ncdf->V850 = V850_
+	ncdf->UBOT = UBOT_         
+	ncdf->VBOT = VBOT_
+	ncdf->T200 = T200_ 
+	ncdf->T300 = T300_  
+	ncdf->T400 = T400_  
+	ncdf->T500 = T500_        
+	ncdf->PSL  = PSL_
+	ncdf->Z200 = Z200_ 
+	ncdf->Z300 = Z300_ 
+	ncdf->Z400 = Z400_ 
+	ncdf->Z500 = Z500_ 
+	ncdf->Z1000= Z1000_
+	ncdf->ZBOT= Z1000_
+	ncdf->VR850SM = VR850SM
+	ncdf->VR850=VR850
+end if
+
+end
