@@ -13,16 +13,18 @@ load "/glade/u/home/zarzycki/ncl/functions/trackDensity.ncl"
 begin
 
 out_type="x11"
-RSIthresh=2
+RSIthresh=0
+prescut=1000.
+plot_diff_abs=True
 
-trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.CAT","/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.2071.CAT"/)
-RSIfile = (/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
-nyrs = (/16*30,10*30/)
+trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.ALL","/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.2071.ALL"/)
+RSIfile = (/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.PRECT.tempest.csv"/)
+nyrs = (/16*35,10*35/)
 nyrs = nyrs / 10   ; change normalization to "per decade"
 
 ncols = 9                     ; assign number of columns
 
-gridsize=8.0
+gridsize=4.0
 
 delim = ","
 
@@ -76,8 +78,9 @@ do z = 0,ncases-1
   cmon = toint(ndtooned(xmon))
 
   ; filter only storms with SLP less than prescut
-  ;clat = where(cpres.lt.prescut,clat,clat@_FillValue)
-  ;clon = where(cpres.lt.prescut,clon,clon@_FillValue)
+  clat = where(cpres.lt.prescut,clat,clat@_FillValue)
+  clon = where(cpres.lt.prescut,clon,clon@_FillValue)
+  cmon = where(cpres.lt.prescut,cmon,cmon@_FillValue)
 
   ; Calculate track density
   count1 = track_density(gridsize,0.0,clat,clon,False)
@@ -112,8 +115,10 @@ count_diff = countArr(1,:,:) - countArr(0,:,:)
 countArr = where(countArr.eq.0, countArr@_FillValue,countArr)
 count_diff = where(count_diff.eq.0, count_diff@_FillValue,count_diff)
 
-count_diff = 100. * count_diff / countArr(0,:,:)
-count_diff = where(countArr(1,:,:) .ge. 1.5, count_diff, count_diff@_FillValue)
+if (.not. plot_diff_abs) then
+  count_diff = 100. * count_diff / countArr(0,:,:)
+  count_diff = where(countArr(1,:,:) .ge. 10., count_diff, count_diff@_FillValue)
+end if
 
 ;************************************************
 ; create plot
@@ -124,7 +129,7 @@ plotname = "tmp"
 wks = gsn_open_wks(out_type,plotname)
 plot = new(3,"graphic")
 
-colorMap1="BlAqGrYeOrRe"
+;colorMap1="GMT_hot"
 colorMap2="BlueWhiteOrangeRed"
 
 res                       = True     ; plot mods desired
@@ -139,25 +144,37 @@ res@cnLineLabelsOn  = False
 res@lbLabelStride = 2
 res@gsnCenterString       = ""
 
-res@mpMinLatF             = 0.
-res@mpMaxLatF             = 90.
-res@mpMinLonF             = 250.
-res@mpMaxLonF             = 340.
+res@mpMinLatF             = 20.
+res@mpMaxLatF             = 70.
+res@mpMinLonF             = 260.
+res@mpMaxLonF             = 310.
 ;res@mpCenterLonF          = 180.
 
 ; plot absolute data
 res@cnLevelSelectionMode  = "ManualLevels"
 res@cnMinLevelValF        = 0.0
-res@cnMaxLevelValF        = 15.0
-res@cnLevelSpacingF       = res@cnMaxLevelValF/15.
-res@cnFillPalette=colorMap1
+res@cnMaxLevelValF        = 100.0
+res@cnLevelSpacingF       = res@cnMaxLevelValF/10.
+
+cmap = read_colormap_file("GMT_hot")
+res@cnFillPalette=cmap(::-1,:)
+delete(cmap)
+
 plot(0) = gsn_csm_contour_map_ce(wks,countArr(0,:,:),res)
 plot(1) = gsn_csm_contour_map_ce(wks,countArr(1,:,:),res)
 ; plot differences
 res@cnLevelSelectionMode  = "ManualLevels"
-res@cnMinLevelValF        = -50.0
-res@cnMaxLevelValF        = 50.0
-res@cnLevelSpacingF       = res@cnMaxLevelValF/10.
+if (plot_diff_abs) then
+  res@cnMinLevelValF        = -20.0
+  res@cnMaxLevelValF        = 20.0
+  res@cnLevelSpacingF       = (res@cnMaxLevelValF-res@cnMinLevelValF)/10.
+else
+  res@cnMinLevelValF        = -50.0
+  res@cnMaxLevelValF        = 50.0
+  res@cnLevelSpacingF       = res@cnMaxLevelValF/10.
+end if
+
+delete(res@cnFillPalette)
 res@cnFillPalette=colorMap2
 
 plot(2) = gsn_csm_contour_map_ce(wks,count_diff(:,:),res)

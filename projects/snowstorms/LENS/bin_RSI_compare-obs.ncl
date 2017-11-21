@@ -12,7 +12,7 @@ begin
 plot_log=False
 out_type="pdf"
 out_string="low-res-ASD-RSI"
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_11.csv.SNOW.tempest.csv"/)
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.Ye-9_12.csv.SNOW.tempest.csv"/)
 ;modelfiles=(/"RSI-ne0conus30x8.csv","RSI-mp15a-120a-US.csv"/)
 ;modelfiles=(/"RSI-ne30.csv","RSI-mp120a.csv"/)
 ;modelcolors=(/"red","blue"/)
@@ -58,7 +58,7 @@ do i = 0,dimsizes(RSIcatArray)-1
   RSInumArray(z,i) = num(RSIcat.eq.RSIcatArray(i))
 end do
 
-MM=where(RSIcat.ge.3,MM,MM@_FillValue)
+MM=where(RSIcat.ge.1,MM,MM@_FillValue)
 do jj = 0,dimsizes(MMArray)-1
   MMnumArray(z,jj) = num(MM.eq.MMArray(jj))
 end do

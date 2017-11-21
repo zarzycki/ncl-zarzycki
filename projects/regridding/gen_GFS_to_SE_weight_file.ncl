@@ -10,9 +10,9 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 
-dstGridFile="natlantic_30_x4.g_scrip.nc"
-GFSres="0.50" ;0.50 or 0.25
-gridName="natlantic_30_x4"
+dstGridFile="conus_30_x8.g_scrip.nc"
+GFSres="0.25" ;0.50 or 0.25
+gridName="conus_30_x8"
 InterpMethod="patch"
 
 if (InterpMethod .eq. "patch") then

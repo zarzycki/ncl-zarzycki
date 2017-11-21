@@ -17,7 +17,7 @@ RSIthresh=3
 ; use running smoother over trajectory?
 do_smooth_traj=True
 
-trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.ALL"/)
+trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/LENS-8/tempest.LENS.1990.ALL"/)
 RSIfile = (/"/glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
 ncols = 9                     ; assign number of columns
 
@@ -84,10 +84,10 @@ res@mpInlandWaterFillColor = res@mpOceanFillColor
 res@mpGreatCircleLinesOn = True
 res@mpOutlineBoundarySets = "National"
  
-res@mpMinLatF             = 10
-res@mpMaxLatF             = 80
-res@mpMinLonF             = 220
-res@mpMaxLonF             = 340
+res@mpMinLatF             = 20
+res@mpMaxLatF             = 60
+res@mpMinLonF             = 240
+res@mpMaxLonF             = 305
 ;map = gsn_csm_map_ce(wks,res)
 
 res@mpProjection = "Orthographic"
@@ -116,7 +116,8 @@ do j = 0,ntimes-1
 thisPres=pres(i,j)
 
 ;linethicknesses = (/1.5,1.5,1.5,1.5,2.0,2.5/)
-linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
+;linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
+linethicknesses = (/3.0,4.0,5.0,5.0,5.0,5.0/)
 
 
 if (.not.ismissing(thisPres))

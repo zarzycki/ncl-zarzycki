@@ -12,20 +12,18 @@ begin
 
 output_type="x11"
 
-; JRA
-;stormID=14
-;year=2010
+;;; JRA
+;stormID=21
+;year=1993
 ;trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.JRA."+year+"."+year
 ;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
 
-;/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS.1990.035.5e-9_12.nc.tempest.nc,XXX,00233,1995020700,090, 32.61,5
-;/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS.1990.035.5e-9_12.nc.tempest.nc,XXX,00346,1997120612,126, 48.44,5
-;/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS.1990.001.5e-9_12.nc.tempest.nc	XXX	89	1991121806	90	16.8	4
 
-stormID=89
-ensmem="001"
+;;; LENS
+stormID=189
+ensmem="007"
 year=1990
-trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
+trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/LENS-8/tempest.LENS."+year+"."+ensmem
 stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
 
 ncols = 9                     ; assign number of columns
@@ -64,7 +62,6 @@ lat = runave_Wrap(lat,nave,opt)
 ;--------------------------------------------------------
 print("Beginning plot sequence")
 wks  = gsn_open_wks(output_type,"latlon_traj_plot")
-gsn_define_colormap(wks,"MPL_BuPu")   ; choose colormap
 map = new(1,graphic)
   
 res  = True
@@ -72,15 +69,15 @@ res@gsnDraw    = False
 res@gsnFrame   = False
 res@gsnMaximize = True
 res@mpFillOn             = True              ; turn off gray continents
-res@mpLandFillColor = "Tan"
+res@mpLandFillColor = "gray50"
 res@mpOceanFillColor = "LightBlue1"
 res@mpOutlineOn = True
 res@mpInlandWaterFillColor = res@mpOceanFillColor
 res@mpGreatCircleLinesOn = True
-res@mpOutlineBoundarySets = "National"
+res@mpOutlineBoundarySets = "GeophysicalAndUSStates"
  
-res@mpMinLatF             = 30
-res@mpMaxLatF             = 60
+res@mpMinLatF             = 25
+res@mpMaxLatF             = 55
 res@mpMinLonF             = 260
 res@mpMaxLonF             = 300
 ;map = gsn_csm_map_ce(wks,res)
@@ -92,21 +89,33 @@ res@mpLimitMode           = "LatLon"
 res@mpCenterLatF      =  45.
 res@mpCenterLonF      =  280.
 
+;gsn_define_colormap(wks,"MPL_BuPu")   ; choose colormap
+res@cnLevelSelectionMode = "ExplicitLevels"
+res@cnLevels    = (/ 4., 10., 20., 30./)
+res@cnFillColors = (/"gray85","white","lightskyblue","dodgerblue3","red"/)
+
 res@gsnSpreadColors     = True         ; Use full colormap, but start
 res@cnFillOn            = True         ; Turn on contour fill
 res@cnLinesOn           = False        ; Turn off contour lines
 res@cnLineLabelsOn      = False        ; Turn off contour line labels
 res@lbLabelAutoStride   = True         ; Clean up labelbar labels.
-res@cnFillMode          = "RasterFill"
+res@cnFillMode          = "AreaFill"
 
 map = gsn_csm_contour_map(wks,SNOW,res)
 
 ;gsn_define_colormap(wks,"rainbow+white+gray")
 polyres               = True          ; poly marker mods desired 
 polyres@gsMarkerIndex = 1            ; choose circle as polymarker
+polyres@gsMarkerSizeF = 0.05
+
+polyresBack=polyres
+polyresBack@gsMarkerSizeF = 0.075
+polyresBack@gsMarkerColor = (/"black"/) 
+
 lineres = True
 
-dum = new((/ntimes/),graphic)
+
+dum = new((/2,ntimes/),graphic)
 
 do j = 0,ntimes-1
 
@@ -151,8 +160,13 @@ do j = 0,ntimes-1
    txres               = True                            
    txres@txFontHeightF = 0.01             ; Set the font height
   
-    if (j .ne. 0) then
-      dum(j) = gsn_add_polyline(wks,map,(/lon(j),lon(j-1)/),(/lat(j),lat(j-1)/),lineres)
+    ;if (j .ne. 0) then
+    ;  dum(j) = gsn_add_polymarker(wks,map,(/lon(j),lon(j-1)/),(/lat(j),lat(j-1)/),lineres)
+    ;end if
+
+    if (j .ne. -1) then
+      dum(0,j) = gsn_add_polymarker(wks,map,(/lon(j)/),(/lat(j)/),polyresBack)
+      dum(1,j) = gsn_add_polymarker(wks,map,(/lon(j)/),(/lat(j)/),polyres)
     end if
   
   end if
