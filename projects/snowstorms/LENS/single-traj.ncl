@@ -11,20 +11,30 @@ load "../../../functions/getTrajectories.ncl"
 begin
 
 output_type="x11"
+smooth_traj=True    ; do a running average on lat/lon to produce smoother PSL trajs
+underlayPop=True
 
 ;;; JRA
-;stormID=21
-;year=1993
-;trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.JRA."+year+"."+year
-;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
-
+; 1993 blizzard -- 21,1993
+; 2010 snowmaggedon -- 7,2010
+; 2016 jonas,snowzilla -- 6,2016
+stormID=6
+year=2016
+trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.JRA."+year+"."+year
+stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
 
 ;;; LENS
-stormID=189
-ensmem="007"
-year=1990
-trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/LENS-8/tempest.LENS."+year+"."+ensmem
-stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
+;ensmem="027"
+;stormID=374
+;year=1990
+;trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
+;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
+
+if (underlayPop) then
+  popFile=addfile("/glade/u/home/zarzycki/snow-tracking/gen_pop_files/population.nc","r")
+  POP=popFile->POP
+  POP=POP/1000.
+end if
 
 ncols = 9                     ; assign number of columns
 
@@ -41,116 +51,163 @@ nstorms = ndims(0)
 ncols   = ndims(1)
 ntimes  = ndims(2)
 
-; need to be modified to 2,3,4 if using latlon data
 lon = traj_data(stormID,2,:)
 lat = traj_data(stormID,3,:)
 pres = traj_data(stormID,4,:)/100.
+yyyy = toint(traj_data(stormID,5,:))
+mm = toint(traj_data(stormID,6,:))
+dd = toint(traj_data(stormID,7,:))
+hh = toint(traj_data(stormID,8,:))
+
+yyyymmddhh=yyyy+mm+dd+hh
 
 f = addfile(stormfile,"r")
 
 SNOW=f->CUM_SNOWFALL(stormID,:,:)
 SNOW=SNOW*12
-SNOW=where(SNOW.lt.1.0,SNOW@_FillValue,SNOW)
+SNOW=where(ismissing(SNOW),0.0,SNOW)
 
 ; Smoother?
-
-nave = 3
-opt = 0
-lon = runave_Wrap(lon,nave,opt)
-lat = runave_Wrap(lat,nave,opt)
+if (smooth_traj) then
+  cleanix = ind(.not.ismissing(lon))
+  loncl=lon(cleanix)
+  latcl=lat(cleanix)
+  nave = 3
+  opt = 1
+  loncl = runave_Wrap(loncl,nave,opt)
+  latcl = runave_Wrap(latcl,nave,opt)
+  lat(min(cleanix):max(cleanix))=latcl
+  lon(min(cleanix):max(cleanix))=loncl
+end if
 
 ;--------------------------------------------------------
 print("Beginning plot sequence")
 wks  = gsn_open_wks(output_type,"latlon_traj_plot")
 map = new(1,graphic)
-  
+
 res  = True
 res@gsnDraw    = False
 res@gsnFrame   = False
 res@gsnMaximize = True
 res@mpFillOn             = True              ; turn off gray continents
-res@mpLandFillColor = "gray50"
+res@mpLandFillColor = "gray70"
 res@mpOceanFillColor = "LightBlue1"
 res@mpOutlineOn = True
 res@mpInlandWaterFillColor = res@mpOceanFillColor
 res@mpGreatCircleLinesOn = True
 res@mpOutlineBoundarySets = "GeophysicalAndUSStates"
+res@mpGeophysicalLineThicknessF = 2.0
+res@mpUSStateLineThicknessF = 2.0
  
-res@mpMinLatF             = 25
-res@mpMaxLatF             = 55
-res@mpMinLonF             = 260
+res@mpMinLatF             = 30
+res@mpMaxLatF             = 50
+res@mpMinLonF             = 270
 res@mpMaxLonF             = 300
-;map = gsn_csm_map_ce(wks,res)
-
-res@gsnAddCyclic = False
 
 res@mpProjection = "Orthographic"
 res@mpLimitMode           = "LatLon"
 res@mpCenterLatF      =  45.
 res@mpCenterLonF      =  280.
 
-;gsn_define_colormap(wks,"MPL_BuPu")   ; choose colormap
-res@cnLevelSelectionMode = "ExplicitLevels"
-res@cnLevels    = (/ 4., 10., 20., 30./)
-res@cnFillColors = (/"gray85","white","lightskyblue","dodgerblue3","red"/)
+res@mpOutlineDrawOrder = "Draw"
 
-res@gsnSpreadColors     = True         ; Use full colormap, but start
-res@cnFillOn            = True         ; Turn on contour fill
-res@cnLinesOn           = False        ; Turn off contour lines
-res@cnLineLabelsOn      = False        ; Turn off contour line labels
-res@lbLabelAutoStride   = True         ; Clean up labelbar labels.
-res@cnFillMode          = "AreaFill"
+res@cnFillDrawOrder             = "PreDraw"
+res@mpFillAreaSpecifiers        = (/"Land"/)
+res@mpSpecifiedFillColors       = (/"transparent"/)
 
-map = gsn_csm_contour_map(wks,SNOW,res)
+if (underlayPop) then
+  res@lbLabelBarOn = False
+
+  res@cnFillOn            = True         ; Turn on contour fill
+
+  res@cnLinesOn           = False        ; Turn off contour lines
+  res@cnLineLabelsOn      = False        ; Turn off contour line labels
+  res@cnInfoLabelOn = False 
+
+  res@cnFillMode          = "RasterFill"
+  res@cnLevelSelectionMode = "ExplicitLevels"                     ; set explicit contour levels
+  cmap = read_colormap_file("GMT_gray")
+  res@cnFillPalette = cmap(::-1,:)     ; reverse color map
+  delete(cmap)
+
+  res@cnLevels    = (/ 10,15,25,50,100/) ; set levels
+  
+  map = gsn_csm_contour_map(wks,POP,res)
+else
+  map = gsn_csm_map(wks,res)
+end if
+
+cnres=True
+cnres@gsnDraw=False
+cnres@gsnFrame=False
+
+cnres@gsnSpreadColors     = True         ; Use full colormap, but start
+cnres@cnFillOn            = True         ; Turn on contour fill
+cnres@cnLinesOn           = False        ; Turn off contour lines
+cnres@cnLineLabelsOn      = False        ; Turn off contour line labels
+cnres@cnInfoLabelOn = False 
+
+cnres@lbLabelBarOn = False
+
+cnres@cnFillMode          = "AreaFill"
+
+cnres@cnFillDrawOrder             = "PreDraw"
+
+cnres@cnLevelSelectionMode = "ExplicitLevels"
+cnres@cnLevels    = (/ 1., 4., 10., 20., 30./)
+if (underlayPop) then
+  snowColors = (/"gray40","gray80","white","lightskyblue","dodgerblue3","red"/)
+else
+  snowColors = (/"gray70","gray85","white","lightskyblue","dodgerblue3","red"/)
+end if
+snowColorsRGBA=namedcolor2rgba(snowColors)
+if (underlayPop) then
+  ; set main opacity and then low contour opacity (i.e., sub 1" snow)
+  snowColorsRGBA(:,3)=0.65
+  snowColorsRGBA(0,3)=0.5
+end if
+cnres@cnFillColors=snowColorsRGBA
+
+; plot snow and overlay onto map
+mpid=gsn_csm_contour(wks,SNOW,cnres)
+overlay(map,mpid)
 
 ;gsn_define_colormap(wks,"rainbow+white+gray")
 polyres               = True          ; poly marker mods desired 
 polyres@gsMarkerIndex = 1            ; choose circle as polymarker
-polyres@gsMarkerSizeF = 0.05
+polyres@gsMarkerSizeF = 0.07
 
 polyresBack=polyres
-polyresBack@gsMarkerSizeF = 0.075
+polyresBack@gsMarkerSizeF = 0.1
 polyresBack@gsMarkerColor = (/"black"/) 
 
-lineres = True
-
+polyres@tfPolyDrawOrder = "PostDraw"
 
 dum = new((/2,ntimes/),graphic)
+  ;linethicknesses = (/1.5,1.5,1.5,1.5,2.0,2.5/)
+  linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
+  linethicknesses = linethicknesses * 3.0
 
 do j = 0,ntimes-1
 
   thisPres=pres(j)
 
-  ;linethicknesses = (/1.5,1.5,1.5,1.5,2.0,2.5/)
-  linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
-  linethicknesses = linethicknesses * 3.0
-
   if (.not.ismissing(thisPres))
+
+    print(hh(j)+" "+pres(j)+" "+lon(j)+" "+lat(j))
 
     if (thisPres .gt. 1010)
       polyres@gsMarkerColor = (/"blue"/)
-      lineres@gsLineColor = (/"blue"/)
-      lineres@gsLineThicknessF = linethicknesses(0)
     else if (thisPres .ge. 1000 .and. thisPres .lt. 1010)
       polyres@gsMarkerColor = (/"green3"/)
-      lineres@gsLineColor = (/"green3"/)
-      lineres@gsLineThicknessF = linethicknesses(1)
     else if (thisPres .ge. 990 .and. thisPres .lt. 1000)
       polyres@gsMarkerColor = (/"yellow2"/)
-      lineres@gsLineColor = (/"yellow2"/)
-      lineres@gsLineThicknessF = linethicknesses(2)
     else if (thisPres .ge. 975 .and. thisPres .lt. 990)
       polyres@gsMarkerColor = (/"orange"/)
-      lineres@gsLineColor = (/"orange"/)
-      lineres@gsLineThicknessF = linethicknesses(3)
     else if (thisPres .ge. 960 .and. thisPres .lt. 975)
       polyres@gsMarkerColor = (/"darkorange3"/)
-      lineres@gsLineColor = (/"darkorange3"/)
-      lineres@gsLineThicknessF  = linethicknesses(4)
     else
       polyres@gsMarkerColor = (/"red"/) 
-      lineres@gsLineColor = (/"red"/)
-      lineres@gsLineThicknessF  = linethicknesses(5)
     end if
     end if
     end if
@@ -182,19 +239,13 @@ lgres                    = True
 
 lgres@lgAutoManage       = False
 
-lgres@vpWidthF           = 0.17       ; was 0.08        ; width of legend (NDC)
-lgres@vpHeightF          = 0.13       ; was 0.08        ; height of legend (NDC)
-; lgres@lgBottomMarginF    = 0.17     ; was 0.25
+lgres@vpWidthF           = 0.23       ; was 0.08        ; width of legend (NDC)
+lgres@vpHeightF          = 0.20       ; was 0.08        ; height of legend (NDC)
 
 lgres@lgPerimFill        = 0                     ; Use solid fill (0) instead of the default hollow fill
 lgres@lgPerimFillColor   = "Background"
 
-;lgres@lgOrientation = "Horizontal"
-
-; lgres@lgBoxMajorExtentF  = 0.4
 lgres@lgBoxMinorExtentF  = 0.2	; controls how wide the box holding the legend items (lines and markers) can be in relation to legend
-
-; lgres@lgBoxBackground    = "PaleTurquoise3"
 
 lgres@lgMonoItemType        = False                 ; indicates that we wish to set the item types individually
 lgres@lgMonoMarkerIndex     = False
@@ -208,14 +259,14 @@ lgres@lgLabelFontAspectF      = 1.4
 lgres@lgLabelConstantSpacingF = 0.0
 
 legendType = "Markers"
-markerSize = .01
+markerSize = 0.02
 markerIndex = 16
 
 lgres@lgItemCount        = 6
 ;lgres@lgLineDashSegLenF  = 0.8
 lgres@lgItemTypes        = (/"Markers","Markers","Markers","Markers","Markers","Markers"/)
 lgres@lgMarkerIndexes    = (/      16,      16,      16,      16,      16,      16/)
-lgres@lgMarkerThicknesses  = (/    markerSize,    markerSize,    markerSize,    markerSize,    markerSize,    markerSize/)
+lgres@lgMarkerSizes  = (/    markerSize,    markerSize,    markerSize,    markerSize,    markerSize,    markerSize/)
 lgres@lgMarkerColors       = (/ "red",     "darkorange3",   "orange",  "yellow",   "green",    "blue"    /) ; colors for legend lines
 ;lgres@lgDashIndexes      = (/      0,          0,          0,         0,               0,      0      /) ; dash indexes
 legend_labels = (/"<950mb","950-965mb","965-980mb",\
@@ -224,18 +275,58 @@ legend_labels = (/"<950mb","950-965mb","965-980mb",\
 legend = gsn_create_legend(wks,lgres@lgItemCount,legend_labels,lgres)
 
 amres = True
-amres@amParallelPosF   = -0.30		    ; move legend to the right .37 formerly
-amres@amOrthogonalPosF = .27             ; move the legend down
+amres@amJust = "BottomRight"
+amres@amParallelPosF   = 0.49		    ; move legend to the right .37 formerly
+amres@amOrthogonalPosF = 0.49             ; move the legend down
 
 annoid1 = gsn_add_annotation(map,legend,amres)   ; add legend to plot
   
+
+
+
+
+; label bar
+nboxes = 5                            ; # of labelbar boxes
+
+lblabels    = (/"1-4","4-10","10-20","20-30","30+"/)
+
+lbres                           = True
+lbres@lbAutoManage              = False         ; we control label bar
+lbres@lbFillColors              = snowColors(1:5)
+lbres@lbMonoFillPattern         = True          ; one pattern, all solid
+
+lbres@vpWidthF           = 0.15       ; was 0.08        ; width of legend (NDC)
+lbres@vpHeightF          = 0.20       ; was 0.08        ; height of legend (NDC)
+
+lbres@lbPerimOn = True
+lbres@lbPerimFill        = 0
+lbres@lbPerimFillColor   = "Background"
+
+lbres@lbLabelFontHeightF = 0.018
+
+lbres@lbBoxMinorExtentF  = 0.2	; controls how wide the box holding the legend items (lines and markers) can be in relation to legend
+
+;lbres@lbLabelFontHeightF      = 0.09
+;lbres@lbLabelFontAspectF      = 1.4
+;lbres@lbLabelConstantSpacingF = 0.0
+
+lbid = gsn_create_labelbar(wks,nboxes,lblabels,lbres)
+
+amres2=True
+amres2@amJust = "BottomRight"
+amres2@amParallelPosF   = 0.29		    ; move legend to the right .37 formerly
+amres2@amOrthogonalPosF = 0.49             ; move the legend down
+
+annoid2 = gsn_add_annotation(map,lbid,amres2)
+
+
+
 print("Drawing plot")
 
 resP = True
 resP@amJust           = "TopLeft"
 
-;  resP@gsnPanelFigureStrings= (/"a."/)
-
+resP@gsnPanelFigureStrings= (/"ST: "+yyyy(0)+"-"+mm(0)+"-"+dd(0)+" "+hh(0)+"Z"/)
 resP@gsnPanelFigureStringsFontHeightF = 0.027
 gsn_panel(wks,map,(/1,1/),resP)             ; now draw as one plot
 

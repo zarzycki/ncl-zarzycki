@@ -67,8 +67,8 @@ end do
 ; calc historgrams
 binSettings=True
 binSettings@bin_min=0.0
-binSettings@bin_max=70.0
-nbins=10
+binSettings@bin_max=50.0
+nbins=12
 
 ap  = pdfx(doyArray(0,:), nbins, binSettings)
 bp  = pdfx(doyArray(1,:), nbins, binSettings)
@@ -81,8 +81,8 @@ xx(0,:) = ap@bin_center
 xx(1,:) = bp@bin_center
 
 yy      = new ( (/nVar, nBin/), typeof(ap))
-yy(0,:) = (/ ap*num(doyArray(0,:)) /)
-yy(1,:) = (/ bp*num(doyArray(1,:)) /)
+yy(0,:) = (/ ap*num(doyArray(0,:))/100. /)
+yy(1,:) = (/ bp*num(doyArray(1,:))/100. /)
 
 yy = where(yy.eq.0.0,yy@_FillValue,yy)
 ;yy(0,0) = 
@@ -104,6 +104,7 @@ res@xyDashPatterns = (/0,0/)
 res@tiYAxisString            = "Storm weekly prob. (%)"
 res@tiXAxisString            = "Day of Year"
 
+res@trYMinF           = 1.
 res@trXMinF           = 0.
 res@trXMaxF           = 70.
 

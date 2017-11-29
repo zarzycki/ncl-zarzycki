@@ -15,7 +15,7 @@ out_string="DoY-dist"
 modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
 modelcolors=(/"pink","lightblue"/)
 
-RSIthresh=1
+RSIthresh=3
 
 nyearsPerSample=(/35*16,35*16/)
 
