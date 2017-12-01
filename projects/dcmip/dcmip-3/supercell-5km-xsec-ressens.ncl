@@ -30,7 +30,7 @@ begin
 ;     lat:   arbitrary
 ;----------------------------------------------------------------------------
 
-;model="ACME"
+;model="TEMPEST"
 resols=(/"r400","r200","r100","r50"/)
 out_type="pdf"
 
@@ -47,6 +47,7 @@ out_type="pdf"
   plot = new(2,graphic)
   wplot = new(3,graphic)
   qrplot = new(3,graphic)
+  text = new(20,graphic)
 
 do ii = 0,dimsizes(resols)-1
 resol=resols(ii)
@@ -410,10 +411,19 @@ end if
 
   res@tmXTLabelsOn      = False
   res@tmXTOn            = False
+; turn off ticks on bottom
+  res@tmXBLabelsOn      = False
+  res@tmXBOn            = False
+
+
+  res@tmXBLabelFontHeightF = 0.03
+  res@tmYLLabelFontHeightF = res@tmXBLabelFontHeightF
 
   res@gsnSpreadColors = True
 
+  res@lbLabelFontHeightF = 0.03
   res@lbOrientation = "vertical"
+
   res@gsnLeftString=""
   res@gsnRightString=""
 
@@ -423,8 +433,11 @@ end if
   res@gsnContourZeroLineThicknessF = 0.0
   res@gsnContourNegLineDashPattern = 1
 
+
+
 ;  res@lbLabelBarOn = False
   res@tmYLLabelsOn = True
+
 
   resw = res
   resw@gsnSpreadColorStart = 8
@@ -439,8 +452,8 @@ end if
   resqr@gsnSpreadColorEnd = 30
   resqr@cnLevelSelectionMode = "ManualLevels"
   resqr@cnLevelSpacingF = 1.0
-  resqr@cnMinLevelValF = 1.0
-  resqr@cnMaxLevelValF = 12.0
+  resqr@cnMinLevelValF = 2.0
+  resqr@cnMaxLevelValF = 14.0
 
 ;------------------------------------------------
 ; Vertical velocity plots
@@ -466,12 +479,18 @@ end if
 ; Rain water plots
 ;------------------------------------------------
 
+ ;txres               = True                            
+ ;txres@txFontHeightF = 0.02             ; Set the font height
+ ;txres@amJust           = "TopCenter"
+ ;label = "mmmmmmmmm"                     ; txFuncCode is ~ 
+
   resqr@trXMinF = -20.0+loncorr
   resqr@trXMaxF =  30.0+loncorr
   if (ii .eq. 0)
     plot(1) = gsn_csm_contour(wks, qr_5km(plot_index,:,:), resqr)
   else
     qrplot(ii-1) = gsn_csm_contour(wks, qr_5km(plot_index,:,:), resqr)
+    ;text(ii) = gsn_add_text(wks,qrplot(ii-1),label,10.,-0.,txres)
   end if
 
   if(ii .eq. 3) then
@@ -492,7 +511,11 @@ end do
   pres@gsnPanelTop = 0.8
   ;pres@gsnPanelYWhiteSpacePercent = 5
   ;pres@gsnPanelXWhiteSpacePercent = 5
-  pres@txString           = model+", +7200s, r400 -> r50"     ; use this for NCL V6.3.0 and earlier
+  ;pres@txString           = model+", +7200s, r400 -> r50"     ; use this for NCL V6.3.0 and earlier
+  pres@txString           = model+""    ; use this for NCL V6.3.0 and earlier
+
+  ;gsn_text_ndc(wks,label,-0.,-0.,txres)
+
   gsn_panel(wks, plot, (/2,1/), pres)
 
 end

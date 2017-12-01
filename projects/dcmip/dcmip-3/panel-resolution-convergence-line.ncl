@@ -21,7 +21,7 @@ modellist=(/"ACME","CSU_CP","FV3","FVM","GEM","ICON","MPAS","NICAM","TEMPEST"/)
 ;modellist=(/"CSU_CP","CSU_LZ"/)
 reslist=(/"r50","r100","r200","r400"/)
 nres = dimsizes(reslist)
-colors = (/"grey15","grey30","grey60","grey90"/)
+colors = (/"black","grey40","grey60","grey85"/)
 
 ;------------------------------------------------
 ; Workspace
@@ -236,11 +236,12 @@ end do
   res@tmXBMinorOn       = True
   res@tmYLMinorOn       = True
 
-  res@xyLineThicknessF  = 3.0
+  res@xyLineThicknessF  = 4.0
   res@xyMarkLineMode    = "Lines"
   res@xyLineColors = colors
 
   res@tiMainString = model+""
+  res@tiMainFontHeightF = 0.04
 
   resw = res
 
@@ -249,20 +250,34 @@ end do
 ;------------------------------------------------
 
   resw@tiXAxisOn = True
-  resw@tiXAxisString = "time (s)"
+  if (ii .ge. 6) then
+    resw@tiXAxisString = "time (s)"
+  else
+    resw@tiXAxisString = ""
+  end if
 
   resw@tiYAxisOn = True
-  resw@tiYAxisString = "maximum vertical velocity (m/s)"
 
+  resw@tmXBLabelFontHeightF = 0.03
+  resw@tmYLLabelFontHeightF = resw@tmXBLabelFontHeightF
   resw@trXMinF = 0.0
   resw@trXMaxF = 7200.0
 
+  resw@tiXAxisFontHeightF = 0.03
+  resw@tiYAxisFontHeightF = resw@tiXAxisFontHeightF
+  resw@tiYAxisString=""
   if (whatVar .eq. "W" .or. whatVar .eq. "w") then
     resw@trYMinF = 0.0
     resw@trYMaxF = 70.0
+    if ( ii .eq. 0 .or. ii .eq. 3 .or. ii .eq. 6 ) then
+      resw@tiYAxisString = "maximum vertical velocity (m/s)"
+    end if
   else
     resw@trYMinF = 0.0
-    resw@trYMaxF = 300.0
+    resw@trYMaxF = 275.0
+    if ( ii .eq. 0 .or. ii .eq. 3 .or. ii .eq. 6 ) then
+      resw@tiYAxisString = "integrated precip. rate (x10^5 kg/s)"
+    end if
   end if
 
   resw@tmXBMode = "Manual"
@@ -270,30 +285,40 @@ end do
   resw@tmXBTickEndF = 7200.0
   resw@tmXBTickSpacingF = 1800.0
 
-  resw@tmYLMode = "Explicit"
-  resw@tmYLTickStartF = 0.0
-  resw@tmYLTickEndF = 50.0
+  ;resw@tmYLMode = "Explicit"
+  ;resw@tmYLTickStartF = 0.0
+  ;resw@tmYLTickEndF = 50.0
 
   plot(ii) = gsn_csm_xy(wks, time_s, maxw, resw)
 
-; add stuff
-  nboxes = nres
-  lgres                    = True          ; labelbar only resources
-  lgres@lgPerimOn          = False
-  lgres@lgLineColors       = colors ; labelbar colors
-  lgres@lgLineThicknessF   = 2.5
-  lgres@lgDashIndexes      = (/0,3,15,1,2/)
-  lgres@lgLabelFontHeightF = .04            ; legend label font thickness
-  lgres@lgBoxMinorExtentF  = 0.35
-  lgres@vpWidthF           = 0.30           ; width of legend (NDC)
-  lgres@vpHeightF          = 0.15           ; height of legend (NDC)
-  labels = reslist
-  id0 = gsn_create_legend(wks,nboxes,labels,lgres)
-  amres                  = True
-  amres@amJust           = "TopRight"
-  amres@amParallelPosF   = 0.55          ; Move legend to left/right
-  amres@amOrthogonalPosF = 0.28         ; Move legend up/down
-  annoid = gsn_add_annotation(plot(ii),id0,amres)
+; add legend
+  if (ii .eq. 0)
+    nboxes = nres
+    lgres                    = True          ; labelbar only resources
+    lgres@lgPerimOn          = False
+    lgres@lgLineColors       = colors ; labelbar colors
+    lgres@lgLineThicknessF   = res@xyLineThicknessF
+    lgres@lgMonoLineDashSegLen = True
+    lgres@lgMonoDashIndex = True
+    lgres@lgDashIndexes      = (/0,3,15,1,2/)
+    lgres@lgLabelFontHeightF = .06
+    lgres@lgBoxMinorExtentF  = 0.35
+    lgres@vpWidthF           = 0.30           ; width of legend (NDC)
+    lgres@vpHeightF          = 0.20           ; height of legend (NDC)
+    labels = reslist
+    id0 = gsn_create_legend(wks,nboxes,labels,lgres)
+    amres                  = True
+    if (whatVar .eq. "W" .or. whatVar .eq. "w") then
+      amres@amJust           = "BottomRight"
+      amres@amParallelPosF   = 0.48          ; Move legend to left/right
+      amres@amOrthogonalPosF = 0.48         ; Move legend up/down
+    else
+      amres@amJust           = "TopLeft"
+      amres@amParallelPosF   = -0.48          ; Move legend to left/right
+      amres@amOrthogonalPosF = -0.48         ; Move legend up/down
+    end if
+    annoid = gsn_add_annotation(plot(ii),id0,amres)
+  end if
 
   delete(whatVar)
 

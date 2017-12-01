@@ -534,10 +534,18 @@ end if
 
   res@tmXTLabelsOn      = False
   res@tmXTOn            = False
+; turn off ticks on bottom
+  res@tmXBLabelsOn      = False
+  res@tmXBOn            = False
+
+  res@tmXBLabelFontHeightF = 0.03
+  res@tmYLLabelFontHeightF = res@tmXBLabelFontHeightF
 
   res@gsnSpreadColors = True
 
+  res@lbLabelFontHeightF = 0.03
   res@lbOrientation = "vertical"
+
   res@gsnLeftString=""
   res@gsnRightString=""
 
@@ -563,8 +571,8 @@ end if
   resqr@gsnSpreadColorEnd = 30
   resqr@cnLevelSelectionMode = "ManualLevels"
   resqr@cnLevelSpacingF = 1.0
-  resqr@cnMinLevelValF = 1.0
-  resqr@cnMaxLevelValF = 12.0
+  resqr@cnMinLevelValF = 2.0
+  resqr@cnMaxLevelValF = 14.0
 
 ;------------------------------------------------
 ; Vertical velocity plots
@@ -619,7 +627,9 @@ end if
   pres@gsnPanelTop = 0.8
   ;pres@gsnPanelYWhiteSpacePercent = 5
   ;pres@gsnPanelXWhiteSpacePercent = 5
-  pres@txString           = model+" "+resol     ; use this for NCL V6.3.0 and earlier
+  ;pres@txString           = model+" "+resol     ; use this for NCL V6.3.0 and earlier
+  pres@txString           = model+""     ; use this for NCL V6.3.0 and earlier
+
   gsn_panel(wks, plot, (/2,1/), pres)
 
 end
