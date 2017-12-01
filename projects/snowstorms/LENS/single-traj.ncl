@@ -24,11 +24,11 @@ trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.JRA."+y
 stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
 
 ;;; LENS
-;ensmem="027"
-;stormID=374
-;year=1990
-;trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
-;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
+ensmem="027"
+stormID=374
+year=1990
+trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
+stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
 
 if (underlayPop) then
   popFile=addfile("/glade/u/home/zarzycki/snow-tracking/gen_pop_files/population.nc","r")
@@ -59,7 +59,10 @@ mm = toint(traj_data(stormID,6,:))
 dd = toint(traj_data(stormID,7,:))
 hh = toint(traj_data(stormID,8,:))
 
-yyyymmddhh=yyyy+mm+dd+hh
+yyyystr = sprinti("%04d",yyyy)
+mmstr = sprinti("%02d",mm)
+ddstr = sprinti("%02d",dd)
+hhstr = sprinti("%02d",hh)
 
 f = addfile(stormfile,"r")
 
@@ -188,6 +191,7 @@ dum = new((/2,ntimes/),graphic)
   linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
   linethicknesses = linethicknesses * 3.0
 
+mbthresh=(/1010,1000,990,975,960/)
 do j = 0,ntimes-1
 
   thisPres=pres(j)
@@ -196,15 +200,15 @@ do j = 0,ntimes-1
 
     print(hh(j)+" "+pres(j)+" "+lon(j)+" "+lat(j))
 
-    if (thisPres .gt. 1010)
+    if (thisPres .gt. mbthresh(0))
       polyres@gsMarkerColor = (/"blue"/)
-    else if (thisPres .ge. 1000 .and. thisPres .lt. 1010)
+    else if (thisPres .ge. mbthresh(1) .and. thisPres .lt. mbthresh(0))
       polyres@gsMarkerColor = (/"green3"/)
-    else if (thisPres .ge. 990 .and. thisPres .lt. 1000)
+    else if (thisPres .ge. mbthresh(2) .and. thisPres .lt. mbthresh(1))
       polyres@gsMarkerColor = (/"yellow2"/)
-    else if (thisPres .ge. 975 .and. thisPres .lt. 990)
+    else if (thisPres .ge. mbthresh(3) .and. thisPres .lt. mbthresh(2))
       polyres@gsMarkerColor = (/"orange"/)
-    else if (thisPres .ge. 960 .and. thisPres .lt. 975)
+    else if (thisPres .ge. mbthresh(4) .and. thisPres .lt. mbthresh(3))
       polyres@gsMarkerColor = (/"darkorange3"/)
     else
       polyres@gsMarkerColor = (/"red"/) 
@@ -269,8 +273,8 @@ lgres@lgMarkerIndexes    = (/      16,      16,      16,      16,      16,      
 lgres@lgMarkerSizes  = (/    markerSize,    markerSize,    markerSize,    markerSize,    markerSize,    markerSize/)
 lgres@lgMarkerColors       = (/ "red",     "darkorange3",   "orange",  "yellow",   "green",    "blue"    /) ; colors for legend lines
 ;lgres@lgDashIndexes      = (/      0,          0,          0,         0,               0,      0      /) ; dash indexes
-legend_labels = (/"<950mb","950-965mb","965-980mb",\
-               "980-995mb","995-1005mb",">1005mb"/)
+legend_labels = (/"<"+mbthresh(4)+"mb",""+mbthresh(4)+"-"+mbthresh(3)+"mb",""+mbthresh(3)+"-"+mbthresh(2)+"mb",\
+               ""+mbthresh(2)+"-"+mbthresh(1)+"mb",""+mbthresh(1)+"-"+mbthresh(0)+"mb",">"+mbthresh(0)+"mb"/)
 
 legend = gsn_create_legend(wks,lgres@lgItemCount,legend_labels,lgres)
 
@@ -288,7 +292,8 @@ annoid1 = gsn_add_annotation(map,legend,amres)   ; add legend to plot
 ; label bar
 nboxes = 5                            ; # of labelbar boxes
 
-lblabels    = (/"1-4","4-10","10-20","20-30","30+"/)
+quote = inttochar(34)
+lblabels    = (/"1-4"+quote,"4-10"+quote,"10-20"+quote,"20-30"+quote,"30"+quote+"+"/)
 
 lbres                           = True
 lbres@lbAutoManage              = False         ; we control label bar
@@ -326,7 +331,7 @@ print("Drawing plot")
 resP = True
 resP@amJust           = "TopLeft"
 
-resP@gsnPanelFigureStrings= (/"ST: "+yyyy(0)+"-"+mm(0)+"-"+dd(0)+" "+hh(0)+"Z"/)
+resP@gsnPanelFigureStrings= (/"ST: "+yyyystr(0)+"-"+mmstr(0)+"-"+ddstr(0)+" "+hhstr(0)+"Z"/)
 resP@gsnPanelFigureStringsFontHeightF = 0.027
 gsn_panel(wks,map,(/1,1/),resP)             ; now draw as one plot
 
