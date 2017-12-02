@@ -5,7 +5,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 
 begin
 
-outtype="pdf"
+outtype="x11"
 
 preclfile="slice-PRECL.nc"
 preccfile="slice-PRECC.nc"
@@ -48,18 +48,26 @@ minlat = 20.
 maxlon = -60.
 minlon = -90.
 
-do zz = 0,90
+; was 0,90
+do zz = 30,30
 
   res                 = True
 
   res@gsnDraw      = False                        ; don't draw yet
   res@gsnFrame     = False                        ; don't advance frame yet
-  res@gsnMaximize = True
+  ;res@gsnMaximize = True
 
   res@gsnAddCyclic = False                    ; Don't add a cyclic point.
 
   res@cnFillOn              = True
+
+
+  ;res@cnFillMode="RasterFill"
+
+  res@lbLabelBarOn = False
+  res@cnInfoLabelOn = False
   res@cnLinesOn   = False
+  res@cnLineLabelsOn = False
 
   resrain=res
 
@@ -96,14 +104,14 @@ do zz = 0,90
   delete(cmap)
   delete(cmap_interp)
   resrain@cnLevelSelectionMode = "ExplicitLevels"                        ; set explicit contour levels
-  resrain@cnLevels    = (/0.1,0.25,0.5,1.0,1.5,2.0,2.5,3.0,4.0,5.0/)        ; set levels
+  resrain@cnLevels    = (/0.2,0.5,1.0,1.5,2.0,2.5,3.0,4.0,5.0,7.5,10.,15.,25./)        ; set levels
   ;;;;;;;;;;
 
   plotrain = gsn_csm_contour_map(wks,PRECRA(zz,:,:),resrain)
 
   ;;;;;;;;
   ressn=res
-  cmap = read_colormap_file("WhiteBlue")
+  cmap = read_colormap_file("MPL_BuPu")
   cmap_dims = dimsizes(cmap)
   ncolors = cmap_dims(0)
   npairs = cmap_dims(1)
@@ -118,7 +126,7 @@ do zz = 0,90
   delete(cmap)
   delete(cmap_interp)
   ressn@cnLevelSelectionMode = "ExplicitLevels"                        ; set explicit contour levels
-  ressn@cnLevels    = (/0.1,0.25,0.5,1.0,1.5,2.0,2.5,3.0/)        ; set levels
+  ressn@cnLevels    = (/0.1,0.25,0.5,1.0,1.5,2.0,2.5,3.0,5.0,10./)        ; set levels
   ;;;;;;;;;;
 
   plotsnow = gsn_csm_contour(wks,PRECSN(zz,:,:),ressn)

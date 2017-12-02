@@ -14,6 +14,9 @@ output_type="x11"
 smooth_traj=True    ; do a running average on lat/lon to produce smoother PSL trajs
 underlayPop=True
 
+
+
+
 ;;; JRA
 ; 1993 blizzard -- 21,1993
 ; 2010 snowmaggedon -- 7,2010
@@ -23,9 +26,10 @@ year=2016
 trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.JRA."+year+"."+year
 stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
 
+
 ;;; LENS
-ensmem="027"
-stormID=374
+ensmem="035"
+stormID=346
 year=1990
 trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
 stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
@@ -159,15 +163,16 @@ cnres@cnFillDrawOrder             = "PreDraw"
 cnres@cnLevelSelectionMode = "ExplicitLevels"
 cnres@cnLevels    = (/ 1., 4., 10., 20., 30./)
 if (underlayPop) then
-  snowColors = (/"gray40","gray80","white","lightskyblue","dodgerblue3","red"/)
+  snowColors = (/"gray40","gray80","white","lightskyblue","dodgerblue3","tomato"/)
 else
-  snowColors = (/"gray70","gray85","white","lightskyblue","dodgerblue3","red"/)
+  snowColors = (/"gray70","gray85","white","lightskyblue","dodgerblue3","tomato"/)
 end if
 snowColorsRGBA=namedcolor2rgba(snowColors)
 if (underlayPop) then
   ; set main opacity and then low contour opacity (i.e., sub 1" snow)
   snowColorsRGBA(:,3)=0.65
   snowColorsRGBA(0,3)=0.5
+  ;snowColorsRGBA(5,3)=0.5
 end if
 cnres@cnFillColors=snowColorsRGBA
 
@@ -191,7 +196,11 @@ dum = new((/2,ntimes/),graphic)
   linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
   linethicknesses = linethicknesses * 3.0
 
-mbthresh=(/1010,1000,990,975,960/)
+mbthresh=(/1010,1000,990,980,970/)
+
+cmap = RGBtoCmap("cb-mono-orange-rgb.txt")
+print(cmap)
+
 do j = 0,ntimes-1
 
   thisPres=pres(j)
@@ -201,17 +210,17 @@ do j = 0,ntimes-1
     print(hh(j)+" "+pres(j)+" "+lon(j)+" "+lat(j))
 
     if (thisPres .gt. mbthresh(0))
-      polyres@gsMarkerColor = (/"blue"/)
+      polyres@gsMarkerColor = cmap(0,:)
     else if (thisPres .ge. mbthresh(1) .and. thisPres .lt. mbthresh(0))
-      polyres@gsMarkerColor = (/"green3"/)
+      polyres@gsMarkerColor = cmap(1,:)
     else if (thisPres .ge. mbthresh(2) .and. thisPres .lt. mbthresh(1))
-      polyres@gsMarkerColor = (/"yellow2"/)
+      polyres@gsMarkerColor = cmap(2,:)
     else if (thisPres .ge. mbthresh(3) .and. thisPres .lt. mbthresh(2))
-      polyres@gsMarkerColor = (/"orange"/)
+      polyres@gsMarkerColor = cmap(3,:)
     else if (thisPres .ge. mbthresh(4) .and. thisPres .lt. mbthresh(3))
-      polyres@gsMarkerColor = (/"darkorange3"/)
+      polyres@gsMarkerColor = cmap(4,:)
     else
-      polyres@gsMarkerColor = (/"red"/) 
+      polyres@gsMarkerColor = cmap(5,:)
     end if
     end if
     end if
@@ -271,7 +280,7 @@ lgres@lgItemCount        = 6
 lgres@lgItemTypes        = (/"Markers","Markers","Markers","Markers","Markers","Markers"/)
 lgres@lgMarkerIndexes    = (/      16,      16,      16,      16,      16,      16/)
 lgres@lgMarkerSizes  = (/    markerSize,    markerSize,    markerSize,    markerSize,    markerSize,    markerSize/)
-lgres@lgMarkerColors       = (/ "red",     "darkorange3",   "orange",  "yellow",   "green",    "blue"    /) ; colors for legend lines
+lgres@lgMarkerColors       = (/ cmap(5,:),     cmap(4,:),  cmap(3,:),  cmap(2,:),  cmap(1,:),    cmap(0,:)    /) ; colors for legend lines
 ;lgres@lgDashIndexes      = (/      0,          0,          0,         0,               0,      0      /) ; dash indexes
 legend_labels = (/"<"+mbthresh(4)+"mb",""+mbthresh(4)+"-"+mbthresh(3)+"mb",""+mbthresh(3)+"-"+mbthresh(2)+"mb",\
                ""+mbthresh(2)+"-"+mbthresh(1)+"mb",""+mbthresh(1)+"-"+mbthresh(0)+"mb",">"+mbthresh(0)+"mb"/)
