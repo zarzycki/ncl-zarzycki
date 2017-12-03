@@ -17,8 +17,9 @@ RSIthresh=3
 ; use running smoother over trajectory?
 do_smooth_traj=True
 
-trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/LENS-8/tempest.LENS.1990.ALL"/)
-RSIfile = (/"/glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
+ENS="ALL"   ; usually use ALL but can do single member for debugging
+trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990."+ENS/)
+RSIfile = (/"/glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.1990."+ENS+".5e-9_12.csv.SNOW.tempest.csv"/)
 ncols = 9                     ; assign number of columns
 
 delim = ","
@@ -77,16 +78,16 @@ res@gsnDraw    = False
 res@gsnFrame   = False
 res@gsnMaximize = True
 res@mpFillOn             = True              ; turn off gray continents
-res@mpLandFillColor = "Tan"
-res@mpOceanFillColor = "LightBlue1"
+res@mpLandFillColor = "gray15"  ; darkkhaki,darkolivegreen3
+res@mpOceanFillColor = "steelblue"  ;LightBlue1
 res@mpOutlineOn = True
 res@mpInlandWaterFillColor = res@mpOceanFillColor
 res@mpGreatCircleLinesOn = True
 res@mpOutlineBoundarySets = "National"
  
 res@mpMinLatF             = 20
-res@mpMaxLatF             = 60
-res@mpMinLonF             = 240
+res@mpMaxLatF             = 55
+res@mpMinLonF             = 245
 res@mpMaxLonF             = 305
 ;map = gsn_csm_map_ce(wks,res)
 
@@ -100,51 +101,64 @@ map = gsn_csm_map(wks,res)
  
 
 gsn_define_colormap(wks,"rainbow+white+gray")
-  polyres               = True          ; poly marker mods desired 
-  polyres@gsMarkerIndex = 1            ; choose circle as polymarker
-  lineres = True
+
+
+polyres               = True          ; poly marker mods desired 
+polyres@gsMarkerIndex = 1            ; choose circle as polymarker
+polyres@gsMarkerSizeF = 0.03
+
+polyresBack=polyres
+polyresBack@gsMarkerSizeF = 0.04
+polyresBack@gsMarkerColor = (/"black"/) 
+
+polyres@tfPolyDrawOrder = "PostDraw"
+
+lineres = True
 
 
 
 
 
-dum = new((/nstorms,ntimes/),graphic)
+dum = new((/3,nstorms,ntimes/),graphic)
+
+cmap = RGBtoCmap("cb-mono-orange-rgb.txt")
+
+linethicknesses = (/2.5,2.5,2.5,2.5,3.0,3.5/)
+;linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
+;linethicknesses = (/3.0,4.0,5.0,5.0,5.0,5.0/)
+
+mbthresh=(/1010,1000,990,980,970/)
 
 do i = 0,nstorms-1
 do j = 0,ntimes-1
 
 thisPres=pres(i,j)
 
-;linethicknesses = (/1.5,1.5,1.5,1.5,2.0,2.5/)
-;linethicknesses = (/1.0,2.0,3.0,3.0,3.0,3.0/)
-linethicknesses = (/3.0,4.0,5.0,5.0,5.0,5.0/)
-
-
 if (.not.ismissing(thisPres))
 
-  if (thisPres .gt. 1010)
-    polyres@gsMarkerColor = (/"blue"/)
-    lineres@gsLineColor = (/"blue"/)
+  if (thisPres .gt. mbthresh(0))
+    polyres@gsMarkerColor = cmap(0,:)
+    lineres@gsLineColor = cmap(0,:)
     lineres@gsLineThicknessF = linethicknesses(0)
-  else if (thisPres .ge. 1000 .and. thisPres .lt. 1010)
-    polyres@gsMarkerColor = (/"green3"/)
-    lineres@gsLineColor = (/"green3"/)
+  else if (thisPres .ge. mbthresh(1) .and. thisPres .lt. mbthresh(0))
+    polyres@gsMarkerColor = cmap(1,:)
+    lineres@gsLineColor = cmap(1,:)
     lineres@gsLineThicknessF = linethicknesses(1)
-  else if (thisPres .ge. 990 .and. thisPres .lt. 1000)
-    polyres@gsMarkerColor = (/"yellow2"/)
-    lineres@gsLineColor = (/"yellow2"/)
+  else if (thisPres .ge. mbthresh(2) .and. thisPres .lt. mbthresh(1))
+    polyres@gsMarkerColor = cmap(2,:)
+    lineres@gsLineColor = cmap(2,:)
     lineres@gsLineThicknessF = linethicknesses(2)
-  else if (thisPres .ge. 975 .and. thisPres .lt. 990)
-    polyres@gsMarkerColor = (/"orange"/)
-    lineres@gsLineColor = (/"orange"/)
+  else if (thisPres .ge. mbthresh(3) .and. thisPres .lt. mbthresh(2))
+    polyres@gsMarkerColor = cmap(3,:)
+    lineres@gsLineColor = cmap(3,:)
     lineres@gsLineThicknessF = linethicknesses(3)
-  else if (thisPres .ge. 960 .and. thisPres .lt. 975)
-    polyres@gsMarkerColor = (/"darkorange3"/)
-    lineres@gsLineColor = (/"darkorange3"/)
+  else if (thisPres .ge. mbthresh(4) .and. thisPres .lt. mbthresh(3))
+    polyres@gsMarkerColor = cmap(4,:)
+    lineres@gsLineColor = cmap(4,:)
     lineres@gsLineThicknessF  = linethicknesses(4)
   else
-    polyres@gsMarkerColor = (/"red"/) 
-    lineres@gsLineColor = (/"red"/)
+    polyres@gsMarkerColor = cmap(5,:)
+    lineres@gsLineColor = cmap(5,:)
     lineres@gsLineThicknessF  = linethicknesses(5)
   end if
   end if
@@ -156,8 +170,13 @@ if (.not.ismissing(thisPres))
  txres@txFontHeightF = 0.01             ; Set the font height
   
   if (j .ne. 0) then
-    dum(i,j) = gsn_add_polyline(wks,map,(/lon(i,j),lon(i,j-1)/),(/lat(i,j),lat(i,j-1)/),lineres)
+    dum(0,i,j) = gsn_add_polyline(wks,map,(/lon(i,j),lon(i,j-1)/),(/lat(i,j),lat(i,j-1)/),lineres)
   end if
+
+    if (j .ne. -1) then
+      dum(1,i,j) = gsn_add_polymarker(wks,map,(/lon(i,j)/),(/lat(i,j)/),polyresBack)
+      dum(2,i,j) = gsn_add_polymarker(wks,map,(/lon(i,j)/),(/lat(i,j)/),polyres)
+    end if
   
 end if
 
@@ -173,8 +192,8 @@ lgres                    = True
 
 lgres@lgAutoManage       = False
 
-lgres@vpWidthF           = 0.17       ; was 0.08        ; width of legend (NDC)
-lgres@vpHeightF          = 0.13       ; was 0.08        ; height of legend (NDC)
+lgres@vpWidthF           = 0.20       ; was 0.08        ; width of legend (NDC)
+lgres@vpHeightF          = 0.22       ; was 0.08        ; height of legend (NDC)
 ; lgres@lgBottomMarginF    = 0.17     ; was 0.25
 
 lgres@lgPerimFill        = 0                     ; Use solid fill (0) instead of the default hollow fill
@@ -194,29 +213,30 @@ lgres@lgMonoMarkerThickness = False
 lgres@lgMonoMarkerSize      = False
 
 ;lgres@lgLabelFont             = 0
-lgres@lgLabelFontHeightF      = 0.09
+lgres@lgLabelFontHeightF      = 0.11
 lgres@lgLabelFontAspectF      = 1.4
 lgres@lgLabelConstantSpacingF = 0.0
 
 legendType = "Markers"
-markerSize = .01
+markerSize = .015
 markerIndex = 16
 
 lgres@lgItemCount        = 6
 ;lgres@lgLineDashSegLenF  = 0.8
 lgres@lgItemTypes        = (/"Markers","Markers","Markers","Markers","Markers","Markers"/)
 lgres@lgMarkerIndexes    = (/      16,      16,      16,      16,      16,      16/)
-lgres@lgMarkerThicknesses  = (/    markerSize,    markerSize,    markerSize,    markerSize,    markerSize,    markerSize/)
-lgres@lgMarkerColors       = (/ "red",     "darkorange3",   "orange",  "yellow",   "green",    "blue"    /) ; colors for legend lines
+lgres@lgMarkerSizes  = (/    markerSize,    markerSize,    markerSize,    markerSize,    markerSize,    markerSize/)
+lgres@lgMarkerColors       = (/ cmap(5,:),     cmap(4,:),   cmap(3,:),  cmap(2,:),   cmap(1,:),    cmap(0,:)    /) ; colors for legend lines
 ;lgres@lgDashIndexes      = (/      0,          0,          0,         0,               0,      0      /) ; dash indexes
-legend_labels = (/"<950mb","950-965mb","965-980mb",\
-               "980-995mb","995-1005mb",">1005mb"/)
+legend_labels = (/"<"+mbthresh(4)+"mb",""+mbthresh(4)+"-"+mbthresh(3)+"mb",""+mbthresh(3)+"-"+mbthresh(2)+"mb",\
+               ""+mbthresh(2)+"-"+mbthresh(1)+"mb",""+mbthresh(1)+"-"+mbthresh(0)+"mb",">"+mbthresh(0)+"mb"/)
 
 legend = gsn_create_legend(wks,lgres@lgItemCount,legend_labels,lgres)
 
 amres = True
-amres@amParallelPosF   = -0.30		    ; move legend to the right .37 formerly
-amres@amOrthogonalPosF = .27             ; move the legend down
+amres@amJust="BottomLeft"
+amres@amParallelPosF   = -0.48		    ; move legend to the right .37 formerly
+amres@amOrthogonalPosF = 0.48             ; move the legend down
 
 annoid1 = gsn_add_annotation(map,legend,amres)   ; add legend to plot
   

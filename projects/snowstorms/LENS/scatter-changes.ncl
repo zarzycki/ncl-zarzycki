@@ -15,9 +15,10 @@ out_type="x11"
 
 MINCAT = 1
 MAXCAT = 5
+SNOWPRECT="SNOW"
 
-RSIlist1=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.1990.0*.5e-9_12.csv.SNOW.tempest.csv")
-RSIlist2=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.2071.0*.5e-9_12.csv.SNOW.tempest.csv")
+RSIlist1=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.1990.0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
+RSIlist2=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.2071.0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
 
 if (dimsizes(RSIlist1) .ne. dimsizes(RSIlist2)) then
   print("Sizes of RSI arrays not equal, exiting...")
@@ -133,9 +134,9 @@ res@gsnFrame = False
 res@xyMarkLineModes     = "Markers" 
 res@xyMarkers           = 16                     ; choose type of marker 
 res@xyMarkerColor       = "red"                  ; Marker color
-res@xyMarkerSizeF       = 0.01                  ; Marker size (default 0.01)
+res@xyMarkerSizeF       = 0.015                  ; Marker size (default 0.01)
 
-res@tiMainString        = "LENS snowstorms/decade (RSI>1)"  ; title
+res@tiMainString        = "LENS snowstorms/decade (RSI>="+MINCAT+" RSI<="+MAXCAT+")"  ; title
 
 res@trXMaxF  =  maxmax*1.05
 res@trYMaxF  =  maxmax*1.05
