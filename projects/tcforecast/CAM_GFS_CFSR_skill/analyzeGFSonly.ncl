@@ -36,8 +36,7 @@ print("Forecast at "+hourForecast+" HOURS: valid at: "+f_hh+"Z on "+f_mm+"/"+f_d
 ;sprinti("%0.5i",f_hh_to_sec)
 ;sprinti("%0.2i",f_dd)
 
-climo_grib = "cfsr_z500.grb"
-climo_netcdf = "simple.nc"
+climo_netcdf = "/glade/u/home/zarzycki/sewx-cam-forecast/plotting_ncl/climo-files/Z500-1980-2009-NCEP.nc"
 
 gfs_grib = "gfs_4_"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+"_"+sprinti("%0.2i",f_hh)+"00_"+sprinti("%0.3i",hourForecast)+".grb2"
 if (.not.isfilepresent(gfs_grib)) then
@@ -53,25 +52,31 @@ climoFile = addfile(climo_netcdf,"r")
 gfsFile = addfile(gfs_grib,"r")
 analFile = addfile(anal_grib,"r")
 
+; get climatological Z500 field for this day
+time = climoFile->time
+climoLat = climoFile->lat
+climoLon = climoFile->lon
+date = cd_inv_calendar(2000,f_mm,f_dd,f_hh,0,0,time@units,0)
+Z500climo_native = climoFile->Z500({date},:,:)
 
-time = climoFile->initial_time0_hours
-climoLat = climoFile->g0_lat_1
-climoLon = climoFile->g0_lon_2
-date = cd_inv_calendar(1999,f_mm,f_dd,f_hh,0,0,time@units,0)
-Z500climo = climoFile->Z500({date},:,:)
-
+; extract Z500 from GFS forecast and analysis
 Z500gfs = gfsFile->HGT_P0_L100_GLL0({50000},:,:)
 Z500anal = analFile->HGT_P0_L100_GLL0({50000},:,:)
 
+; Flip lats since GFS is 90 -> -90 by default
+Z500gfs=Z500gfs(::-1,:)
+Z500anal=Z500anal(::-1,:)
 
-Z500gfsAnom      = Z500climo
+; interp CLIMO
+Z500climo=linint2_Wrap(climoLon,climoLat,Z500climo_native,True,Z500gfs&lon_0,Z500gfs&lat_0,0)
+
+; Calculate anoms
+Z500gfsAnom  = Z500climo
 Z500analAnom = Z500climo
-
-Z500gfsAnom      = Z500gfs(::-1,:) - Z500climo
-Z500analAnom = Z500anal(::-1,:) - Z500climo
+Z500gfsAnom  = Z500gfs - Z500climo
+Z500analAnom = Z500anal - Z500climo
 
 ;printVarSummary(Z500gfsAnom)
-
 
 minLat = 20
 maxLat = 80

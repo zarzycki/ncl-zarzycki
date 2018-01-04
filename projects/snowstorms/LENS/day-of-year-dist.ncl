@@ -11,18 +11,18 @@ begin
 
 plot_log=False
 out_type="pdf"
-out_string="DoY-dist"
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
-modelcolors=(/"pink","lightblue"/)
+RSIthresh=1
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
+modelcolors=(/"blue","green","red"/)
 
-RSIthresh=3
+out_string="pdf/DoY-dist-RSIge"+RSIthresh
 
-nyearsPerSample=(/35*16,35*16/)
+nyearsPerSample=(/35*16,35*10,35*10/)
 
-nCases=2
+nCases=3
 doyArray=new((/nCases,50000/),"float")
 
-do z = 0,1
+do z = 0,2
 
 filename = modelfiles(z)
 
@@ -70,10 +70,11 @@ end do
 binSettings=True
 binSettings@bin_min=0.0
 binSettings@bin_max=365.0
-nbins=36
+nbins=26
 
 ap  = pdfx(doyArray(0,:), nbins, binSettings)
 bp  = pdfx(doyArray(1,:), nbins, binSettings)
+cp  = pdfx(doyArray(2,:), nbins, binSettings)
 
 nVar = nCases
 
@@ -81,10 +82,12 @@ nBin    = ap@nbins          ; retrieve the number of bins
 xx      = new ( (/nVar, nBin/), typeof(ap))
 xx(0,:) = ap@bin_center
 xx(1,:) = bp@bin_center
+xx(2,:) = cp@bin_center
 
 yy      = new ( (/nVar, nBin/), typeof(ap))
 yy(0,:) = (/ ap*num(doyArray(0,:))/100./nyearsPerSample(0) /)
 yy(1,:) = (/ bp*num(doyArray(1,:))/100./nyearsPerSample(1) /)
+yy(2,:) = (/ bp*num(doyArray(2,:))/100./nyearsPerSample(2) /)
 
 ;yy(0,0) = 
 ;==================
@@ -98,11 +101,11 @@ res  = True
 res@gsnDraw=False
 res@gsnFrame=False
 
-res@xyLineThicknesses        = (/8.0,8.0/)
-res@xyLineColors             = (/"red","blue"/)
+res@xyLineThicknesses        = (/8.0,8.0,8.0/)
+res@xyLineColors             = modelcolors
 res@xyMonoDashPattern        = False              ; all solid
-res@xyDashPatterns = (/0,0/)
-res@tiYAxisString            = "Storm weekly prob. (%)"
+res@xyDashPatterns = (/0,0,0/)
+res@tiYAxisString            = "Storm biweekly prob. (%)"
 res@tiXAxisString            = "Day of Year"
 
 res@trXMinF           = 0.
@@ -110,9 +113,9 @@ res@trXMaxF           = 365.
 plot(0) = gsn_csm_xy (wks, xx, yy, res)
 
 lgres                    = True
-lgres@lgLabelFontHeightF = .08
-lgres@vpWidthF           = 0.22
-lgres@vpHeightF          = 0.13
+lgres@lgLabelFontHeightF = .06
+lgres@vpWidthF           = 0.2
+lgres@vpHeightF          = 0.08
 lgres@lgPerimColor       = "black"
 lgres@lgPerimThicknessF  = 1.0
 lgres@lgItemType         = "Lines"
@@ -120,11 +123,12 @@ lgres@lgLineColors     = res@xyLineColors(::-1)
 lgres@lgDashIndexes = res@xyDashPatterns(::-1)
 lgres@lgMonoLineThickness = False
 lgres@lgLineThicknesses = res@xyLineThicknesses(::-1)
-lbid = gsn_create_legend(wks,2,(/"2081-2090 (RSI<1)","1990-2005 (RSI<1)"/),lgres)
+lbid = gsn_create_legend(wks,3,(/"2071-2080 (RSI>="+RSIthresh+")","2026-2035 (RSI>="+RSIthresh+")","1990-2005 (RSI>="+RSIthresh+")"/),lgres)
 
 amres = True
-amres@amParallelPosF   = -0.27             ; move legend to the right
-amres@amOrthogonalPosF = -.36             ; move the legend down
+amres@amJust="TopRight"
+amres@amParallelPosF   = 0.49             ; move legend to the right
+amres@amOrthogonalPosF = -0.49             ; move the legend down
 annoid1 = gsn_add_annotation(plot,lbid(0),amres)   ; add legend to plot
 
 resP = True

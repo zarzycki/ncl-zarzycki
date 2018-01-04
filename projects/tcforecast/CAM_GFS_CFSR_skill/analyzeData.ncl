@@ -10,12 +10,18 @@ hourForecast=120           ; What forecast do we want to analyze
 do_plot = False            ; Do we want a 3 panel plot?
 deleteGFSfiles = False     ; do we want to delete GFS files?
 do_cam = True
+do_comparison = True
 
 ;;; RANGE FOR ANOMALY CALCULATION
-minLat = 20
-maxLat = 80
-minLon = 0
-maxLon = 360
+;minLat = 20
+;maxLat = 80
+;minLon = 0
+;maxLon = 360
+
+minLat = 21
+maxLat = 53
+minLon = 231
+maxLon = 295
 
 ; ===== Getting date from YYYYMMDDHH
 dtime_map = (/4,2,2,2/)
@@ -45,17 +51,16 @@ print("Forecast at "+hourForecast+" HOURS: verification at: "+f_hh+"Z on "+f_mm+
 ;;;; FILES
 
 THISDIR=systemfunc("pwd") 
-WORKDIR="/glade/p/work/zarzycki/CFSRskill/"
+WORKDIR="/glade/scratch/zarzycki/CFSRskill/"
 
-climo_grib = "cfsr_z500.grb"
-climo_netcdf = "simple.nc"
+climo_netcdf = "/glade/u/home/zarzycki/sewx-cam-forecast/plotting_ncl/climo-files/Z500-1980-2009-NCEP.nc"
 
 ;;;; ===== GET CAM FORECAST FILE
 if (do_cam) then
-  forecast_netcdf = "/glade/u/home/zarzycki/scratch/TCFORECAST_2013/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"/tcforecast_60_x4.cam.h1."+sprinti("%0.4i",f_yyyy)+"-"+sprinti("%0.2i",f_mm)+"-"+sprinti("%0.2i",f_dd)+"-"+sprinti("%0.5i",f_hh_to_sec)+".nc"
+  forecast_netcdf = "/glade/scratch/zarzycki/forecast_conus_30_x8_CAM5/run/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"/_forecast_conus_30_x8_CAM5.cam.h0."+sprinti("%0.4i",f_yyyy)+"-"+sprinti("%0.2i",f_mm)+"-"+sprinti("%0.2i",f_dd)+"-"+sprinti("%0.5i",f_hh_to_sec)+".nc"
   print("CAM FORECAST FILE: "+forecast_netcdf)
   forecastFile = addfile(forecast_netcdf,"r")
-  wgt_file = "/glade/u/home/zarzycki/work/maps/tcforecast_60_x4/map_tcforecast_60_x4_TO_0.25x0.25_patc.nc"
+  wgt_file = "/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_conus_30_x8_to_0.25x0.25glob_patch.nc"
 end if
 
 gfs_grib = "gfs_4_"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+"_"+sprinti("%0.2i",hh)+"00_"+sprinti("%0.3i",hourForecast)+".grb2"
@@ -78,19 +83,27 @@ if (.not.isfilepresent(WORKDIR+anal_grib)) then
   exit
 end if
 
-climoFile = addfile(WORKDIR+climo_netcdf,"r")
+climoFile = addfile(climo_netcdf,"r")
 gfsFile = addfile(WORKDIR+gfs_grib,"r")
 analFile = addfile(WORKDIR+anal_grib,"r")
 
-; Get climatology
-time = climoFile->initial_time0_hours
-climoLat = climoFile->g0_lat_1
-climoLon = climoFile->g0_lon_2
-date = cd_inv_calendar(1999,f_mm,f_dd,f_hh,0,0,time@units,0)
-Z500climo = climoFile->Z500({date},:,:)
+; get climatological Z500 field for this day
+time = climoFile->time
+climoLat = climoFile->lat
+climoLon = climoFile->lon
+date = cd_inv_calendar(2000,f_mm,f_dd,f_hh,0,0,time@units,0)
+Z500climo_native = climoFile->Z500({date},:,:)
 
+; extract Z500 from GFS forecast and analysis
 Z500gfs = gfsFile->HGT_P0_L100_GLL0({50000},:,:)
 Z500anal = analFile->HGT_P0_L100_GLL0({50000},:,:)
+
+; Flip lats since GFS is 90 -> -90 by default
+Z500gfs=Z500gfs(::-1,:)
+Z500anal=Z500anal(::-1,:)
+
+; interp CLIMO
+Z500climo=linint2_Wrap(climoLon,climoLat,Z500climo_native,True,Z500gfs&lon_0,Z500gfs&lat_0,0)
 
 if (do_cam) then
   Z500_se = forecastFile->Z500(0,:)
@@ -104,39 +117,42 @@ if (do_cam) then
   relc      = 0.5              ; relaxation coefficient
   opt       = 0                ; not used
   poisson_grid_fill( Z500forecast, is_cyclic, guess, nscan, eps, relc, opt)
-  newZ500 = linint2(Z500forecast&lon,Z500forecast&lat,Z500forecast,True,climoLon,climoLat,0)
+  Z500forecast_ = Z500forecast(:,0:1439)
+  Z500forecast_ = lonFlip(Z500forecast_)
+  newZ500 = linint2(Z500forecast_&lon,Z500forecast_&lat,Z500forecast_,True,Z500gfs&lon_0,Z500gfs&lat_0,0)
   copy_VarMeta(Z500climo,newZ500)
 end if
-
-;copy_VarMeta(Z500climo,Z500gfs)
-
-;printVarSummary(newZ500)
-;printVarSummary(Z500gfs)
 
 if (do_cam) then
   Z500forecastAnom = Z500climo
   Z500forecastAnom = newZ500 - Z500climo
 end if
 
-Z500gfsAnom      = Z500climo
-Z500gfsAnom      = Z500gfs(::-1,:) - Z500climo
-
+; Calculate anoms
+Z500gfsAnom  = Z500climo
 Z500analAnom = Z500climo
-Z500analAnom = Z500anal(::-1,:) - Z500climo
+Z500gfsAnom  = Z500gfs - Z500climo
+Z500analAnom = Z500anal - Z500climo
 
 ACCgfs =      sum(     Z500gfsAnom({minLat:maxLat},{minLon:maxLon})*Z500analAnom({minLat:maxLat},{minLon:maxLon})) / sqrt(sum(     Z500gfsAnom({minLat:maxLat},{minLon:maxLon})^2)*sum(Z500analAnom({minLat:maxLat},{minLon:maxLon})^2))
 print("GFS forecast: "+ACCgfs)
 
-
 if (do_cam) then
   ACCforecast = sum(Z500forecastAnom({minLat:maxLat},{minLon:maxLon})*Z500analAnom({minLat:maxLat},{minLon:maxLon})) / sqrt(sum(Z500forecastAnom({minLat:maxLat},{minLon:maxLon})^2)*sum(Z500analAnom({minLat:maxLat},{minLon:maxLon})^2))
   print("CAM forecast: "+ACCforecast)
+  if (do_comparison) then
+    ACCcomparison = sum(Z500forecastAnom({minLat:maxLat},{minLon:maxLon})*Z500gfsAnom({minLat:maxLat},{minLon:maxLon})) / sqrt(sum(Z500forecastAnom({minLat:maxLat},{minLon:maxLon})^2)*sum(Z500gfsAnom({minLat:maxLat},{minLon:maxLon})^2))
+    print("CAM/GFS comparison: "+ACCcomparison)
+  else
+    ACCcomparison = 0.
+  end if
 else
   ACCforecast = 0.
+  ACCcomparison = 0.
 end if
 
 quote = inttochar(34) 
-system("echo "+quote+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+" "+ACCforecast+" "+ACCgfs+quote+" >> stats.txt")
+system("echo "+quote+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"  "+ACCgfs+"  "+ACCforecast+"  "+ACCcomparison+quote+" >> stats.txt")
 
 if (deleteGFSfiles) then
   print("Deleting files...")
@@ -149,7 +165,7 @@ if (do_plot)
 ;************************************************
   plot = new(3,graphic)   
   wks = gsn_open_wks("x11","map")           ; open a ps file
-  gsn_define_colormap(wks,"gui_default")
+  gsn_define_colormap(wks,"MPL_RdBu")
 
   res                   = True
   res@gsnDraw = False
@@ -163,13 +179,32 @@ if (do_plot)
   res@cnLevelSelectionMode =  "ManualLevels"   
   res@cnMinLevelValF       = -500.
   res@cnMaxLevelValF       = 500.
-  res@cnLevelSpacingF      =   100. 
+  res@cnLevelSpacingF      =   50. 
 
+  res@lbLabelBarOn = False
+
+  res@mpMaxLatF = maxLat           ; choose subregion
+  res@mpMinLatF = minLat
+  res@mpMinLonF = minLon
+  res@mpMaxLonF = maxLon
+  res@mpCenterLonF = (res@mpMinLonF+res@mpMaxLonF)/2.
+
+  res@gsnLeftString="CAM forecast"
   plot(0) = gsn_csm_contour_map(wks,Z500forecastAnom,res)  ; create the plot
+  res@gsnLeftString="GFS forecast"
   plot(1) = gsn_csm_contour_map(wks,Z500gfsAnom,res)
+  res@gsnLeftString="GFS analysis"
   plot(2) = gsn_csm_contour_map(wks,Z500analAnom,res)
-  
-  gsn_panel(wks,plot,(/3,1/),False)
+
+;************************************************
+; create panel
+;************************************************
+  resP                     = True
+  ;resP@gsnPanelMainString = "A plot with a common label bar"
+  resP@gsnPanelLabelBar    = True                ; add common colorbar
+  resP@lbLabelFontHeightF  = 0.01               ; make labels smaller
+
+  gsn_panel(wks,plot,(/3,1/),resP)
 end if
   
 end

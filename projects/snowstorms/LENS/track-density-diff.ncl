@@ -12,10 +12,11 @@ load "/glade/u/home/zarzycki/ncl/functions/trackDensity.ncl"
 ;========================================================
 begin
 
-out_type="x11"
+out_type="pdf"
 RSIthresh=0
-prescut=1000.
-plot_diff_abs=True
+prescut=1090.  ; 1000 for AGU
+plot_diff_abs=False
+plotname = "pdf/etcdens-absdiff-allstorms"
 
 trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.ALL","/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.2071.ALL"/)
 RSIfile = (/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.PRECT.tempest.csv"/)
@@ -124,7 +125,7 @@ end if
 ; create plot
 ;************************************************
 
-plotname = "tmp"
+
 
 wks = gsn_open_wks(out_type,plotname)
 plot = new(3,"graphic")
@@ -151,10 +152,23 @@ res@mpMaxLonF             = 310.
 ;res@mpCenterLonF          = 180.
 
 ; plot absolute data
-res@cnLevelSelectionMode  = "ManualLevels"
-res@cnMinLevelValF        = 0.0
-res@cnMaxLevelValF        = 100.0
-res@cnLevelSpacingF       = res@cnMaxLevelValF/10.
+if (RSIthresh .eq. 0) then
+  res@cnLevelSelectionMode  = "ManualLevels"
+  res@cnMinLevelValF        = 0.0
+  res@cnMaxLevelValF        = 192.0
+  res@cnLevelSpacingF       = res@cnMaxLevelValF/12.
+if (RSIthresh .eq. 1) then
+  res@cnLevelSelectionMode  = "ManualLevels"
+  res@cnMinLevelValF        = 0.0
+  res@cnMaxLevelValF        = 160.0
+  res@cnLevelSpacingF       = res@cnMaxLevelValF/12.
+else
+  res@cnLevelSelectionMode  = "ManualLevels"
+  res@cnMinLevelValF        = 0.0
+  res@cnMaxLevelValF        = 48.0
+  res@cnLevelSpacingF       = res@cnMaxLevelValF/12.
+end if
+end if
 
 cmap = read_colormap_file("GMT_hot")
 res@cnFillPalette=cmap(::-1,:)
@@ -162,11 +176,23 @@ delete(cmap)
 
 plot(0) = gsn_csm_contour_map_ce(wks,countArr(0,:,:),res)
 plot(1) = gsn_csm_contour_map_ce(wks,countArr(1,:,:),res)
+print("max countArr(0,:,:) "+max(countArr(0,:,:)))
+print("max countArr(1,:,:) "+max(countArr(1,:,:)))
+
 ; plot differences
 res@cnLevelSelectionMode  = "ManualLevels"
 if (plot_diff_abs) then
-  res@cnMinLevelValF        = -20.0
-  res@cnMaxLevelValF        = 20.0
+  if (RSIthresh .eq. 0) then
+    res@cnMinLevelValF        = -48.0
+    res@cnMaxLevelValF        = 48.0
+  else if (RSIthresh .eq. 1) then
+    res@cnMinLevelValF        = -40.0
+    res@cnMaxLevelValF        = 40.0
+  else
+    res@cnMinLevelValF        = -12.0
+    res@cnMaxLevelValF        = 12.0
+  end if
+  end if
   res@cnLevelSpacingF       = (res@cnMaxLevelValF-res@cnMinLevelValF)/10.
 else
   res@cnMinLevelValF        = -50.0
@@ -178,6 +204,7 @@ delete(res@cnFillPalette)
 res@cnFillPalette=colorMap2
 
 plot(2) = gsn_csm_contour_map_ce(wks,count_diff(:,:),res)
+print("max count_diff(:,:) "+max(count_diff(:,:)))
 
 resP = True
 resP@txString           = ""

@@ -6,68 +6,59 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
+load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-var="PRECBSN_FREQ"
-fileDir="/glade/scratch/zarzycki/LENS-snow/"
+output_type="pdf"
+
 configArr=(/"B20TRC5CNBDRD","BRCP85C5CNBDRD","BRCP85C5CNBDRD"/)
 yearsArr=(/"1990010100Z-2005123118Z","2026010100Z-2035123118Z","2071010100Z-2080123118Z"/)
+f1990=addfile("/glade/u/home/zarzycki/scratch/LENS-snow/climo/b.e11.B20TRC5CNBDRD.f09_g16.ENS.cam.h2.PRECT_SNOW.1990010100Z-2005123118Z_AVG.nc","r")
+f2026=addfile("/glade/u/home/zarzycki/scratch/LENS-snow/climo/b.e11.BRCP85C5CNBDRD.f09_g16.ENS.cam.h2.PRECT_SNOW.2026010100Z-2035123118Z_AVG.nc","r")
+f2071=addfile("/glade/u/home/zarzycki/scratch/LENS-snow/climo/b.e11.BRCP85C5CNBDRD.f09_g16.ENS.cam.h2.PRECT_SNOW.2071010100Z-2080123118Z_AVG.nc","r")
 
-out_type="pdf"
-out_name="spatdiff-PRECBSN_FREQ"
+SWE=12.
 
-nconfigs=dimsizes(configArr)
+SNOW1990=f1990->PRECT_SNOW(0,:,:)
+SNOW1990 = SNOW1990*3.402e+6  ; now inches per day
+SNOW1990 = SNOW1990*365. ; now inches per year
+SNOW1990 = SNOW1990*SWE  ; now inches SNOW1990 per year
 
-do ii = 0,nconfigs-1
-  all_files = systemfunc("ls "+fileDir+"/b.e11."+configArr(ii)+".f09_g16.*.cam.h2."+var+"."+yearsArr(ii)+".nc") 
-  fall = addfiles (all_files, "r")
-  ListSetType (fall, "join")
-  ensallvar=fall[:]->PRECBSN_FREQ
-  tmp=dim_avg_n_Wrap(ensallvar,0)
-  if (ii .eq. 0)
-    ndims=dimsizes(tmp)
-    nlat=ndims(0)
-    nlon=ndims(1)
-    ensavg=new((/nconfigs,nlat,nlon/),typeof(tmp))
-    ensavg!1="lat"
-    ensavg!2="lon"
-    ensavg&lat=tmp&lat
-    ensavg&lon=tmp&lon
-    ;delete([/nlat,nlon,ndims/])
-  end if
-  ensavg(ii,:,:)=tmp
-  delete([/tmp,ensallvar,fall,all_files/])
-end do
+SNOW2026=f2026->PRECT_SNOW(0,:,:)
+SNOW2026 = SNOW2026*3.402e+6  ; now inches per day
+SNOW2026 = SNOW2026*365. ; now inches per year
+SNOW2026 = SNOW2026*SWE  ; now inches SNOW2026 per year
 
-ensavgdiff = ensavg(0,:,:)
+SNOW2071=f2071->PRECT_SNOW(0,:,:)
+SNOW2071 = SNOW2071*3.402e+6  ; now inches per day
+SNOW2071 = SNOW2071*365. ; now inches per year
+SNOW2071 = SNOW2071*SWE  ; now inches SNOW2071 per year
 
+SNOW2071DIFF=SNOW2071
+SNOW2071DIFF=SNOW2071-SNOW1990
+SNOW2026DIFF=SNOW2026
+SNOW2026DIFF=SNOW2026-SNOW1990
 
-; CMZ - need to mask
-
-wks = gsn_open_wks(out_type,out_name)               ; open workstation
+wks = gsn_open_wks(output_type,"./pdf/seasonal-mean-LENS")               ; open workstation
 nplots=6
-map = new(nplots,graphic)
+map = new(nplots,"graphic")
 
 res                     = True         ; plot modifications desired
-
 res@gsnDraw=False
 res@gsnFrame=False
-
 res@cnFillOn            = True         ; Turn on contour fill
-res@cnLinesOn           = False        ; Turn off contour lines
+res@cnLinesOn           = True        ; Turn off contour lines
 res@cnLineLabelsOn      = False        ; Turn off contour line labels
 res@lbLabelAutoStride   = True         ; Clean up labelbar labels.
 
-res@lbLabelBarOn        = False           ; turn off individual cb's
+res@mpOceanFillColor = "White"
+res@cnFillDrawOrder             = "PreDraw"
+res@cnLineDrawOrder             = "PreDraw"
+res@mpFillAreaSpecifiers        = (/"Land"/)
+res@mpSpecifiedFillColors       = (/"transparent"/)
+res@mpOutlineDrawOrder = "Draw"
 
-
-cmap = read_colormap_file("wind_17lev") 
-res@cnFillPalette       = cmap
-res@cnLevelSelectionMode = "ManualLevels"
-res@cnLevelSpacingF      =  10.0
-res@cnMinLevelValF       =  10.0
-res@cnMaxLevelValF       =  140.0
 
 ;res@cnFillMode          = "RasterFill"
 res@gsnAddCyclic = False
@@ -78,38 +69,56 @@ res@mpMinLonF             = 279.
 res@mpMaxLonF             = 293.
 res@mpCenterLonF = 286.
 
+res@lbLabelBarOn        = False           ; turn off individual cb's
+
 
 res@mpOutlineOn                 = True
 
-res@mpUSStateLineThicknessF     = 3  ; 2-1/2 times as thick.
-res@mpGeophysicalLineThicknessF = 3
+res@mpUSStateLineThicknessF     = 2.5  ; 2-1/2 times as thick.
+res@mpGeophysicalLineThicknessF = 2.5
+
 res@mpOutlineBoundarySets       = "GeophysicalAndUSStates"
 res@mpOutlineSpecifiers         = (/"Land","Conterminous US:states"/)
 
+res@gsnStringFontHeightF=0.027
 
-res@gsnRightString="days/year"
-res@gsnLeftString="Bourgoin scheme"
-res@tiMainString="LENS SN POSS (1990-05)"
-map(0) = gsn_csm_contour_map_ce(wks,ensavg(0,:,:),res)
-res@tiMainString="LENS SN POSS (2026-35)"
-map(1) = gsn_csm_contour_map_ce(wks,ensavg(1,:,:),res)
-res@tiMainString="LENS SN POSS (2071-80)"
-map(2) = gsn_csm_contour_map_ce(wks,ensavg(2,:,:),res)
+resavg=res
 
+cmap = read_colormap_file("wxbell_snow.rgb")
+;cmap = read_colormap_file("MPL_StepSeq")
+resavg@cnFillPalette       = cmap(::-1,:)
 delete(cmap)
-delete(res@cnFillPalette)
-cmap = read_colormap_file("MPL_bwr") 
-res@cnFillPalette       = cmap(::1,:)
-res@cnLevelSpacingF      =  5.0
-res@cnMinLevelValF       =  -25.0
-res@cnMaxLevelValF       =  25.0
+resavg@cnLevelSelectionMode = "ExplicitLevels"
+resavg@cnLevels    = (/  6., 12., 18., 24., 30., 36., 48., 60., 72., 84., 96., 120./)
 
-ensavgdiff = ensavg(1,:,:) - ensavg(0,:,:)
-res@tiMainString="LENS SN POSS (2026-35 MINUS 1990-05)"
-map(4) = gsn_csm_contour_map_ce(wks,ensavgdiff(:,:),res)
-ensavgdiff = ensavg(2,:,:) - ensavg(1,:,:)
-res@tiMainString="LENS SN POSS (2071-80 MINUS 1990-05)"
-map(5) = gsn_csm_contour_map_ce(wks,ensavgdiff(:,:),res)
+
+
+resavg@tiMainString=""
+resavg@gsnRightString="in. snow/yr"
+resavg@gsnLeftString="Annual snowfall (1990-2015)"
+map(0) = gsn_csm_contour_map_ce(wks,SNOW1990,resavg)
+resavg@gsnLeftString="Annual snowfall (2026-2035)"
+map(1) = gsn_csm_contour_map_ce(wks,SNOW2026,resavg)
+resavg@gsnLeftString="Annual snowfall (2071-2080)"
+map(2) = gsn_csm_contour_map_ce(wks,SNOW2071,resavg)
+
+resdiff=res
+
+cmap = read_colormap_file("temp_diff_18lev")
+resdiff@cnFillColors = cmap(::-1,:)    ; Skips the first two colors
+delete(cmap)
+resdiff@cnLevelSelectionMode = "ManualLevels"
+resdiff@cnLevelSpacingF      =  5.0
+resdiff@cnMinLevelValF       =  -35.0
+resdiff@cnMaxLevelValF       =  35.0
+
+
+resdiff@gsnRightString="in. snow/yr"
+
+resdiff@gsnLeftString="Snowfall change in 2026-2035"
+map(4) = gsn_csm_contour_map_ce(wks,SNOW2026DIFF,resdiff)
+resdiff@gsnLeftString="Snowfall change in 2071-2080"
+map(5) = gsn_csm_contour_map_ce(wks,SNOW2071DIFF,resdiff)
 
 ;************************************************
 ; create panel
@@ -151,7 +160,7 @@ pres@lbLabelStride = 2
   pres@amJust                           = "TopLeft"
 
 ;---Main title, only on first set of plots
-  pres@txString = "LENS ensemble mean days/yr supporting snow"
+  pres@txString = "LENS ensemble mean annual snowfall"
 
   fig_strs = (/"a","b","c","d","e","f"/) + "."
   do n=0,nplots-1,3
@@ -165,5 +174,6 @@ pres@lbLabelStride = 2
   end do
   frame(wks)
 
-
 end
+
+

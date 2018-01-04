@@ -1,4 +1,4 @@
-z = imread('irsat_colors.png','png')
+z = imread('wxbell_snow.png','png')
 z = squeeze(z)
 z_short = z(1:2:end,:)
-dlmwrite('irsat',z_short)
+dlmwrite('wxbell_snow',z_short)

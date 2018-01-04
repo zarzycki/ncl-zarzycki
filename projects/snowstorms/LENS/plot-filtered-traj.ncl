@@ -10,7 +10,7 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="png"
+output_type="pdf"
 
 RSIthresh=3
 

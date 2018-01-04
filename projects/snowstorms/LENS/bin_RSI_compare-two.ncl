@@ -11,22 +11,22 @@ begin
 
 plot_log=False
 out_type="pdf"
-out_string="pdf/RSI-bin-comp-LENS"
-SNOWPRECT="SNOW"
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv"/)
-modelstrs=(/"1990-2005","2026-2035","2071-2080"/)
-
-nyearsPerSample=(/35*16,35*10,35*10/)
+out_string="pdf/RSI-bin-comp-OBS-LENS"
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.CAT.csv"/)
+nyearsPerSample=(/35*16,57,117/)
 
 RSIcatArray=(/1,2,3,4,5/)
 nCases=3
 RSInumArray=new((/nCases,dimsizes(RSIcatArray)/),"integer")
 RSInormArray=new((/nCases,dimsizes(RSIcatArray)/),"float")
 
+; OBS
+RSInumArray(2,:)=(/119,54,15,11,4/)
+
 MMArray=(/1,2,3,4,5,6,7,8,9,10,11,12/)
 MMnumArray=new((/nCases,dimsizes(MMArray)/),"integer")
 
-do z = 0,2
+do z = 0,1
 
 filename = modelfiles(z)
 
@@ -87,6 +87,8 @@ end do
 print(RSInormArray)
 
 wks = gsn_open_wks(out_type,out_string)
+;newcolor = NhlNewColor(wks,.6,.85,1.)
+;newcolor = NhlNewColor(wks,0.42,0.42,0.42)
 
 cmap = RGBtoCmap("diverging-cmap.txt")
 
@@ -97,12 +99,7 @@ sres@vpXF = .15
 sres@trXMinF = 0.4
 sres@trXMaxF = 5.6
 sres@trYMinF = 0.0
-if (SNOWPRECT .eq. "SNOW") then
-  sres@trYMaxF = 1.1
-else
-  sres@trYMaxF = 5.0
-end if
-
+sres@trYMaxF = 1.2
 if (plot_log) then
   sres@xyYStyle = "Log"
   sres@trYMinF = 0.001
@@ -110,7 +107,7 @@ end if
 sres@gsnDraw = True
 sres@gsnFrame = False
 sres@gsnXYBarChart = True
-sres@gsnXYBarChartBarWidth = 0.25           ; change bar widths
+sres@gsnXYBarChartBarWidth = 0.4           ; change bar widths
 sres@tmXBMode          = "Explicit"         ; explicit labels
 sres@tmXBValues        = (/1,2,3,4,5/)
 sres@tmXBLabels = (/"1","2","3","4","5"/)
@@ -119,30 +116,32 @@ sres@tmXTLabelFontHeightF = 0.0205
 sres@tmYLLabelFontHeightF = 0.0225
 sres@tiMainFontHeightF = 0.025
 sres@tiMainFont = "helvetica"
-sres@tiMainString = "RSI frequency (LENS)"
+sres@tiMainString = "RSI frequency"
 sres@gsnRightString = ""
-sres@tiYAxisString = "Storms per year"
+sres@tiYAxisString = "RSI storms per year"
 sres@tiXAxisString = "RSI category"
 
-sres@gsnXYBarChartColors = cmap(1,:)
-plot1 = gsn_csm_xy(wks,fspan(0.75,4.75,5),RSInormArray(0,:),sres)		; draw each timeseries
-sres@gsnXYBarChartColors = cmap(2,:)			; seperately, not
-plot2 = gsn_csm_xy(wks,fspan(1.0,5.0,5),RSInormArray(1,:),sres)		; advancing the frame
-sres@gsnXYBarChartColors = cmap(0,:)				; but tweaking where
-plot3 = gsn_csm_xy(wks,fspan(1.25,5.25,5),RSInormArray(2,:),sres)		; each timeseries is
+sres@gsnXYBarChartColors = cmap(0,:)
+plot1 = gsn_csm_xy(wks,fspan(0.8,4.8,5),RSInormArray(0,:),sres)		; draw each timeseries
+sres@gsnXYBarChartColors = cmap(2,:)			; but tweaking where
+plot3 = gsn_csm_xy(wks,fspan(1.2,5.2,5),RSInormArray(2,:),sres)		; each timeseries is
 
 lbres                    = True          ; labelbar only resources
 lbres@vpWidthF           = 0.2           ; labelbar width
 lbres@vpHeightF          = 0.15           ; labelbar height
 lbres@lbBoxMajorExtentF  = 0.36          ; puts space between color boxes
-lbres@lbFillColors       = (/cmap(0,:),cmap(2,:),cmap(1,:)/)
+lbres@lbFillColors       = (/cmap(2,:),cmap(0,:)/)
 lbres@lbMonoFillPattern  = True          ; Solid fill pattern
 lbres@lbLabelFontHeightF = 0.019         ; font height. default is small
 lbres@lbLabelJust        = "CenterLeft"  ; left justify labels
 lbres@lbPerimOn          = False
 lbres@lgPerimColor 	 = "white"
-labels = modelstrs(::-1)  ; labels in reverse
-gsn_labelbar_ndc(wks,3,labels,0.4,0.8,lbres)	; draw right labelbar column
+tablabels=new(2,"string")
+tablabels(0)="LENS (all mem.) 1980-2005"
+tablabels(1)="NOAA obs. 1900-2017"
+labels=tablabels
+;labels = (/"ne0conus30x8","mp15a-120a","Obs 1900-2015"/)  ; labels in reverse
+gsn_labelbar_ndc(wks,2,labels(::-1),0.4,0.8,lbres)	; draw right labelbar column
 frame(wks)     
 
 end

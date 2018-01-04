@@ -11,11 +11,12 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 ;========================================================
 begin
 
-out_type="x11"
+out_type="pdf"
 
-MINCAT = 1
+MINCAT = 3
 MAXCAT = 5
-SNOWPRECT="SNOW"
+SNOWPRECT="PRECT"
+OUTSTR="scatter-"+MINCAT+"_"+MAXCAT+"_"+SNOWPRECT
 
 RSIlist1=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.1990.0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
 RSIlist2=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.2071.0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
@@ -92,14 +93,14 @@ rseed1 = toint(systemfunc(" date +%s"))
 rseed2 = toint((12345l*rseed1)%2147483398l)
 random_setallseed(rseed1, rseed2)
 do jj = 0,nsamples-1
-  unf = toint(floor(random_uniform(low, high, 8)))
+  unf = toint(floor(random_uniform(low, high, 12)))
   ; bootstraps one climatology regardless of ensemble member
   x1r(jj) = x1(unf(0))
   x2r(jj) = x2(unf(1))
   diffr(jj) = x1r(jj) - x2r(jj)
-  ; this bootstraps 3 non-consecutive "segments"
-  x1rr(jj) = x1(unf(2)) + x1(unf(3)) + x1(unf(4))
-  x2rr(jj) = x2(unf(5)) + x2(unf(6)) + x2(unf(7))
+  ; this bootstraps 5 non-consecutive "segments"
+  x1rr(jj) = x1(unf(2)) + x1(unf(3)) + x1(unf(4)) + x1(unf(5)) + x1(unf(6))
+  x2rr(jj) = x2(unf(7)) + x2(unf(8)) + x2(unf(9)) + x2(unf(10)) + x2(unf(11))
   diffrr(jj) = x1rr(jj) - x2rr(jj)
   if (x1r(jj) .ge. x2r(jj)) then
     ratior(jj)=1.
@@ -118,14 +119,14 @@ opt@PrintStat = True
 stats = stat_dispersion(diffr, opt )
 
 ; Percentage of events in RSILIST1 > RSILIST2
-print(sum(ratior)/tofloat(nsamples))
+print((sum(ratior)/tofloat(nsamples))+" "+(1-(sum(ratior)/tofloat(nsamples))))
 ; Percentage of events in RSILIST1 > RSILIST2 (with 3 cycle sampling)
-print(sum(ratiorr)/tofloat(nsamples))
+print((sum(ratiorr)/tofloat(nsamples))+" "+(1-(sum(ratiorr)/tofloat(nsamples))))
 
 ;************************************************
 ; plotting parameters
 ;************************************************
-wks   = gsn_open_wks (out_type,"scatter")           ; send graphics to PNG file
+wks   = gsn_open_wks (out_type,"pdf/"+OUTSTR)           ; send graphics to PNG file
 
 res                     = True                   ; plot mods desired
 res@gsnDraw = False
@@ -142,6 +143,9 @@ res@trXMaxF  =  maxmax*1.05
 res@trYMaxF  =  maxmax*1.05
 res@trXMinF  =  -0.05
 res@trYMinF  =  -0.05
+
+res@tmXBPrecision = 2
+res@tmYLPrecision = 2
 
 res@tiXAxisString   = "1990-2015"  
 res@tiYAxisString   = "2071-2080"

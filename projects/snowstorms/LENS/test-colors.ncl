@@ -10,9 +10,9 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="pdf"
+output_type="x11"
 smooth_traj=True    ; do a running average on lat/lon to produce smoother PSL trajs
-underlayPop=True
+underlayPop=False
 
 
 
@@ -28,11 +28,11 @@ stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"
 
 
 ;;; LENS
-;ensmem="035"
-;stormID=346
-;year=1990
-;trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
-;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
+ensmem="035"
+stormID=346
+year=1990
+trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
+stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
 
 if (underlayPop) then
   popFile=addfile("/glade/u/home/zarzycki/snow-tracking/gen_pop_files/population.nc","r")
@@ -89,7 +89,7 @@ end if
 
 ;--------------------------------------------------------
 print("Beginning plot sequence")
-wks  = gsn_open_wks(output_type,"./pdf/single-storm-traj")
+wks  = gsn_open_wks(output_type,"latlon_traj_plot")
 map = new(1,graphic)
 
 res  = True
@@ -97,8 +97,8 @@ res@gsnDraw    = False
 res@gsnFrame   = False
 res@gsnMaximize = True
 res@mpFillOn             = True              ; turn off gray continents
-res@mpLandFillColor = "gray70"
-res@mpOceanFillColor = "steelblue" ;"LightBlue1"
+res@mpLandFillColor = "white"
+res@mpOceanFillColor = "LightBlue1"
 res@mpOutlineOn = True
 res@mpInlandWaterFillColor = res@mpOceanFillColor
 res@mpGreatCircleLinesOn = True
@@ -148,33 +148,23 @@ cnres=True
 cnres@gsnDraw=False
 cnres@gsnFrame=False
 
-cnres@gsnSpreadColors     = True         ; Use full colormap, but start
 cnres@cnFillOn            = True         ; Turn on contour fill
 cnres@cnLinesOn           = False        ; Turn off contour lines
 cnres@cnLineLabelsOn      = False        ; Turn off contour line labels
 cnres@cnInfoLabelOn = False 
 
-cnres@lbLabelBarOn = False
+cnres@lbLabelBarOn = True
 
 cnres@cnFillMode          = "AreaFill"
 
 cnres@cnFillDrawOrder             = "PreDraw"
 
 cnres@cnLevelSelectionMode = "ExplicitLevels"
-cnres@cnLevels    = (/ 1., 4., 10., 20., 30./)
-if (underlayPop) then
-  snowColors = (/"black","gray80","white","lightskyblue","dodgerblue3","tomato"/)
-else
-  snowColors = (/"gray70","gray85","white","lightskyblue","dodgerblue3","tomato"/)
-end if
-snowColorsRGBA=namedcolor2rgba(snowColors)
-if (underlayPop) then
-  ; set main opacity and then low contour opacity (i.e., sub 1" snow)
-  snowColorsRGBA(:,3)=0.6
-  snowColorsRGBA(0,3)=0.5
-  ;snowColorsRGBA(5,3)=0.5
-end if
-cnres@cnFillColors=snowColorsRGBA
+cnres@cnLevels    = (/ 0.1, 0.5, 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15., 16., 17., 18., 19., 20., 21., 22., 23., 24., 25., 26., 27., 28., 29., 30., 32., 34., 36., 38., 40., 42., 44., 46., 48., 50., 54., 58., 62., 66., 70., 75., 80./)
+cmap = read_colormap_file("wxbell_snow.rgb")
+print(cmap)
+cnres@cnFillPalette = cmap(::-1,:)       ; reverse color map
+delete(cmap)
 
 ; plot snow and overlay onto map
 mpid=gsn_csm_contour(wks,SNOW,cnres)
@@ -306,7 +296,7 @@ lblabels    = (/"1-4"+quote,"4-10"+quote,"10-20"+quote,"20-30"+quote,"30"+quote+
 
 lbres                           = True
 lbres@lbAutoManage              = False         ; we control label bar
-lbres@lbFillColors              = snowColors(1:5)
+;lbres@lbFillColors              = snowColors(1:5)
 lbres@lbMonoFillPattern         = True          ; one pattern, all solid
 
 lbres@vpWidthF           = 0.15       ; was 0.08        ; width of legend (NDC)
