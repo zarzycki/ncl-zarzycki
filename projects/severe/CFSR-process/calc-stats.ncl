@@ -4,30 +4,30 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 
+mmdaythresh=0.1
+SEVEREVAR="SHIP"
+severethresh=1.0
+
 minlat=25.
 maxlat=50.
 minlon=-125.
 maxlon=-65.
 
-severethresh=2.0
-mmdaythresh=0.1
+fili = systemfunc("ls /glade/u/home/zarzycki/scratch/CFSR/CFSR-SEVERE/single-file/*200*")
+print(fili)
+nfili= dimsizes(fili)
+print("nfili="+nfili)
+f1 = addfiles(fili,"r") 
 
-NYRS=1
-nfiles=1
+lat1=f1[0]->lat
+lon1=f1[0]->lon
 
-;NYRS=10
-;nfiles=121
-
-filename="cfsr-2008.nc"
-f1=addfile("/glade/u/home/zarzycki/scratch/CFSR/FINAL/CATTED/"+filename,"r")
-
-lat1=f1->lat
-lon1=f1->lon
-
-ntimes=1459*nfiles
-
-PRECT1=f1->PRECT
-SIGTOR1=f1->SIGTOR
+print("Loading PRECT")
+PRECT1=f1[:]->PRECT
+print("Loading "+SEVEREVAR)
+SIGTOR1=f1[:]->$SEVEREVAR$
+time=f1[:]->time
+ntimes=dimsizes(time)
 
 PRECT1(0:ntimes-2,:,:)=(PRECT1(1:ntimes-1,:,:)+PRECT1(0:ntimes-2,:,:)) / 2.
 PRECT1(ntimes-1,:,:)=PRECT1(ntimes-1,:,:)
@@ -49,7 +49,7 @@ copy_VarMeta(SIGTOR1_regrid,SIGTORFREQ1)
 
 SIGTORCUM1 = dim_sum_n_Wrap(SIGTORFREQ1,0)
 
-SIGTORCUM1NORM = tofloat(SIGTORCUM1)/tofloat(NYRS)
+SIGTORCUM1NORM = tofloat(SIGTORCUM1)*(1440./ntimes)   ; days/yr
 copy_VarMeta(SIGTORCUM1,SIGTORCUM1NORM)
 
 print(max(SIGTORCUM1NORM))
@@ -74,13 +74,13 @@ print(max(SIGTORCUM1NORM))
   res@mpMinLonF = minlon
 
   res@cnLevelSelectionMode = "ManualLevels"
-  res@cnMinLevelValF       =  0.5
-  res@cnMaxLevelValF       =  10.
-  res@cnLevelSpacingF      = 0.5
+  res@cnMinLevelValF       =  1.0
+  res@cnMaxLevelValF       =  15.0
+  res@cnLevelSpacingF      = 1.0
   res@gsnAddCyclic = False
 
-  res@gsnLeftString=filename
-  res@gsnRightString="SEVERE > "+severethresh+" .and. PRECT > "+mmdaythresh+"mm/day"
+  res@gsnLeftString=""
+  res@gsnRightString=SEVEREVAR+" > "+severethresh+" .and. PRECT > "+mmdaythresh+"mm/day"
 
   res@mpOutlineBoundarySets     = "geophysicalandusstates"; turn on states
   res@mpDataBaseVersion         = "mediumres"             ; select database
@@ -130,7 +130,7 @@ filedimdef(ncdf,"time",-1,True)
 ; output variables directly; NCL will call appropriate functions
 ; to write the meta data associated with each variable
 ;===================================================================
-ncdf->SIGTORFREQ1  = SIGTORFREQ1            
+ncdf->SIGTORCUM1NORM  = SIGTORCUM1NORM            
 
 
 
