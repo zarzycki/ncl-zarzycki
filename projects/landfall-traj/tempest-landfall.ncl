@@ -16,6 +16,7 @@ begin
 
 
 thefile="ibtracs-1979-2012-NATL_only.txt"
+thefile="/glade/u/home/zarzycki/tempest-scripts/asd-se/trajectories.txt.NE30"
 ncols = 10                    ; assign number of columns
 maxLines = -1
 headerDelimStr = "start"
@@ -25,7 +26,7 @@ traj_data = getTrajectories(thefile,ncols,maxLines,headerDelimStr,delimStr,isHea
 
 lon = traj_data(:,1,:)
 lat = traj_data(:,2,:)
-wind = traj_data(:,4,:)
+wind = traj_data(:,4,:)*0.85
 pres = traj_data(:,3,:)/100.
 yyyy=  traj_data(:,6,:)
 mm= traj_data(:,7,:)
