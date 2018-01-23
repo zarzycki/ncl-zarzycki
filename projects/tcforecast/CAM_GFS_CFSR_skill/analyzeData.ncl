@@ -6,23 +6,24 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 begin
 
 ;; USER SETTINGS
-hourForecast=168           ; What forecast do we want to analyze
-do_plot = True            ; Do we want a 3 panel plot?
+hourForecast=120           ; What forecast do we want to analyze
+do_plot = False            ; Do we want a 3 panel plot?
 deleteGFSfiles = False     ; do we want to delete GFS files?
 do_cam = True
 do_comparison = True
 use_Z500 = False
+fcst_config = "hindcast_conus_30_x8_CAM5_L30"
 
 ;;; RANGE FOR ANOMALY CALCULATION
-minLat = 20
-maxLat = 80
-minLon = 0
-maxLon = 360
+;minLat = 20
+;maxLat = 80
+;minLon = 0
+;maxLon = 360
 
-;minLat = 21
-;maxLat = 53
-;minLon = 231
-;maxLon = 295
+minLat = 21
+maxLat = 53
+minLon = 231
+maxLon = 295
 
 ; ===== Getting date from YYYYMMDDHH
 dtime_map = (/4,2,2,2/)
@@ -59,8 +60,9 @@ climo_netcdf = "/glade/u/home/zarzycki/sewx-cam-forecast/plotting_ncl/climo-file
 ;;;; ===== GET CAM FORECAST FILE
 if (do_cam) then
 ;  forecast_netcdf = "/glade/scratch/zarzycki/forecast_conus_30_x8_CAM5/run/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"/_forecast_conus_30_x8_CAM5.cam.h0."+sprinti("%0.4i",f_yyyy)+"-"+sprinti("%0.2i",f_mm)+"-"+sprinti("%0.2i",f_dd)+"-"+sprinti("%0.5i",f_hh_to_sec)+".nc"
-;  forecast_netcdf = "/glade/scratch/zarzycki/hindcast_conus_30_x8_CAM5_L59/run/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"/hindcast_conus_30_x8_CAM5_L59.cam.h0."+sprinti("%0.4i",f_yyyy)+"-"+sprinti("%0.2i",f_mm)+"-"+sprinti("%0.2i",f_dd)+"-"+sprinti("%0.5i",f_hh_to_sec)+".nc"
-  forecast_netcdf = "/glade/scratch/zarzycki/hindcast_conus_30_x8_CAM4_L26/run/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"/hindcast_conus_30_x8_CAM4_L26.cam.h0."+sprinti("%0.4i",f_yyyy)+"-"+sprinti("%0.2i",f_mm)+"-"+sprinti("%0.2i",f_dd)+"-"+sprinti("%0.5i",f_hh_to_sec)+".nc"
+;  forecast_netcdf = "/glade/scratch/zarzycki/hindcast_conus_30_x8_CAM5_L30/run/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"/hindcast_conus_30_x8_CAM5_L30.cam.h0."+sprinti("%0.4i",f_yyyy)+"-"+sprinti("%0.2i",f_mm)+"-"+sprinti("%0.2i",f_dd)+"-"+sprinti("%0.5i",f_hh_to_sec)+".nc"
+;  forecast_netcdf = "/glade/scratch/zarzycki/hindcast_conus_30_x8_CAM4_L26/run/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"/hindcast_conus_30_x8_CAM4_L26.cam.h0."+sprinti("%0.4i",f_yyyy)+"-"+sprinti("%0.2i",f_mm)+"-"+sprinti("%0.2i",f_dd)+"-"+sprinti("%0.5i",f_hh_to_sec)+".nc"
+  forecast_netcdf = "/glade/scratch/zarzycki/"+fcst_config+"/run/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"/"+fcst_config+".cam.h0."+sprinti("%0.4i",f_yyyy)+"-"+sprinti("%0.2i",f_mm)+"-"+sprinti("%0.2i",f_dd)+"-"+sprinti("%0.5i",f_hh_to_sec)+".nc"
   print("CAM FORECAST FILE: "+forecast_netcdf)
   forecastFile = addfile(forecast_netcdf,"r")
   wgt_file = "/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_conus_30_x8_to_0.25x0.25glob_patch.nc"
@@ -168,8 +170,9 @@ else
   ACCcomparison = 0.
 end if
 
+stats_output_name="stats_"+fcst_config+"_"+hourForecast+".txt"
 quote = inttochar(34) 
-system("echo "+quote+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"  "+ACCgfs+"  "+ACCforecast+"  "+ACCcomparison+quote+" >> stats.txt")
+system("echo "+quote+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"  "+ACCgfs+"  "+ACCforecast+"  "+ACCcomparison+quote+" >> "+stats_output_name)
 
 if (deleteGFSfiles) then
   print("Deleting files...")
