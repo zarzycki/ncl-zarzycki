@@ -6,24 +6,32 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 begin
 
 ;; USER SETTINGS
-hourForecast=120           ; What forecast do we want to analyze
+;hourForecast=120           ; What forecast do we want to analyze
 do_plot = False            ; Do we want a 3 panel plot?
 deleteGFSfiles = False     ; do we want to delete GFS files?
 do_cam = True
 do_comparison = True
 use_Z500 = False
-fcst_config = "hindcast_conus_30_x8_CAM5_L30"
+;fcst_config = "hindcast_conus_30_x8_CAM5_L59"
+;region="conus"   ; region = conus or nhemi
 
 ;;; RANGE FOR ANOMALY CALCULATION
-;minLat = 20
-;maxLat = 80
-;minLon = 0
-;maxLon = 360
 
-minLat = 21
-maxLat = 53
-minLon = 231
-maxLon = 295
+if (region .eq. "nhemi")
+  minLat = 20
+  maxLat = 80
+  minLon = 0
+  maxLon = 360
+else if (region .eq. "conus")
+  minLat = 21
+  maxLat = 53
+  minLon = 231
+  maxLon = 295
+else
+  print("invalid region")
+  exit()
+end if
+end if
 
 ; ===== Getting date from YYYYMMDDHH
 dtime_map = (/4,2,2,2/)
@@ -170,9 +178,11 @@ else
   ACCcomparison = 0.
 end if
 
-stats_output_name="stats_"+fcst_config+"_"+hourForecast+".txt"
-quote = inttochar(34) 
-system("echo "+quote+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+"  "+ACCgfs+"  "+ACCforecast+"  "+ACCcomparison+quote+" >> "+stats_output_name)
+;stats_output_name="stats_"+fcst_config+"_"+hourForecast+".txt"
+stats_output_name="stats.txt"
+quote = inttochar(34)
+delim = " "
+system("echo "+quote+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+delim+ACCgfs+delim+ACCforecast+delim+ACCcomparison+delim+fcst_config+delim+hourForecast+delim+region+     quote+" >> "+stats_output_name)
 
 if (deleteGFSfiles) then
   print("Deleting files...")
