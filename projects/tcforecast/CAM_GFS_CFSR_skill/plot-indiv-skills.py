@@ -31,9 +31,13 @@ print df1
 
 print df1.describe()
 
-forecast_hours = raw_df0.lead.unique()
-forecast_regions = raw_df0.region.unique()
-forecast_configs = raw_df0.config.unique()
+### Subset particular configurations
+configsToAnalyze=['hindcast_conus_30_x8_CAM5_L30','hindcast_mp15a-120a-US_CAM5_L30']
+raw_df1=raw_df0.loc[raw_df0['config'].isin(configsToAnalyze)]
+
+forecast_hours = raw_df1.lead.unique()
+forecast_regions = raw_df1.region.unique()
+forecast_configs = raw_df1.config.unique()
 
 plot_GFS = True
 if plot_GFS:
@@ -45,7 +49,7 @@ for ii, zz in enumerate(forecast_hours):
   for jj, yy in enumerate(forecast_regions):
     for kk, xx in enumerate(forecast_configs):
       print str(zz)+' '+str(yy)+' '+str(xx)
-      tmpdf=raw_df0[(raw_df0.config == xx) & (raw_df0.lead == zz) & (raw_df0.region == yy)]
+      tmpdf=raw_df1[(raw_df1.config == xx) & (raw_df1.lead == zz) & (raw_df1.region == yy)]
       stats=tmpdf.describe(percentiles=[.1, .25, .5, .75, .9])
       array[jj,kk,ii,0] = stats.at['mean','CAM']
       array[jj,kk,ii,1] = stats.at['25%','CAM']
@@ -56,17 +60,27 @@ for ii, zz in enumerate(forecast_hours):
         array[jj,len(forecast_configs),ii,2] = stats.at['75%','GFS']
 
 print(array)
+
+colors = ['#966842', '#f44747', '#eedc31' , '#7fdb6a' , '#666547', '#0057e7', '#000000']
+
 if plot_GFS:
   forecast_configs=np.append(forecast_configs,'GFS')
 
-colors = ['#CC4F1B', '#1B2ACC', '#3F7F4C' , '#000000']
-facecolors = ['#FF9848', '#089FFF', '#7EFF99', '#000000']
 
-REGIX=1
+plt.plot((0, 240), (0.6, 0.6), '--', color='#000000')
+
+REGIX=0
 for kk, xx in enumerate(forecast_configs):
-  plt.plot(forecast_hours, array[REGIX,kk,:,0], 'k', color=colors[kk], label=xx)
+  plt.plot(forecast_hours, array[REGIX,kk,:,0], 'k', color=colors[kk], linewidth=2, label=xx)
   plt.fill_between(forecast_hours, array[REGIX,kk,:,1], array[REGIX,kk,:,2],
-    alpha=0.2, edgecolor=colors[kk], facecolor=facecolors[kk])
+    alpha=0.35, edgecolor=colors[kk], facecolor=colors[kk])
+
+plt.xlabel('Lead (hours)')
+plt.ylabel('Z500 ACC')
+plt.xlim( 0, 240 )
+plt.ylim( 0.0, 1.0 )
+
+plt.xticks([12, 24, 36, 48, 60, 72, 96, 120, 144, 168, 192, 216, 240])
 
 plt.legend(loc=3)
 

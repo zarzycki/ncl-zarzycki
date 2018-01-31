@@ -10,11 +10,11 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 
-gridName="newcyclone_30_x4"
-InterpMethod="bilinear"  ;bilinear, patch, conserve, nearestdtos, neareststod
+gridName="conus_60_x4"
+InterpMethod="patch"  ;bilinear, patch, conserve, nearestdtos, neareststod
 regional=False
 atlantic=False
-tctest=True
+tctest=False
 
 ; RLL GRID
 outres="0.25x0.25"
