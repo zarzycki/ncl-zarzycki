@@ -32,7 +32,7 @@ print df1
 print df1.describe()
 
 ### Subset particular configurations
-configsToAnalyze=['hindcast_conus_30_x8_CAM5_L30','hindcast_mp15a-120a-US_CAM5_L30']
+configsToAnalyze=['hindcast_conus_30_x8_CAM5_L30','hindcast_conus_60_x4_CAM5_L30']
 raw_df1=raw_df0.loc[raw_df0['config'].isin(configsToAnalyze)]
 
 forecast_hours = raw_df1.lead.unique()
@@ -71,7 +71,11 @@ plt.plot((0, 240), (0.6, 0.6), '--', color='#000000')
 
 REGIX=0
 for kk, xx in enumerate(forecast_configs):
-  plt.plot(forecast_hours, array[REGIX,kk,:,0], 'k', color=colors[kk], linewidth=2, label=xx)
+  if xx == 'GFS':
+    thisColor='#000000'
+  else:
+    thisColor=colors[kk]
+  plt.plot(forecast_hours, array[REGIX,kk,:,0], 'k', color=thisColor, linewidth=2, label=xx)
   plt.fill_between(forecast_hours, array[REGIX,kk,:,1], array[REGIX,kk,:,2],
     alpha=0.35, edgecolor=colors[kk], facecolor=colors[kk])
 

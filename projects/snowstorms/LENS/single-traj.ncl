@@ -10,7 +10,7 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="pdf"
+output_type="x11"
 smooth_traj=True    ; do a running average on lat/lon to produce smoother PSL trajs
 underlayPop=True
 

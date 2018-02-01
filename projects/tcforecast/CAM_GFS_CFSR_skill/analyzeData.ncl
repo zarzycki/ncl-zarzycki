@@ -18,6 +18,8 @@ use_Z500 = False
 ;hourForecast=240         ; What forecast do we want to analyze
 ;YYYYMMDDHH=2017120100
 
+stats_string=fcst_config+"_"+region+"_"+sprinti("%0.10i",YYYYMMDDHH)+"_"+sprinti("%0.4i",hourForecast)
+
 ;;; check for dycore
 strs = str_split(fcst_config, "_")
 modres = strs(1)
@@ -233,7 +235,8 @@ else
 end if
 
 ;stats_output_name="stats_"+fcst_config+"_"+hourForecast+".txt"
-stats_output_name="stats.txt"
+;stats_output_name="stats.txt"
+stats_output_name="./out-stats/"+stats_string
 quote = inttochar(34)
 delim = " "
 system("echo "+quote+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+delim+ACCgfs+delim+ACCforecast+delim+ACCcomparison+delim+fcst_config+delim+hourForecast+delim+region+     quote+" >> "+stats_output_name)
