@@ -16,7 +16,7 @@ UVARNAME="U200"
 VVARNAME="V200"
 
 ; Regional options =============================================================================
-do_regional=True     ; if grid is not global (i.e., limited area model or regional subset)
+do_regional=False     ; if grid is not global (i.e., limited area model or regional subset)
 deldeg=0.25           ; horizontal grid spacing in degrees (for wavenumber truncation)
 cenLat=0.             ; latitude of center of region -- roughly for scaling wavenumber with cos(lat)
 ;=================================================================================
