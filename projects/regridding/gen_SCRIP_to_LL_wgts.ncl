@@ -10,7 +10,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 
-gridName="conus_60_x4"
+gridName="conus_15_x16"
 InterpMethod="patch"  ;bilinear, patch, conserve, nearestdtos, neareststod
 regional=False
 atlantic=False

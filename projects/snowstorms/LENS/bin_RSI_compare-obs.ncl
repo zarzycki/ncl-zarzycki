@@ -12,7 +12,7 @@ begin
 plot_log=False
 out_type="pdf"
 out_string="low-res-ASD-RSI"
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.Ze-9_12.csv.SNOW.tempest.csv"/)
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
 ;modelfiles=(/"RSI-ne0conus30x8.csv","RSI-mp15a-120a-US.csv"/)
 ;modelfiles=(/"RSI-ne30.csv","RSI-mp120a.csv"/)
 ;modelcolors=(/"red","blue"/)
@@ -90,6 +90,8 @@ do k = 0,dimsizes(RSIcatArray)-1
 end do
 
 print(RSInormArray)
+RSInormArrayDecade = RSInormArray*10.
+print(RSInormArrayDecade)
 
 wks = gsn_open_wks(out_type,out_string)
 ;newcolor = NhlNewColor(wks,.6,.85,1.)

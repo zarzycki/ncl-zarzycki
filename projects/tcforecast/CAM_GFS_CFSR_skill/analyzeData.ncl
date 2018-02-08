@@ -6,19 +6,20 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 begin
 
 ;; USER SETTINGS
-do_plot = False            ; Do we want a 3 panel plot?
+do_plot = False           ; Do we want a 3 panel plot?
 deleteGFSfiles = False     ; do we want to delete GFS files?
 do_cam = True
 do_comparison = True
 use_Z500 = False
 
 ;;; COMMENT THESE WHEN RUNNING BATCH
-;fcst_config = "hindcast_conus_30_x8_CAM5_L30"
-;region="nhemi"   ; region = conus or nhemi
-;hourForecast=240         ; What forecast do we want to analyze
+;azvar="Z500"
+;fcst_config = "hindcast_conus_15_x16_CAM5_L30"
+;region="conus"   ; region = conus or nhemi
+;hourForecast=120         ; What forecast do we want to analyze
 ;YYYYMMDDHH=2017120100
 
-stats_string=fcst_config+"_"+region+"_"+sprinti("%0.10i",YYYYMMDDHH)+"_"+sprinti("%0.4i",hourForecast)
+stats_string=fcst_config+"_"+region+"_"+azvar+"_"+sprinti("%0.10i",YYYYMMDDHH)+"_"+sprinti("%0.4i",hourForecast)
 
 ;;; check for dycore
 strs = str_split(fcst_config, "_")
@@ -47,6 +48,16 @@ else
   print("invalid region")
   exit()
 end if
+end if
+
+if (azvar .eq. "TS") then
+  print("cannot parse, not an interpolatable value")
+  varname=azvar
+else
+  varname=str_get_cols(azvar,0,0)
+  varlev=tofloat(str_get_cols(azvar,1,3))
+  print(varname+" "+varlev)
+  climo_varname=azvar
 end if
 
 ; ===== Getting date from YYYYMMDDHH
@@ -79,7 +90,7 @@ print("Forecast at "+hourForecast+" HOURS: verification at: "+f_hh+"Z on "+f_mm+
 THISDIR=systemfunc("pwd") 
 WORKDIR="/glade/scratch/zarzycki/CFSRskill/"
 
-climo_netcdf = "/glade/u/home/zarzycki/sewx-cam-forecast/plotting_ncl/climo-files/Z500-1980-2009-NCEP.nc"
+climo_netcdf = "/glade/u/home/zarzycki/sewx-cam-forecast/plotting_ncl/climo-files/"+climo_varname+"-1980-2009-NCEP.nc"
 
 ;;;; ===== GET CAM FORECAST FILE
 if (do_cam) then
@@ -96,9 +107,12 @@ if (do_cam) then
       wgt_file = "/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_conus_30_x8_to_0.25x0.25glob_patch.nc"
     else if (.not.ismissing(str_match(fcst_config, "conus_60_x4"))) then
       wgt_file = "/glade/scratch/zarzycki/map_conus_60_x4_to_0.25x0.25glob_patch.nc"
+    else if (.not.ismissing(str_match(fcst_config, "conus_15_x16"))) then
+      wgt_file = "/glade/scratch/zarzycki/map_conus_15_x16_to_0.25x0.25glob_patch.nc"
     else
       print("incorrect matching SE weight file string")
       exit()
+    end if
     end if
     end if
   end if
@@ -133,11 +147,27 @@ time = climoFile->time
 climoLat = climoFile->lat
 climoLon = climoFile->lon
 date = cd_inv_calendar(2000,f_mm,f_dd,f_hh,0,0,time@units,0)
-Z500climo_native = climoFile->Z500({date},:,:)
+Z500climo_native = climoFile->$climo_varname$({date},:,:)
 
 ; extract Z500 from GFS forecast and analysis
-Z500gfs = gfsFile->HGT_P0_L100_GLL0({50000},:,:)
-Z500anal = analFile->HGT_P0_L100_GLL0({50000},:,:)
+if (varname .eq. "Z") then
+  Z500gfs = gfsFile->HGT_P0_L100_GLL0({varlev*100.},:,:)
+  Z500anal = analFile->HGT_P0_L100_GLL0({varlev*100.},:,:)
+else if (varname .eq. "TS") then
+  Z500gfs = gfsFile->TMP_P0_L1_GLL0(:,:)
+  Z500anal = analFile->TMP_P0_L1_GLL0(:,:)
+else if (varname .eq. "T") then
+  Z500gfs = gfsFile->TMP_P0_L100_GLL0({varlev*100.},:,:)
+  Z500anal = analFile->TMP_P0_L100_GLL0({varlev*100.},:,:)
+else if (varname .eq. "U") then
+  Z500gfs = gfsFile->UGRD_P0_L100_GLL0({varlev*100.},:,:)
+  Z500anal = analFile->UGRD_P0_L100_GLL0({varlev*100.},:,:)
+else
+  print("no")
+end if
+end if
+end if
+end if
 
 ; Flip lats since GFS is 90 -> -90 by default
 Z500gfs=Z500gfs(::-1,:)
@@ -147,50 +177,140 @@ Z500anal=Z500anal(::-1,:)
 Z500climo=linint2_Wrap(climoLon,climoLat,Z500climo_native,True,Z500gfs&lon_0,Z500gfs&lat_0,0)
 
 if (do_cam) then
-  if (use_Z500) then
-    Z500_se = forecastFile->Z500(0,:)
+  if (varname .eq. "Z") then
+    if (use_Z500) then
+      Z500_se = forecastFile->$climo_varname$(0,:)
+      Opt         = True
+      Z500forecast  = ESMF_regrid_with_weights(Z500_se,wgt_file,Opt)
+    else
+      if (mpas) then
+        Z3=forecastFile->Z3(0,:,:)
+        PS=forecastFile->PS(0,:)
+        PRESSURE=forecastFile->PRESSURE(0,:,:)
+        TBOT=forecastFile->T(0,29,:)
+        topofile=addfile("/glade/u/home/zarzycki/work/ASD2017_files/atm/cam/topo/mp15a-120a-US.topo.170118.nc","r")
+        PHIS=topofile->PHIS
+
+        Opt         = True
+        Z3int      = ESMF_regrid_with_weights(Z3,wgt_file,Opt)
+        PSint      = ESMF_regrid_with_weights(PS,wgt_file,Opt)
+        PRESSUREint= ESMF_regrid_with_weights(PRESSURE,wgt_file,Opt)
+        TBOTint    = ESMF_regrid_with_weights(TBOT,wgt_file,Opt)
+        PHISint    = ESMF_regrid_with_weights(PHIS,wgt_file,Opt)
+
+        intyp = 2      ; 1=linear, 2=log, 3=log-log
+        kxtrp = False   ; True=extrapolate
+        varflg = -1                          ; geo pot hgt is variable [tbot is used]
+
+        Z500forecast_interp = vintp2p_ecmwf(Z3int, PRESSUREint/100., varlev ,PSint, intyp, 1, \
+                   kxtrp,varflg,TBOTint,PHISint)
+        Z500forecast = Z500forecast_interp(0,:,:)
+      else
+        Z3=forecastFile->Z3(0,:,:)
+        PS=forecastFile->PS(0,:)
+        hyam=forecastFile->hyam
+        hybm=forecastFile->hybm
+        p0=1000.
+        Opt         = True
+        Z3int  = ESMF_regrid_with_weights(Z3,wgt_file,Opt)
+        PSint  = ESMF_regrid_with_weights(PS,wgt_file,Opt)
+
+        intyp = 2      ; 1=linear, 2=log, 3=log-log
+        kxtrp = False   ; True=extrapolate
+
+        Z500forecast_interp = vinth2p(Z3int,hyam,hybm,varlev,PSint,intyp,p0,1,kxtrp)
+        Z500forecast = Z500forecast_interp(0,:,:)
+      end if
+    end if
+  else if (varname .eq. "T") then
+      if (mpas) then
+        T=forecastFile->T(0,:,:)
+        PS=forecastFile->PS(0,:)
+        PRESSURE=forecastFile->PRESSURE(0,:,:)
+        TBOT=forecastFile->T(0,29,:)
+        topofile=addfile("/glade/u/home/zarzycki/work/ASD2017_files/atm/cam/topo/mp15a-120a-US.topo.170118.nc","r")
+        PHIS=topofile->PHIS
+
+        Opt         = True
+        Tint       = ESMF_regrid_with_weights(T,wgt_file,Opt)
+        PSint      = ESMF_regrid_with_weights(PS,wgt_file,Opt)
+        PRESSUREint= ESMF_regrid_with_weights(PRESSURE,wgt_file,Opt)
+        TBOTint    = ESMF_regrid_with_weights(TBOT,wgt_file,Opt)
+        PHISint    = ESMF_regrid_with_weights(PHIS,wgt_file,Opt)
+
+        intyp = 2      ; 1=linear, 2=log, 3=log-log
+        kxtrp = False   ; True=extrapolate
+        varflg = 1                          ; temp is variable [tbot is used]
+
+        Z500forecast_interp = vintp2p_ecmwf(Tint, PRESSUREint/100., varlev ,PSint, intyp, 1, \
+                   kxtrp,varflg,TBOTint,PHISint)
+        Z500forecast = Z500forecast_interp(0,:,:)
+      else
+        T=forecastFile->T(0,:,:)
+        PS=forecastFile->PS(0,:)
+        hyam=forecastFile->hyam
+        hybm=forecastFile->hybm
+        p0=1000.
+        Opt         = True
+        Tint  = ESMF_regrid_with_weights(T,wgt_file,Opt)
+        PSint  = ESMF_regrid_with_weights(PS,wgt_file,Opt)
+
+        intyp = 2      ; 1=linear, 2=log, 3=log-log
+        kxtrp = False   ; True=extrapolate
+
+        Z500forecast_interp = vinth2p(Tint,hyam,hybm,varlev,PSint,intyp,p0,1,kxtrp)
+        Z500forecast = Z500forecast_interp(0,:,:)
+      end if
+  else if (varname .eq. "U") then
+      if (mpas) then
+        U=forecastFile->U(0,:,:)
+        PS=forecastFile->PS(0,:)
+        PRESSURE=forecastFile->PRESSURE(0,:,:)
+        TBOT=forecastFile->T(0,29,:)
+        topofile=addfile("/glade/u/home/zarzycki/work/ASD2017_files/atm/cam/topo/mp15a-120a-US.topo.170118.nc","r")
+        PHIS=topofile->PHIS
+
+        Opt         = True
+        Uint       = ESMF_regrid_with_weights(U,wgt_file,Opt)
+        PSint      = ESMF_regrid_with_weights(PS,wgt_file,Opt)
+        PRESSUREint= ESMF_regrid_with_weights(PRESSURE,wgt_file,Opt)
+        TBOTint    = ESMF_regrid_with_weights(TBOT,wgt_file,Opt)
+        PHISint    = ESMF_regrid_with_weights(PHIS,wgt_file,Opt)
+
+        intyp = 2      ; 1=linear, 2=log, 3=log-log
+        kxtrp = False   ; True=extrapolate
+        varflg = 1                          ; temp is variable [tbot is used]
+
+        Z500forecast_interp = vintp2p_ecmwf(Uint, PRESSUREint/100., varlev ,PSint, intyp, 0, \
+                   kxtrp,varflg,TBOTint,PHISint)
+        Z500forecast = Z500forecast_interp(0,:,:)
+      else
+        U=forecastFile->U(0,:,:)
+        PS=forecastFile->PS(0,:)
+        hyam=forecastFile->hyam
+        hybm=forecastFile->hybm
+        p0=1000.
+        Opt         = True
+        Uint  = ESMF_regrid_with_weights(U,wgt_file,Opt)
+        PSint  = ESMF_regrid_with_weights(PS,wgt_file,Opt)
+
+        intyp = 2      ; 1=linear, 2=log, 3=log-log
+        kxtrp = False   ; True=extrapolate
+
+        Z500forecast_interp = vinth2p(Uint,hyam,hybm,varlev,PSint,intyp,p0,0,kxtrp)
+        Z500forecast = Z500forecast_interp(0,:,:)
+      end if
+  else if (azvar .eq. "TS") then
+    Z500_se = forecastFile->TREFHT(0,:)
     Opt         = True
     Z500forecast  = ESMF_regrid_with_weights(Z500_se,wgt_file,Opt)
   else
-    if (mpas) then
-      Z3=forecastFile->Z3(0,:,:)
-      PS=forecastFile->PS(0,:)
-      PRESSURE=forecastFile->PRESSURE(0,:,:)
-      TBOT=forecastFile->T(0,29,:)
-      topofile=addfile("/glade/u/home/zarzycki/work/ASD2017_files/atm/cam/topo/mp15a-120a-US.topo.170118.nc","r")
-      PHIS=topofile->PHIS
-
-      Opt         = True
-      Z3int      = ESMF_regrid_with_weights(Z3,wgt_file,Opt)
-      PSint      = ESMF_regrid_with_weights(PS,wgt_file,Opt)
-      PRESSUREint= ESMF_regrid_with_weights(PRESSURE,wgt_file,Opt)
-      TBOTint    = ESMF_regrid_with_weights(TBOT,wgt_file,Opt)
-      PHISint    = ESMF_regrid_with_weights(PHIS,wgt_file,Opt)
-
-      intyp = 2      ; 1=linear, 2=log, 3=log-log
-      kxtrp = True   ; True=extrapolate
-      varflg = -1                          ; geo pot hgt is variable [tbot is used]
-
-      Z500forecast_interp = vintp2p_ecmwf(Z3int, PRESSUREint/100., 500.0 ,PSint, intyp, 1, \
-                 kxtrp,varflg,TBOTint,PHISint)
-      Z500forecast = Z500forecast_interp(0,:,:)
-    else
-      Z3=forecastFile->Z3(0,:,:)
-      PS=forecastFile->PS(0,:)
-      hyam=forecastFile->hyam
-      hybm=forecastFile->hybm
-      p0=1000.
-      Opt         = True
-      Z3int  = ESMF_regrid_with_weights(Z3,wgt_file,Opt)
-      PSint  = ESMF_regrid_with_weights(PS,wgt_file,Opt)
-
-      intyp = 2      ; 1=linear, 2=log, 3=log-log
-      kxtrp = True   ; True=extrapolate
-
-      Z500forecast_interp = vinth2p(Z3int,hyam,hybm,500.0,PSint,intyp,p0,1,kxtrp)
-      Z500forecast = Z500forecast_interp(0,:,:)
-    end if
+    print("no")
   end if
+  end if
+  end if
+  end if ; var selection
+
   ;print("Begin interp")
   guess     = 1                ; use zonal means
   is_cyclic = True             ; cyclic [global]
@@ -239,7 +359,7 @@ end if
 stats_output_name="./out-stats/"+stats_string
 quote = inttochar(34)
 delim = " "
-system("echo "+quote+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+delim+ACCgfs+delim+ACCforecast+delim+ACCcomparison+delim+fcst_config+delim+hourForecast+delim+region+     quote+" >> "+stats_output_name)
+system("echo "+quote+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+delim+ACCgfs+delim+ACCforecast+delim+ACCcomparison+delim+fcst_config+delim+hourForecast+delim+region+delim+azvar+     quote+" >> "+stats_output_name)
 
 if (deleteGFSfiles) then
   print("Deleting files...")
@@ -261,12 +381,28 @@ if (do_plot)
  
   res@cnFillOn          = True              ; color plot desired
   res@cnLineLabelsOn    = False             ; turn off contour lines
-
+  res@cnLinesOn = False
   res@gsnSpreadColors     = True            ; use full range of color map
-  res@cnLevelSelectionMode =  "ManualLevels"   
-  res@cnMinLevelValF       = -500.
-  res@cnMaxLevelValF       = 500.
-  res@cnLevelSpacingF      =   50. 
+  res@cnLevelSelectionMode =  "ManualLevels"
+   
+  if (varname .eq. "Z") then
+    res@cnMinLevelValF       = -500.
+    res@cnMaxLevelValF       = 500.
+    res@cnLevelSpacingF      =   50.
+  else if (varname .eq. "TS" .or. azvar .eq. "T") then
+    res@cnLevelSelectionMode =  "ManualLevels"   
+    res@cnMinLevelValF       = -10.
+    res@cnMaxLevelValF       = 10.
+    res@cnLevelSpacingF      =   4.
+  else if (varname .eq. "U") then
+    res@cnLevelSelectionMode =  "ManualLevels"   
+    res@cnMinLevelValF       = -20.
+    res@cnMaxLevelValF       = 20.
+    res@cnLevelSpacingF      =   5.
+  else  
+  end if
+  end if
+  end if
 
   res@lbLabelBarOn = False
 

@@ -21,18 +21,18 @@ underlayPop=True
 ; 1993 blizzard -- 21,1993
 ; 2010 snowmaggedon -- 7,2010
 ; 2016 jonas,snowzilla -- 6,2016
-stormID=6
-year=2016
-trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.JRA."+year+"."+year
-stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
+;stormID=21
+;year=1993
+;trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.JRA."+year+"."+year
+;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
 
 
 ;;; LENS
-;ensmem="035"
-;stormID=346
-;year=1990
-;trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
-;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
+ensmem="035"
+stormID=346
+year=1990
+trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
+stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
 
 if (underlayPop) then
   popFile=addfile("/glade/u/home/zarzycki/snow-tracking/gen_pop_files/population.nc","r")
@@ -103,13 +103,13 @@ res@mpOutlineOn = True
 res@mpInlandWaterFillColor = res@mpOceanFillColor
 res@mpGreatCircleLinesOn = True
 res@mpOutlineBoundarySets = "GeophysicalAndUSStates"
-res@mpGeophysicalLineThicknessF = 2.0
-res@mpUSStateLineThicknessF = 2.0
+res@mpGeophysicalLineThicknessF = 1.0
+res@mpUSStateLineThicknessF = 1.0
  
-res@mpMinLatF             = 30
+res@mpMinLatF             = 35
 res@mpMaxLatF             = 50
-res@mpMinLonF             = 270
-res@mpMaxLonF             = 300
+res@mpMinLonF             = 273
+res@mpMaxLonF             = 298
 
 res@mpProjection = "Orthographic"
 res@mpLimitMode           = "LatLon"
@@ -179,6 +179,24 @@ cnres@cnFillColors=snowColorsRGBA
 ; plot snow and overlay onto map
 mpid=gsn_csm_contour(wks,SNOW,cnres)
 overlay(map,mpid)
+
+;;;;;;;;;
+maskfile=addfile("/glade/u/home/zarzycki/snow-tracking/LES_tracking/NEmask.nc","r")
+RSIOUT=maskfile->MASK
+
+res_outline=True
+res_outline@gsnDraw=False
+res_outline@gsnFrame=False
+res_outline@cnLevelSelectionMode = "ExplicitLevels"     ; set manual contour levels
+res_outline@cnLevels    = (/ 0.5 /)      ; set levels
+res_outline@cnLineLabelsOn       = False
+res_outline@cnInfoLabelOn = False
+res_outline@cnLineColor="black"
+res_outline@cnLineThicknessF = 8.             ; doubles thickness of zero contour
+plotzeroline = gsn_csm_contour(wks,RSIOUT,res_outline)
+overlay(map,plotzeroline)
+
+;;;;;;;;
 
 ;gsn_define_colormap(wks,"rainbow+white+gray")
 polyres               = True          ; poly marker mods desired 

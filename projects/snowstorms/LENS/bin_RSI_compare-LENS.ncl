@@ -85,6 +85,8 @@ do k = 0,dimsizes(RSIcatArray)-1
 end do
 
 print(RSInormArray)
+RSInormArrayDecade = RSInormArray*10.
+print(RSInormArrayDecade)
 
 wks = gsn_open_wks(out_type,out_string)
 

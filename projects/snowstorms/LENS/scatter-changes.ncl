@@ -13,13 +13,26 @@ begin
 
 out_type="pdf"
 
-MINCAT = 3
-MAXCAT = 5
-SNOWPRECT="PRECT"
+
+;ncl scatter-changes.ncl MINCAT=1 MAXCAT=1 'SNOWPRECT="SNOW"' 'REFTIME="1990"' 'TESTTIME="2026"'
+
+;MINCAT = 1
+;MAXCAT = 1
+;SNOWPRECT="SNOW"
+;REFTIME="1990"
+;TESTTIME="2071"
+
+
+;MINCAT = 1
+;MAXCAT = 1
+;SNOWPRECT="SNOW"
+;REFTIME="1990"
+;TESTTIME="2071"
+
 OUTSTR="scatter-"+MINCAT+"_"+MAXCAT+"_"+SNOWPRECT
 
-RSIlist1=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.1990.0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
-RSIlist2=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS.2071.0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
+RSIlist1=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS."+REFTIME+".0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
+RSIlist2=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS."+TESTTIME+".0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
 
 if (dimsizes(RSIlist1) .ne. dimsizes(RSIlist2)) then
   print("Sizes of RSI arrays not equal, exiting...")
@@ -119,9 +132,16 @@ opt@PrintStat = True
 stats = stat_dispersion(diffr, opt )
 
 ; Percentage of events in RSILIST1 > RSILIST2
-print((sum(ratior)/tofloat(nsamples))+" "+(1-(sum(ratior)/tofloat(nsamples))))
+boot_1=(sum(ratior)/tofloat(nsamples))
+print(boot_1+" "+(1-boot_1))
 ; Percentage of events in RSILIST1 > RSILIST2 (with 3 cycle sampling)
-print((sum(ratiorr)/tofloat(nsamples))+" "+(1-(sum(ratiorr)/tofloat(nsamples))))
+boot_X=(sum(ratiorr)/tofloat(nsamples))
+print(boot_X+" "+(1-boot_X))
+
+stats_output_name="./bootstrap-stats.txt"
+quote = inttochar(34)
+delim = " "
+system("echo "+quote+REFTIME+delim+TESTTIME+delim+sprinti("%0.1i",MINCAT)+delim+sprinti("%0.1i",MAXCAT)+delim+SNOWPRECT+delim+boot_1+delim+boot_X     +quote+" >> "+stats_output_name)
 
 ;************************************************
 ; plotting parameters

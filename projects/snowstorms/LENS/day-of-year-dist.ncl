@@ -10,19 +10,25 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 begin
 
 plot_log=False
-out_type="pdf"
+out_type="x11"
 RSIthresh=1
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
-modelcolors=(/"blue","green","red"/)
+PRECTSNOW="PRECT"
+;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
+;modelcolors=(/"blue","green","red"/)
+;nyearsPerSample=(/35*16,35*10,35*10/)
+;nCases=3
+
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.CAT.csv"/)
+modelcolors=(/"blue","red"/)
+nyearsPerSample=(/35*16,56/)
+nCases=2
 
 out_string="pdf/DoY-dist-RSIge"+RSIthresh
 
-nyearsPerSample=(/35*16,35*10,35*10/)
 
-nCases=3
 doyArray=new((/nCases,50000/),"float")
 
-do z = 0,2
+do z = 0,nCases-1
 
 filename = modelfiles(z)
 
@@ -44,7 +50,7 @@ YYYY@calendar="no_leap"
 
 doy = day_of_year(YYYY,MM,DD)
 doy = where(RSIcat.ge.RSIthresh,doy,doy@_FillValue)
-doy = doy-200
+doy = doy-213     ; 213 = aug 1
 doy = where(doy .lt. 0, doy + 365,doy)
 
 doyArray(z,0:(dimsizes(doy)-1)) = doy
@@ -73,22 +79,33 @@ binSettings@bin_max=365.0
 nbins=26
 
 ap  = pdfx(doyArray(0,:), nbins, binSettings)
-bp  = pdfx(doyArray(1,:), nbins, binSettings)
-cp  = pdfx(doyArray(2,:), nbins, binSettings)
+if (nCases .gt. 1) then
+  bp  = pdfx(doyArray(1,:), nbins, binSettings)
+  if (nCases .gt. 2) then
+    cp  = pdfx(doyArray(2,:), nbins, binSettings)
+  end if
+end if
 
 nVar = nCases
 
 nBin    = ap@nbins          ; retrieve the number of bins
 xx      = new ( (/nVar, nBin/), typeof(ap))
 xx(0,:) = ap@bin_center
-xx(1,:) = bp@bin_center
-xx(2,:) = cp@bin_center
+if (nCases .gt. 1) then
+  xx(1,:) = bp@bin_center
+  if (nCases .gt. 2) then
+    xx(2,:) = cp@bin_center
+  end if
+end if
 
 yy      = new ( (/nVar, nBin/), typeof(ap))
 yy(0,:) = (/ ap*num(doyArray(0,:))/100./nyearsPerSample(0) /)
-yy(1,:) = (/ bp*num(doyArray(1,:))/100./nyearsPerSample(1) /)
-yy(2,:) = (/ bp*num(doyArray(2,:))/100./nyearsPerSample(2) /)
-
+if (nCases .gt. 1) then
+  yy(1,:) = (/ bp*num(doyArray(1,:))/100./nyearsPerSample(1) /)
+  if (nCases .gt. 2) then
+    yy(2,:) = (/ bp*num(doyArray(2,:))/100./nyearsPerSample(2) /)
+  end if
+end if
 ;yy(0,0) = 
 ;==================
 
@@ -110,7 +127,17 @@ res@tiXAxisString            = "Day of Year"
 
 res@trXMinF           = 0.
 res@trXMaxF           = 365.
-plot(0) = gsn_csm_xy (wks, xx, yy, res)
+
+res@tmXBMode      = "Explicit"   ; Define your own tick mark labels.
+res@tmXBLabelFontHeightF = 0.015 ; Change font height of labels.
+;res@tmXBMinorOn   = False        ; No minor tick marks.
+;res@tmXBValues= (/0,31,61,92,122,153,182,211,242,272,303,334,365/)
+;res@tmXBLabels= (/"Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"/)
+res@tmXBValues= (/0,61,122,182,242,303,365/)
+res@tmXBLabels= (/"Aug 1","Oct 1","Dec 1","Feb 1","Apr 1","Jun 1","Aug 1"/)
+res@tmXBMinorValues = (/0,31,61,92,122,153,182,211,242,272,303,334,365/)
+
+plot(0) = gsn_csm_xy (wks, xx, yy*100., res)
 
 lgres                    = True
 lgres@lgLabelFontHeightF = .06

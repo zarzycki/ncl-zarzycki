@@ -13,10 +13,10 @@ load "/glade/u/home/zarzycki/ncl/functions/trackDensity.ncl"
 begin
 
 out_type="pdf"
-RSIthresh=0
+RSIthresh=3
 prescut=1090.  ; 1000 for AGU
-plot_diff_abs=False
-plotname = "pdf/etcdens-absdiff-allstorms"
+plot_diff_abs=True
+plotname = "pdf/etcdens-absdiff-RSIthresh_"+RSIthresh
 
 trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.ALL","/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.2071.ALL"/)
 RSIfile = (/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.PRECT.tempest.csv"/)
@@ -113,10 +113,11 @@ end do
 count_diff = countArr(0,:,:)
 count_diff = countArr(1,:,:) - countArr(0,:,:)
 
-countArr = where(countArr.eq.0, countArr@_FillValue,countArr)
-count_diff = where(count_diff.eq.0, count_diff@_FillValue,count_diff)
+
 
 if (.not. plot_diff_abs) then
+  countArr = where(countArr.eq.0, countArr@_FillValue,countArr)
+  count_diff = where(count_diff.eq.0, count_diff@_FillValue,count_diff)
   count_diff = 100. * count_diff / countArr(0,:,:)
   count_diff = where(countArr(1,:,:) .ge. 10., count_diff, count_diff@_FillValue)
 end if
@@ -143,7 +144,7 @@ res@cnFillMode            = "RasterFill"       ; Raster Mode
 res@cnLinesOn             = False    ; turn of contour lines
 res@cnLineLabelsOn  = False
 res@lbLabelStride = 2
-res@gsnCenterString       = ""
+res@gsnRightString       = "decade~S~-1"
 
 res@mpMinLatF             = 20.
 res@mpMaxLatF             = 70.
@@ -152,19 +153,20 @@ res@mpMaxLonF             = 310.
 ;res@mpCenterLonF          = 180.
 
 ; plot absolute data
+print(RSIthresh)
 if (RSIthresh .eq. 0) then
   res@cnLevelSelectionMode  = "ManualLevels"
-  res@cnMinLevelValF        = 0.0
+  res@cnMinLevelValF        = 16.0
   res@cnMaxLevelValF        = 192.0
   res@cnLevelSpacingF       = res@cnMaxLevelValF/12.
-if (RSIthresh .eq. 1) then
+else if (RSIthresh .eq. 1) then
   res@cnLevelSelectionMode  = "ManualLevels"
-  res@cnMinLevelValF        = 0.0
-  res@cnMaxLevelValF        = 160.0
+  res@cnMinLevelValF        = 12.0
+  res@cnMaxLevelValF        = 144.0
   res@cnLevelSpacingF       = res@cnMaxLevelValF/12.
 else
   res@cnLevelSelectionMode  = "ManualLevels"
-  res@cnMinLevelValF        = 0.0
+  res@cnMinLevelValF        = 4.0
   res@cnMaxLevelValF        = 48.0
   res@cnLevelSpacingF       = res@cnMaxLevelValF/12.
 end if
@@ -174,7 +176,15 @@ cmap = read_colormap_file("GMT_hot")
 res@cnFillPalette=cmap(::-1,:)
 delete(cmap)
 
+if (RSIthresh .eq. 0) then
+  CATSTR="all ETCs"
+else
+  CATSTR="RPI > "+RSIthresh
+end if
+
+res@gsnLeftString       = "1990-05 "+CATSTR
 plot(0) = gsn_csm_contour_map_ce(wks,countArr(0,:,:),res)
+res@gsnLeftString       = "2071-80 "+CATSTR
 plot(1) = gsn_csm_contour_map_ce(wks,countArr(1,:,:),res)
 print("max countArr(0,:,:) "+max(countArr(0,:,:)))
 print("max countArr(1,:,:) "+max(countArr(1,:,:)))
@@ -186,14 +196,14 @@ if (plot_diff_abs) then
     res@cnMinLevelValF        = -48.0
     res@cnMaxLevelValF        = 48.0
   else if (RSIthresh .eq. 1) then
-    res@cnMinLevelValF        = -40.0
-    res@cnMaxLevelValF        = 40.0
+    res@cnMinLevelValF        = -36.0
+    res@cnMaxLevelValF        = 36.0
   else
     res@cnMinLevelValF        = -12.0
     res@cnMaxLevelValF        = 12.0
   end if
   end if
-  res@cnLevelSpacingF       = (res@cnMaxLevelValF-res@cnMinLevelValF)/10.
+  res@cnLevelSpacingF       = (res@cnMaxLevelValF-res@cnMinLevelValF)/12.
 else
   res@cnMinLevelValF        = -50.0
   res@cnMaxLevelValF        = 50.0
@@ -203,14 +213,22 @@ end if
 delete(res@cnFillPalette)
 res@cnFillPalette=colorMap2
 
+res@gsnLeftString       = "Diff. "+CATSTR
 plot(2) = gsn_csm_contour_map_ce(wks,count_diff(:,:),res)
 print("max count_diff(:,:) "+max(count_diff(:,:)))
 
 resP = True
 resP@txString           = ""
 resP@amJust           = "TopLeft"
-resP@gsnPanelFigureStringsFontHeightF = 0.014
-resP@gsnPanelFigureStrings= (/"a.","b.","c."/)
+resP@gsnPanelFigureStringsFontHeightF = 0.02
+if (RSIthresh .eq. 0) then
+  resP@gsnPanelFigureStrings= (/"a.","b.","c."/)
+else if (RSIthresh .eq. 1) then
+  resP@gsnPanelFigureStrings= (/"d.","e.","f."/)
+else
+  resP@gsnPanelFigureStrings= (/"g.","h.","i."/)
+end if
+end if
 
 gsn_panel(wks,plot,(/1,3/),resP)
 
