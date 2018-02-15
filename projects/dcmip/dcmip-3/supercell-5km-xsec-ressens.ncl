@@ -30,7 +30,7 @@ begin
 ;     lat:   arbitrary
 ;----------------------------------------------------------------------------
 
-;model="TEMPEST"
+;model="OLAM"
 resols=(/"r400","r200","r100","r50"/)
 out_type="pdf"
 
@@ -369,6 +369,55 @@ if (model .eq. "DYNAMICO") then
 
 ;p(i,j,k)=hya(k)*P0+hyb(k)*PS(i,j) where P0=1000hPa
   exit
+end if
+
+if (model .eq. "OLAM") then
+  correctLon=False
+  conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
+  time_str_arr=(/"005000","010000","015000","020000"/)
+  do kk=0,3
+    w_data_file  = "/glade/p/vetssg/data/DCMIP_2016/olam/publish/case131_"+resol+"/dcmip131_"+resol+"-DLL-2000-01-01-"+time_str_arr(kk)+".h5"
+    qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/olam/publish/case131_"+resol+"/dcmip131_"+resol+"-DLL-2000-01-01-"+time_str_arr(kk)+".h5"
+    z_data = addfile(w_data_file,"r")
+    w_data = addfile(w_data_file,"r")
+    qr_data = addfile(qr_data_file,"r")
+
+    lat = z_data->lat
+    lon = z_data->lon
+    z = z_data->z
+    w = w_data->W(9:10,:,:)
+    qr = qr_data->Qr(9:10,:,:)
+
+    w_5km_single=w(0,:,:)
+    qr_5km_single=qr(0,:,:)
+
+    w_5km_single =( w(0,:,:)  +  w(1,:,:))/2.
+    qr_5km_single=( qr(0,:,:) + qr(1,:,:))/2.
+
+    ; need to init arrays
+    if (kk .eq. 0) then  
+      w_5km = new((/4,dimsizes(lat),dimsizes(lon)/),typeof(w_5km_single))
+      w_5km!0="time"
+      w_5km!1="lat"
+      w_5km!2="lon"
+      w_5km&lat=lat
+      w_5km&lon=lon
+      qr_5km=w_5km
+    end if
+    w_5km(kk,:,:)=w_5km_single
+    qr_5km(kk,:,:)=qr_5km_single
+  end do
+  print("min 5km w: "+min(w_5km))
+  print("max 5km w: "+max(w_5km))
+  print("min 5km qr: "+min(qr_5km))
+  print("max 5km qr: "+max(qr_5km))
+  delete(lat)
+  delete(lon)
+  delete(z)
+  delete(w)
+  delete(qr)
+  delete(w_5km_single)
+  delete(qr_5km_single)
 end if
 
 

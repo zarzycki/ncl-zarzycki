@@ -21,7 +21,7 @@ def return_indices_of_a(a, b):
   b_set = set(b)
   return [i for i, v in enumerate(a) if v in b_set]
 
-raw_df0 = pd.read_csv('stats.txt', header=None, delim_whitespace=True)
+raw_df0 = pd.read_csv('stats2017only.txt', header=None, delim_whitespace=True)
 raw_df0.columns = ['date', 'GFS', 'CAM', 'ratio', 'config', 'lead', 'region', 'verifvar']
 raw_df0['DateTime'] = raw_df0['date'].apply(lambda x: pd.to_datetime(str(x), format='%Y%m%d%H'))
 raw_df0.set_index('DateTime', inplace=True)
@@ -71,11 +71,12 @@ for ii, zz in enumerate(forecast_hours):
 
 forecast_configs=np.append(forecast_configs,'GFS')
 
-configs_configs=[['GFS', 'hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_15_x16_CAM5_L30', 'hindcast_conus_60_x4_CAM5_L30'] , \
+configs_configs=[['hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_15_x16_CAM5_L30', 'hindcast_conus_60_x4_CAM5_L30'] , \
   ['hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_30_x8_CAM5_L30_NOFILT', 'hindcast_conus_30_x8_CAM5_L30_RTOPO'], \
   ['hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_60_x4_CAM5_L30', 'hindcast_conus_15_x16_CAM5_L30'], \
   ['hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_30_x8_CAM5_L59'], \
   ['hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_30_x8_CAM4_L26_HV', 'hindcast_conus_30_x8_CAM6_L32'], \
+  ['GFS', 'hindcast_conus_30_x8_CAM5_L30', 'hindcast_mp15a-120a-US_CAM5_L30'], \
   ['hindcast_conus_30_x8_CAM4_L26', 'hindcast_conus_30_x8_CAM4_L26_HV'] \
   ]
 

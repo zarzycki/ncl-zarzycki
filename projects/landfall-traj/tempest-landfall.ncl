@@ -15,8 +15,8 @@ begin
 ;===========================================================================================
 
 
-thefile="ibtracs-1979-2012-NATL_only.txt"
-thefile="/glade/u/home/zarzycki/tempest-scripts/asd-se/trajectories.txt.NE30"
+thefile="~/ncl/projects/ibtracs/ibtracs-1999-1999-NATL_only.txt"
+;thefile="/glade/u/home/zarzycki/tempest-scripts/asd-se/trajectories.txt.NE30"
 ncols = 10                    ; assign number of columns
 maxLines = -1
 headerDelimStr = "start"
@@ -26,7 +26,7 @@ traj_data = getTrajectories(thefile,ncols,maxLines,headerDelimStr,delimStr,isHea
 
 lon = traj_data(:,1,:)
 lat = traj_data(:,2,:)
-wind = traj_data(:,4,:)*0.85
+wind = traj_data(:,4,:)
 pres = traj_data(:,3,:)/100.
 yyyy=  traj_data(:,6,:)
 mm= traj_data(:,7,:)
@@ -52,10 +52,10 @@ landfall_pres=new((/npossLF,nstorms/),typeof(pres))
 ;===========================================================================================
 
 hrsbase=6
-hrsinterp=1
+hrsinterp=0.25
 
 print("max number of time records in orig data: "+ntimes)
-ntimesinterp = ( (ntimes-1) * toint(hrsbase)/toint(hrsinterp) ) + 1
+ntimesinterp = ( (ntimes-1) * toint(hrsbase/hrsinterp) ) + 1
 print("max number of time records in interpolated data: "+ntimesinterp)
 
 ;interp_lat=new((/nstorms,ntimesinterp/),typeof(lat))
@@ -64,7 +64,12 @@ print("max number of time records in interpolated data: "+ntimesinterp)
 ;interp_pres=new((/nstorms,ntimesinterp/),typeof(pres))
 
 xi = ispan(0,(ntimes-1)*toint(hrsbase)        , hrsbase  )
-xo = ispan(0,(ntimesinterp-1)*toint(hrsinterp), hrsinterp)
+;xo = ispan(0,toint((ntimesinterp-1)*(hrsinterp)), hrsinterp)
+xo = fspan(0,toint((ntimesinterp-1)*(hrsinterp)),ntimesinterp)
+
+print(xi)
+print(xo)
+
 
 interp_lat =linint1_n_Wrap(xi,lat,False,xo,0,1) 
 interp_lon =linint1_n_Wrap(xi,lon,False,xo,0,1) 
@@ -93,7 +98,7 @@ do ii = STIX,ENIX
   latClean=strip_missing(interp_lat(ii,:))
   lonClean=strip_missing(interp_lon(ii,:))
 
-  IX = find_landfalls(latClean,lonClean,1,12,0.75,npossLF,debug)
+  IX = find_landfalls(latClean,lonClean,1,12,0.5,npossLF,debug)
 
   do zz = 0,npossLF-1
     if(.not.ismissing(IX(zz)))
@@ -199,7 +204,7 @@ if (.not.ismissing(thisWind))
  txres@txFontHeightF = 0.01             ; Set the font height
  
  polyresback=polyres
- polyresback@gsMarkerSizeF=0.045
+ polyresback@gsMarkerSizeF=0.035
  polyresback@gsMarkerColor="black" 
 
       dum1(i,j) = gsn_add_polymarker(wks,map,thisLon,thisLat,polyresback)

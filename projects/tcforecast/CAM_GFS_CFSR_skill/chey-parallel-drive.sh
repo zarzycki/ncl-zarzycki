@@ -20,15 +20,15 @@ hours=( 6 12 24 36 48 60 72 96 120 144 168 192 216 240)
 #hours=( 6 12 120 240)
 regions=( "nhemi" "conus" )
 #configs=( "hindcast_mp15a-120a-US_CAM5_L30" "hindcast_conus_30_x8_CAM4_L26" )
-#configs=( "hindcast_conus_15_x16_CAM5_L30" "hindcast_conus_60_x4_CAM5_L30" "hindcast_mp15a-120a-US_CAM5_L30" "hindcast_conus_30_x8_CAM4_L26" "hindcast_conus_30_x8_CAM4_L26_HV" "hindcast_conus_30_x8_CAM5_L30" "hindcast_conus_30_x8_CAM6_L32" "hindcast_conus_30_x8_CAM5_L59" "hindcast_conus_30_x8_CAM5_L30_RTOPO" "hindcast_conus_30_x8_CAM5_L30_NOFILT" )
-configs=( "hindcast_conus_15_x16_CAM5_L30" )
-#vars=( "U200" "U850" "Z500" "T200" "T850" )
-vars=( "Z500" )
+configs=( "hindcast_conus_15_x16_CAM5_L30" "hindcast_conus_60_x4_CAM5_L30" "hindcast_mp15a-120a-US_CAM5_L30" "hindcast_conus_30_x8_CAM4_L26" "hindcast_conus_30_x8_CAM4_L26_HV" "hindcast_conus_30_x8_CAM5_L30" "hindcast_conus_30_x8_CAM6_L32" "hindcast_conus_30_x8_CAM5_L59" "hindcast_conus_30_x8_CAM5_L30_RTOPO" "hindcast_conus_30_x8_CAM5_L30_NOFILT" )
+#configs=( "hindcast_conus_15_x16_CAM5_L30" )
+vars=( "U200" "U850" "Z500" "T200" "T850" )
+#vars=( "Z500" )
 
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
-NUMCORES=1
+NUMCORES=12
 
 rm stats.1.txt
 rm ${COMMANDFILE}

@@ -16,7 +16,7 @@ out_type="pdf"
 
 thisVar="PRECL"  ; W or PRECL
 
-modellist=(/"ACME","CSU_CP","FV3","FVM","GEM","ICON","MPAS","NICAM","TEMPEST"/)
+modellist=(/"ACME","CSU_CP","FV3","FVM","GEM","ICON","MPAS","NICAM","OLAM","TEMPEST"/)
 
 ;modellist=(/"CSU_CP","CSU_LZ"/)
 reslist=(/"r50","r100","r200","r400"/)
@@ -152,6 +152,12 @@ do jj = 0,nres-1
     time_var_name="time"
     prec_units="ms"
   end if
+  if (model .eq. "OLAM") then
+    data_file = "/glade/scratch/zarzycki/dcmip131_"+resol+"-DLL-2000-01-01-CAT.nc"
+    time_units = "m"
+    time_var_name="time"
+    prec_units="ms"
+  end if
 
   print(""+data_file)
 
@@ -178,10 +184,19 @@ do jj = 0,nres-1
     rho_h2o = 1000.
     model_w = model_w * rho_h2o * 4 * 3.14159 * (6371000./120.)^2 / 10^5
   end if
-  model_time = f->$time_var_name$
+  if (model .ne. "OLAM")
+    model_time = f->$time_var_name$
+  end if 
 
-  if(model .eq. "NICAM") then
+  if(model .eq. "NICAM" .or. model .eq. "OLAM") then
     model_time = (/0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120 /)
+  end if
+
+  if(model .eq. "OLAM") then
+    model_time_float = tofloat(model_time)
+    delete(model_time)
+    model_time = model_time_float
+    delete(model_time_float)
   end if
 
   if (time_units .eq. "d") then
@@ -332,7 +347,7 @@ end do
   pres@gsnPanelTop = 0.9
   pres@gsnPanelYWhiteSpacePercent = 5
   pres@gsnPanelXWhiteSpacePercent = 5
-  gsn_panel(wks, plot, (/3,3/), pres)
+  gsn_panel(wks, plot, (/2,5/), pres)
 
 end
 

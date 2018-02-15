@@ -6,18 +6,18 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 begin
 
 ;; USER SETTINGS
-do_plot = False           ; Do we want a 3 panel plot?
+do_plot = True           ; Do we want a 3 panel plot?
 deleteGFSfiles = False     ; do we want to delete GFS files?
 do_cam = True
 do_comparison = True
 use_Z500 = False
 
 ;;; COMMENT THESE WHEN RUNNING BATCH
-;azvar="Z500"
-;fcst_config = "hindcast_conus_15_x16_CAM5_L30"
-;region="conus"   ; region = conus or nhemi
-;hourForecast=120         ; What forecast do we want to analyze
-;YYYYMMDDHH=2017120100
+azvar="Z500"
+fcst_config = "hindcast_conus_30_x8_CAM5_L30"
+region="nhemi"   ; region = conus or nhemi
+hourForecast=120         ; What forecast do we want to analyze
+YYYYMMDDHH=2017123100
 
 stats_string=fcst_config+"_"+region+"_"+azvar+"_"+sprinti("%0.10i",YYYYMMDDHH)+"_"+sprinti("%0.4i",hourForecast)
 
@@ -106,9 +106,9 @@ if (do_cam) then
     if (.not.ismissing(str_match(fcst_config, "conus_30_x8"))) then
       wgt_file = "/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_conus_30_x8_to_0.25x0.25glob_patch.nc"
     else if (.not.ismissing(str_match(fcst_config, "conus_60_x4"))) then
-      wgt_file = "/glade/scratch/zarzycki/map_conus_60_x4_to_0.25x0.25glob_patch.nc"
+      wgt_file = "/glade/p/work/zarzycki/maps/VR_to_latlon/map_conus_60_x4_to_0.25x0.25glob_patch.nc"
     else if (.not.ismissing(str_match(fcst_config, "conus_15_x16"))) then
-      wgt_file = "/glade/scratch/zarzycki/map_conus_15_x16_to_0.25x0.25glob_patch.nc"
+      wgt_file = "/glade/p/work/zarzycki/maps/VR_to_latlon/map_conus_15_x16_to_0.25x0.25glob_patch.nc"
     else
       print("incorrect matching SE weight file string")
       exit()
@@ -371,8 +371,8 @@ if (do_plot)
 ; create plot
 ;************************************************
   plot = new(3,graphic)   
-  wks = gsn_open_wks("x11","map")           ; open a ps file
-  gsn_define_colormap(wks,"MPL_RdBu")
+  wks = gsn_open_wks("pdf","map")           ; open a ps file
+  gsn_define_colormap(wks,"MPL_BuRd")
 
   res                   = True
   res@gsnDraw = False
@@ -386,8 +386,8 @@ if (do_plot)
   res@cnLevelSelectionMode =  "ManualLevels"
    
   if (varname .eq. "Z") then
-    res@cnMinLevelValF       = -500.
-    res@cnMaxLevelValF       = 500.
+    res@cnMinLevelValF       = -400.
+    res@cnMaxLevelValF       = 400.
     res@cnLevelSpacingF      =   50.
   else if (varname .eq. "TS" .or. azvar .eq. "T") then
     res@cnLevelSelectionMode =  "ManualLevels"   

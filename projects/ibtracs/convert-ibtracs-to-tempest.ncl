@@ -12,8 +12,8 @@ begin
 
 
 
-ibstyr=1979
-ibenyr=2012
+ibstyr=1999
+ibenyr=1999
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
@@ -128,8 +128,8 @@ filename="./test.txt"
 
 do ii = 0,ibstormcount-1
   ;print(ibname(ii,0)+" "+toint(ibbasin(ii,0)))
-  ;if (toint(ibbasin(ii,0)) .eq. 0 .or. toint(ibbasin(ii,0)) .eq. 12 .or. toint(ibbasin(ii,0)) .eq. 13) then
-  if (toint(ibbasin(ii,0)) .eq. 0 ) then
+  if (toint(ibbasin(ii,0)) .eq. 0 .or. toint(ibbasin(ii,0)) .eq. 12 .or. toint(ibbasin(ii,0)) .eq. 13) then
+  ;if (toint(ibbasin(ii,0)) .eq. 0 ) then
     if (.not.ismissing(ibname(ii,0))) then
 
       thisdate=cd_calendar(ibtime(ii,0),0)
