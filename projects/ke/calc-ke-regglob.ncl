@@ -1,6 +1,7 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
+load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 ;
 ;  Colin Zarzycki 6/1/17
 ;  read u,v files, compute KE spectra
@@ -10,24 +11,48 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 
 begin
 
-fps = addfile("/glade/u/home/zarzycki/scratch/tmp_regrid.nc","r")    ;input file, needs to have time dimension (can be 1)
-specfilename="./spectrum.nc"     ;output filename
+; Default options =============================================================================
+;anlfilename="/glade/u/home/zarzycki/acgd0005/CMZ/HINDCASTS/hindcast_conus_30_x8_CAM4_L26_HV/2017123100/hindcast_conus_30_x8_CAM4_L26_HV.cam.h0.2018-01-10-00000.nc"
+;specfilename="./spectrum_HV.nc"     ;output filename
 UVARNAME="U200"
 VVARNAME="V200"
+overwrite_out=False
+;==============================================================================================
+
+; Regrid options =============================================================================
+do_regrid=True
+regrid_wgts="/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_conus_30_x8_to_0.25x0.25glob_patch.nc"
+;==============================================================================================
 
 ; Regional options =============================================================================
 do_regional=False     ; if grid is not global (i.e., limited area model or regional subset)
 deldeg=0.25           ; horizontal grid spacing in degrees (for wavenumber truncation)
 cenLat=0.             ; latitude of center of region -- roughly for scaling wavenumber with cos(lat)
-;=================================================================================
+;==============================================================================================
 
+fps = addfile(anlfilename,"r")    ;input file, needs to have time dimension (can be 1)
+if (do_regrid)
+  tmp = fps->$UVARNAME$
+  Opt = True
+  tmpregrid = ESMF_regrid_with_weights(tmp,regrid_wgts,Opt)
+  printVarSummary(tmpregrid)
+  lat = tmpregrid&lat
+  lon = tmpregrid&lon
+  delete(tmp)
+  delete(tmpregrid)
+else ; already on lat-lon grid
+  lat = fps->lat
+  lon = fps->lon
+end if
+
+nlat = dimsizes(lat)
+nlon = dimsizes(lon)
 ntimes = dimsizes(fps->time)
-nlat = dimsizes(fps->lat)
-nlon = dimsizes(fps->lon)
+
+
 print ("ntimes="+ntimes+" nlat x nlon "+nlat+"x"+nlon)
 
-lat = fps->lat
-lon = fps->lon
+
 
 ; x = new ( (/nlat/), "double", 1d-99 )
 spc = new ( (/nlat/), "double", 1d-99 )
@@ -51,8 +76,16 @@ k_save=spc_save
 
 do timeix = 0,ntimes-1
 
-  u = fps->$UVARNAME$(timeix,:,:)
-  v = fps->$VVARNAME$(timeix,:,:)
+  if (do_regrid)
+    utmp = fps->$UVARNAME$(timeix,:)
+    vtmp = fps->$UVARNAME$(timeix,:)
+    Opt = True
+    u = ESMF_regrid_with_weights(utmp,regrid_wgts,Opt)
+    v = ESMF_regrid_with_weights(vtmp,regrid_wgts,Opt)
+  else
+    u = fps->$UVARNAME$(timeix,:,:)
+    v = fps->$VVARNAME$(timeix,:,:)
+  end if
   print ("dimsizes(u)")
   print (dimsizes(u))
 
@@ -190,17 +223,31 @@ end if
 
 ;-------------------------------------------------------------------------------
 
-;save spectrum data
-system("/bin/rm "+specfilename)           ; remove any pre-existing file
-ncdf     = addfile(specfilename ,"c")  ; open output netCDF file
-; make time and UNLIMITED dimension      ; recommended  for most applications
-;filedimdef(ncdf,"time",-1,True) 
-ncdf->x = x_save
-ncdf->spc = spc_save
-if (do_regional) then
-  ncdf->k = k_save
+doesfileexist=fileexists(specfilename)
+if (overwrite_out .eq. True .or. doesfileexist .eq. False) then
+  print("Writing new file")
+  ;save spectrum data
+  system("/bin/rm "+specfilename)           ; remove any pre-existing file
+  ncdf     = addfile(specfilename ,"c")  ; open output netCDF file
+  ; make time and UNLIMITED dimension      ; recommended  for most applications
+  filedimdef(ncdf,"time",-1,True) 
+  ncdf->x = x_save
+  ncdf->spc = spc_save
+  if (do_regional) then
+    ncdf->k = k_save
+  end if
+else  ; we are appending...
+  ncdf = addfile(specfilename ,"w")  ; open output netCDF file
+  ndims=dimsizes(ncdf->x)
+  nfiletimes=ndims(0)
+  print ("Append data at new time step.")
+  stix=nfiletimes
+  enix=(nfiletimes+ntimes-1)
+  ncdf->x(stix:enix,:) = (/ x_save(0:(ntimes-1),:) /) 
+  ncdf->spc(stix:enix,:) = (/ spc_save(0:(ntimes-1),:) /) 
+  if (do_regional) then
+    ncdf->k(stix:enix,:) = (/ k_save(0:(ntimes-1),:) /) 
+  end if
 end if
 
-
 end
-
