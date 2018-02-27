@@ -21,7 +21,7 @@ overwrite_out=False
 
 ; Regrid options =============================================================================
 do_regrid=True
-regrid_wgts="/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_conus_30_x8_to_0.25x0.25glob_patch.nc"
+;regrid_wgts="/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_conus_30_x8_to_0.25x0.25glob_patch.nc"
 ;==============================================================================================
 
 ; Regional options =============================================================================
@@ -30,6 +30,7 @@ deldeg=0.25           ; horizontal grid spacing in degrees (for wavenumber trunc
 cenLat=0.             ; latitude of center of region -- roughly for scaling wavenumber with cos(lat)
 ;==============================================================================================
 
+; Load lat/lon arrays and get dimension sizes
 fps = addfile(anlfilename,"r")    ;input file, needs to have time dimension (can be 1)
 if (do_regrid)
   tmp = fps->$UVARNAME$
@@ -44,44 +45,38 @@ else ; already on lat-lon grid
   lat = fps->lat
   lon = fps->lon
 end if
-
 nlat = dimsizes(lat)
 nlon = dimsizes(lon)
 ntimes = dimsizes(fps->time)
-
-
 print ("ntimes="+ntimes+" nlat x nlon "+nlat+"x"+nlon)
 
-
-
-; x = new ( (/nlat/), "double", 1d-99 )
+; ==== Allocate new arrays
 spc = new ( (/nlat/), "double", 1d-99 )
-;spc@_FillValue = 1d-99 ; has to be positive 
 spc = spc@_FillValue
 spc_c=spc
 x=spc
 n_avg = 0        
 
 spc_vd = new ( (/nlat/), "double", 1d-99 )
-;spc_vd@_FillValue = 1d-99 ; has to be positive 
 spc_vd = spc_vd@_FillValue
 
 spc_uv = new ( (/nlat/), "double", 1d-99 )
-;spc_uv@_FillValue = 1d-99 ; has to be positive 
 spc_uv = spc_uv@_FillValue
 
 spc_save = new ( (/ntimes,nlat/), "double", 1d-99 )
 x_save=spc_save
 k_save=spc_save
 
+; Loop over all time indices on file to calculate KE spectra
 do timeix = 0,ntimes-1
-
   if (do_regrid)
     utmp = fps->$UVARNAME$(timeix,:)
     vtmp = fps->$UVARNAME$(timeix,:)
     Opt = True
     u = ESMF_regrid_with_weights(utmp,regrid_wgts,Opt)
     v = ESMF_regrid_with_weights(vtmp,regrid_wgts,Opt)
+    delete(utmp)
+    delete(vtmp)
   else
     u = fps->$UVARNAME$(timeix,:,:)
     v = fps->$VVARNAME$(timeix,:,:)
@@ -93,7 +88,6 @@ do timeix = 0,ntimes-1
 
   if (do_regional)
     ; Errico 1985 technique
-
     utmp=u
     vtmp=v
     var_full=u
@@ -136,12 +130,10 @@ do timeix = 0,ntimes-1
 
     var=var_full(0:nlat-2,0:nlon-2)
     var2=var2_full(0:nlat-2,0:nlon-2)
-
   else
     var  = u
     var2 = v
   end if
-
 
   print ("u min/max = "+min(var(:,:))+", "+max(var(:,:)) )
   print ("v min/max = "+min(var2(:,:))+", "+max(var2(:,:)) )

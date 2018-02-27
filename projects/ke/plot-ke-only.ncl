@@ -14,10 +14,9 @@ plottitle="ne0conus60x4_200mb_KE"
 ; filelist = *.nc outputs from calc-ke-colin-regglob.ncl
 ; filelabs = labels for plot
 
-;filelist=(/"default.nc","config1.nc","config2.nc","config3.nc","config4.nc"/)
-;filelabs=(/"nu=1.0/nu_div=6.25/nu_p=1.0/nu_q=1.0","nu=0.1/nu_div=1.0/nu_p=1.0/nu_q=1.0","nu=0.1/nu_div=0.1/nu_p=0.1/nu_q=0.1","nu=0.05/nu_div=0.05/nu_p=0.05/nu_q=0.05","nu=0.01/nu_div=0.1/nu_p=0.1/nu_q=0.1"/)
-filelist=(/"spectrum.nc","spectrum_HV.nc","spectrum_hindcast_conus_30_x8_CAM5_L30.nc"/)
-filelabs=(/"reduced HV","control","spectrum_hindcast_conus_30_x8_CAM5_L30.nc"/)
+filelist=(/"spectrum_hindcast_conus_30_x8_CAM5_L30.nc","spectrum_hindcast_conus_30_x8_CAM5_L59.nc"/)
+;filelabs=(/"reduced HV","control","spectrum_hindcast_conus_30_x8_CAM5_L30.nc"/)
+filelabs=filelist
 
 nfiles=dimsizes(filelist)
 
