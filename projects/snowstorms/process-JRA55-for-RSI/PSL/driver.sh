@@ -13,7 +13,7 @@
 
 ################################################################
 
-for YYYY in `seq 1969 2016`; do
+for YYYY in `seq 1975 1975`; do
 
 JRABASEDIR=/glade/p/rda/data/ds628.0/
 SYMDIR=/glade/u/home/zarzycki/scratch/JRAsym/

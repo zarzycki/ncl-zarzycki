@@ -11,17 +11,22 @@ begin
 
 plot_log=False
 out_type="x11"
-RSIthresh=1
-PRECTSNOW="PRECT"
+RSIthresh=3
+PRECTSNOW="SNOW"
+
 ;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
 ;modelcolors=(/"blue","green","red"/)
+;labelsArr=(/"1990-2005 (RSI>="+RSIthresh+")","2026-2035 (RSI>="+RSIthresh+")","2071-2080 (RSI>="+RSIthresh+")"/)
 ;nyearsPerSample=(/35*16,35*10,35*10/)
-;nCases=3
 
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.CAT.csv"/)
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
 modelcolors=(/"blue","red"/)
-nyearsPerSample=(/35*16,56/)
-nCases=2
+labelsArr=(/"LENS PD (RSI>="+RSIthresh+")","JRA PD (RSI>="+RSIthresh+")"/)
+nyearsPerSample=(/35*16,60/)
+
+
+
+nCases=dimsizes(modelfiles)
 
 out_string="pdf/DoY-dist-RSIge"+RSIthresh
 
@@ -146,11 +151,11 @@ lgres@vpHeightF          = 0.08
 lgres@lgPerimColor       = "black"
 lgres@lgPerimThicknessF  = 1.0
 lgres@lgItemType         = "Lines"
-lgres@lgLineColors     = res@xyLineColors(::-1)
-lgres@lgDashIndexes = res@xyDashPatterns(::-1)
+lgres@lgLineColors     = res@xyLineColors
+lgres@lgDashIndexes = res@xyDashPatterns
 lgres@lgMonoLineThickness = False
-lgres@lgLineThicknesses = res@xyLineThicknesses(::-1)
-lbid = gsn_create_legend(wks,3,(/"2071-2080 (RSI>="+RSIthresh+")","2026-2035 (RSI>="+RSIthresh+")","1990-2005 (RSI>="+RSIthresh+")"/),lgres)
+lgres@lgLineThicknesses = res@xyLineThicknesses
+lbid = gsn_create_legend(wks,nCases,labelsArr,lgres)
 
 amres = True
 amres@amJust="TopRight"

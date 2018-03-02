@@ -12,13 +12,13 @@ begin
 plot_log=False
 out_type="pdf"
 out_string="low-res-ASD-RSI"
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
 ;modelfiles=(/"RSI-ne0conus30x8.csv","RSI-mp15a-120a-US.csv"/)
 ;modelfiles=(/"RSI-ne30.csv","RSI-mp120a.csv"/)
 ;modelcolors=(/"red","blue"/)
 modelcolors=(/"pink","lightblue"/)
 
-nyearsPerSample=(/35*16,35*16,117/)
+nyearsPerSample=(/35*16,60,117/)
 
 RSIcatArray=(/1,2,3,4,5/)
 nCases=3
