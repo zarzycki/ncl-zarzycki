@@ -6,19 +6,19 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 begin
 
 ;; USER SETTINGS
-do_plot = True          ; Do we want a 3 panel plot?
+do_plot = False          ; Do we want a 3 panel plot?
 deleteGFSfiles = False     ; do we want to delete GFS files?
 do_cam = True
 do_comparison = True
 use_Z500 = False
 
 ;;; COMMENT THESE WHEN RUNNING BATCH
-azvar="Z500"
-fcst_config = "hindcast_conus_30_x8_CAM5_L30_NOLAND"
-region="nhemi"   ; region = conus or nhemi
-hourForecast=12         ; What forecast do we want to analyze
-YYYYMMDDHH=2017123100
-PATHTOCAM="/glade/scratch/zarzycki/"+fcst_config+"/run/"
+;azvar="Z500"
+;fcst_config = "hindcast_conus_30_x8_CAM5_L30"
+;region="nhemi"   ; region = conus or nhemi
+;hourForecast=120         ; What forecast do we want to analyze
+;YYYYMMDDHH=2017123100
+;PATHTOCAM="/glade/scratch/zarzycki/"+fcst_config+"/run/"
 
 stats_string=fcst_config+"_"+region+"_"+azvar+"_"+sprinti("%0.10i",YYYYMMDDHH)+"_"+sprinti("%0.4i",hourForecast)
 
