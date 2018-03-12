@@ -12,8 +12,8 @@ begin
 
 gridName="conus_30_x8"
 InterpMethod="patch"
-;outres="0.25x0.25"
-outres="0.125x0.125"
+outres="0.25x0.25"
+;outres="0.125x0.125"
 ;outres="0.5x0.5"
 ;outres="1x1"
 ;dstGridDir="."

@@ -9,6 +9,7 @@ stats*txt
 *.png
 nohu*
 simple.nc
+PET*
 out.*
 slice-*nc
 timesArray_*
