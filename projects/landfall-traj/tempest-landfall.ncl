@@ -14,19 +14,31 @@ begin
 
 ;===========================================================================================
 
+thedir="~/tempest-scripts/asd-se/"
+thefile="trajectories.txt.MP15A-120A-US-EXP213"
+;thefile="trajectories.txt.NE0CONUS30X8-EXP211"
 
-thefile="~/ncl/projects/ibtracs/ibtracs-1999-1999-NATL_only.txt"
-;thefile="/glade/u/home/zarzycki/tempest-scripts/asd-se/trajectories.txt.NE30"
+;thedir="~/ncl/projects/ibtracs/"
+;thefile="ibtracs-1979-2012-NATL_only.txt"
+
 ncols = 10                    ; assign number of columns
 maxLines = -1
 headerDelimStr = "start"
 delimStr="tab"
 isHeader=False
-traj_data = getTrajectories(thefile,ncols,maxLines,headerDelimStr,delimStr,isHeader)
+
+npossLF=3
+
+hrsbase=6
+hrsinterp=0.25
+
+;===========================================================================================
+
+traj_data = getTrajectories(thedir+"/"+thefile,ncols,maxLines,headerDelimStr,delimStr,isHeader)
 
 lon = traj_data(:,1,:)
 lat = traj_data(:,2,:)
-wind = traj_data(:,4,:)
+wind = traj_data(:,4,:)*.85
 pres = traj_data(:,3,:)/100.
 yyyy=  traj_data(:,6,:)
 mm= traj_data(:,7,:)
@@ -42,17 +54,12 @@ ntimes = ndims(1)
 
 ;===========================================================================================
 
-npossLF=5
-
 landfall_lat=new((/npossLF,nstorms/),typeof(lat))
 landfall_lon=new((/npossLF,nstorms/),typeof(lon))
 landfall_wind=new((/npossLF,nstorms/),typeof(wind))
 landfall_pres=new((/npossLF,nstorms/),typeof(pres))
 
 ;===========================================================================================
-
-hrsbase=6
-hrsinterp=0.25
 
 print("max number of time records in orig data: "+ntimes)
 ntimesinterp = ( (ntimes-1) * toint(hrsbase/hrsinterp) ) + 1
@@ -126,7 +133,7 @@ print(num(landfall_lat(0,:)))
 
 ;--------------------------------------------------------
 print("Beginning plot sequence")
-wks  = gsn_open_wks("x11","landfall."+thefile)
+wks  = gsn_open_wks("png","landfall."+thefile)
 map = new(1,graphic)
   
 res  = True

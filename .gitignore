@@ -1,3 +1,4 @@
+projects/tcforecast/CAM_GFS_CFSR_skill/out-stats/*
 stats*txt
 *.Log
 *.pdf
