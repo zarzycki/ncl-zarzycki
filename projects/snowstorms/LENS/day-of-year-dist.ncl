@@ -10,25 +10,25 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 begin
 
 plot_log=False
-out_type="x11"
-RSIthresh=3
+out_type="pdf"
+RSIthresh=1
 PRECTSNOW="SNOW"
 
-;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
-;modelcolors=(/"blue","green","red"/)
-;labelsArr=(/"1990-2005 (RSI>="+RSIthresh+")","2026-2035 (RSI>="+RSIthresh+")","2071-2080 (RSI>="+RSIthresh+")"/)
-;nyearsPerSample=(/35*16,35*10,35*10/)
+modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
+modelcolors=(/"blue2","green2","red2"/)
+labelsArr=(/"  1990-2005","  2026-2035","  2071-2080"/)
+nyearsPerSample=(/35*16,35*10,35*10/)
 
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
-modelcolors=(/"blue","red"/)
-labelsArr=(/"LENS PD (RSI>="+RSIthresh+")","JRA PD (RSI>="+RSIthresh+")"/)
-nyearsPerSample=(/35*16,60/)
+;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
+;modelcolors=(/"blue","red"/)
+;labelsArr=(/"LENS PD (RSI>="+RSIthresh+")","JRA PD (RSI>="+RSIthresh+")"/)
+;nyearsPerSample=(/35*16,60/)
 
 
 
 nCases=dimsizes(modelfiles)
 
-out_string="pdf/DoY-dist-RSIge"+RSIthresh
+out_string="pdf/DoY-dist-"+PRECTSNOW+"-RSIge"+RSIthresh
 
 
 doyArray=new((/nCases,50000/),"float")
@@ -116,19 +116,19 @@ end if
 
 wks = gsn_open_wks(out_type,out_string)
 
-plot = new(1,graphic)
-
 res  = True
 
 res@gsnDraw=False
 res@gsnFrame=False
 
-res@xyLineThicknesses        = (/8.0,8.0,8.0/)
+res@xyLineThicknesses        = (/12.0,12.0,12.0/)
 res@xyLineColors             = modelcolors
 res@xyMonoDashPattern        = False              ; all solid
 res@xyDashPatterns = (/0,0,0/)
-res@tiYAxisString            = "Storm biweekly prob. (%)"
+res@tiYAxisString            = "Biweekly prob. (%)"
 res@tiXAxisString            = "Day of Year"
+res@tiMainString         = "Storm probability (RSI ~F34~3~F21~ "+RSIthresh+")"
+
 
 res@trXMinF           = 0.
 res@trXMaxF           = 365.
@@ -142,12 +142,26 @@ res@tmXBValues= (/0,61,122,182,242,303,365/)
 res@tmXBLabels= (/"Aug 1","Oct 1","Dec 1","Feb 1","Apr 1","Jun 1","Aug 1"/)
 res@tmXBMinorValues = (/0,31,61,92,122,153,182,211,242,272,303,334,365/)
 
-plot(0) = gsn_csm_xy (wks, xx, yy*100., res)
+plot_wo_grid = gsn_csm_xy (wks, xx, yy*100., res)
 
+res@tmXMajorGrid      = True
+res@tmYMajorGrid      = True
+res@tmXMajorGridLineColor = "grey60"
+res@tmYMajorGridLineColor = "grey60"
+res@tmXMajorGridLineDashPattern = 7
+res@tmYMajorGridLineDashPattern = 7
+
+plot_w_grid = gsn_csm_xy (wks, xx, yy*100., res)
+
+annoid = gsn_add_annotation(plot_w_grid,plot_wo_grid,False) 
+
+; add legend
 lgres                    = True
-lgres@lgLabelFontHeightF = .06
-lgres@vpWidthF           = 0.2
+lgres@lgLabelFontHeightF = .1
+lgres@vpWidthF           = 0.15
 lgres@vpHeightF          = 0.08
+lgres@lgPerimFill            = "SolidFill"      ; Fill legend box w/white
+lgres@lgPerimFillColor       = "white"          ; so it masks XY curves
 lgres@lgPerimColor       = "black"
 lgres@lgPerimThicknessF  = 1.0
 lgres@lgItemType         = "Lines"
@@ -155,16 +169,36 @@ lgres@lgLineColors     = res@xyLineColors
 lgres@lgDashIndexes = res@xyDashPatterns
 lgres@lgMonoLineThickness = False
 lgres@lgLineThicknesses = res@xyLineThicknesses
+;lgres@lgLineDashSegLenF = 0.01
 lbid = gsn_create_legend(wks,nCases,labelsArr,lgres)
-
 amres = True
 amres@amJust="TopRight"
 amres@amParallelPosF   = 0.49             ; move legend to the right
 amres@amOrthogonalPosF = -0.49             ; move the legend down
-annoid1 = gsn_add_annotation(plot,lbid(0),amres)   ; add legend to plot
+annoid1 = gsn_add_annotation(plot_w_grid,lbid,amres)   ; add legend to plot
 
-resP = True
-gsn_panel(wks,plot,(/1,1/),resP)             ; now draw as one plot
+; add panel label
+if (RSIthresh .eq. 1) then
+  panelStr="a."
+else if (RSIthresh .eq. 3) then
+  panelStr="b."
+else
+  panelStr="x."
+end if
+end if
+paneltxres                       = True
+paneltxres@txPerimOn             = True
+paneltxres@txFontHeightF         = 0.05
+amres_tr                  = True
+amres_tr@amParallelPosF   = -0.48    ; This is the left edge of the plot.
+amres_tr@amOrthogonalPosF = -0.48    ; This is the top edge of the plot.
+amres_tr@amJust           = "TopLeft"
+paneltxres@txBackgroundFillColor = "White"
+txid = gsn_create_text(wks, panelStr, paneltxres)
+amid = gsn_add_annotation(plot_w_grid, txid, amres_tr)
+
+draw(plot_w_grid)
+frame(wks)
    
 
 end

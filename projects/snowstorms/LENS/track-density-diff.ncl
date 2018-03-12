@@ -13,7 +13,7 @@ load "/glade/u/home/zarzycki/ncl/functions/trackDensity.ncl"
 begin
 
 out_type="pdf"
-RSIthresh=3
+RSIthresh=0
 prescut=1090.  ; 1000 for AGU
 plot_diff_abs=True
 plotname = "pdf/etcdens-absdiff-RSIthresh_"+RSIthresh
@@ -179,7 +179,7 @@ delete(cmap)
 if (RSIthresh .eq. 0) then
   CATSTR="all ETCs"
 else
-  CATSTR="RPI > "+RSIthresh
+  CATSTR="RPI ~F34~3~F21~ "+RSIthresh
 end if
 
 res@gsnLeftString       = "1990-05 "+CATSTR

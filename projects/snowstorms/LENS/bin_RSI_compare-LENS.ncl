@@ -12,7 +12,7 @@ begin
 plot_log=False
 out_type="pdf"
 out_string="pdf/RSI-bin-comp-LENS"
-SNOWPRECT="SNOW"
+SNOWPRECT="PRECT"
 modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv"/)
 modelstrs=(/"1990-2005","2026-2035","2071-2080"/)
 
