@@ -12,10 +12,13 @@ begin
 
 out_type="pdf"
 
-do_non_snow=True
+do_non_snow=False
 
-trajfile=(/"/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.1990.CAT","/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.2071.CAT"/)
-RSIfile = (/"/home/zarzycki/snow/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.SNOW.tempest.csv","/home/zarzycki/snow/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.SNOW.tempest.csv"/)
+PRECTSNOW="PRECT"
+trajfile=(/"/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.1990.CAT","/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.2026.CAT","/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.2071.CAT"/)
+RSIfile = (/"/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
+modelcolors=(/"blue2","green2","red2"/)
+labelsArr=(/"  1990-2005","  2026-2035","  2071-2080"/)
 ncols = 9                     ; assign number of columns
 
 delim = ","
@@ -85,24 +88,15 @@ do z = 0,ncases-1
 
 end do
 
-print("Mean min pressure RSI>=1 0: "+avg(minPresArray(0,0,:)))
-print("Mean min pressure RSI>=1 1: "+avg(minPresArray(0,1,:)))
-
-print("Mean min pressure RSI<=1 0: "+avg(minPresArray(1,0,:)))
-print("Mean min pressure RSI<=1 1: "+avg(minPresArray(1,1,:)))
+;print("Mean min pressure RSI>=1 0: "+avg(minPresArray(0,0,:)))
+;print("Mean min pressure RSI>=1 1: "+avg(minPresArray(0,1,:)))
+;print("Mean min pressure RSI<=1 0: "+avg(minPresArray(1,0,:)))
+;print("Mean min pressure RSI<=1 1: "+avg(minPresArray(1,1,:)))
 
 binSettings=True
 binSettings@bin_min=930.0
 binSettings@bin_max=1020.0
 nbins=9
-
-ap  = pdfx(minPresArray(0,0,:), nbins, binSettings)
-bp  = pdfx(minPresArray(0,1,:), nbins, binSettings)
-if (do_non_snow) then
-  cp  = pdfx(minPresArray(1,0,:), nbins, binSettings)
-  dp  = pdfx(minPresArray(1,1,:), nbins, binSettings)
-end if
-
 
 if (do_non_snow) then
   nVar = ncases*2
@@ -110,24 +104,23 @@ else
   nVar = ncases
 end if
 
-nBin    = ap@nbins          ; retrieve the number of bins
-xx      = new ( (/nVar, nBin/), typeof(ap))
-xx(0,:) = ap@bin_center
-xx(1,:) = bp@bin_center
-if (do_non_snow) then
-  xx(2,:) = cp@bin_center
-  xx(3,:) = dp@bin_center
-end if
+xx=new ( (/nVar, nbins/), "double")
+yy=new ( (/nVar, nbins/), "double")
 
-yy      = new ( (/nVar, nBin/), typeof(ap))
-yy(0,:) = (/ ap /)
-yy(1,:) = (/ bp /)
-if (do_non_snow) then
-  yy(2,:) = (/ cp /)
-  yy(3,:) = (/ dp /)
-end if
+do z = 0,ncases-1
+  ap = pdfx(minPresArray(0,z,:), nbins, binSettings)
+  yy(z,:) = ap
+  xx(z,:) = ap@bin_center
+  delete(ap)
+  if (do_non_snow) then
+    bp = pdfx(minPresArray(0,z,:), nbins, binSettings)
+    yy((z+ncases),:) = bp
+    xx((z+ncases),:) = bp@bin_center
+    delete(bp)
+  end if
+end do
 
-wks  = gsn_open_wks (out_type,"MSLP_freq_comp")
+wks  = gsn_open_wks (out_type,"MSLP_freq_comp_"+PRECTSNOW)
 
 plot = new(1,graphic)
 
@@ -136,34 +129,35 @@ res  = True
 res@gsnDraw=False
 res@gsnFrame=False
 
-res@xyLineThicknesses        = (/8.0,8.0,4.0,4.0/)
-res@xyLineColors             = (/"red","blue","red","blue"/)
+res@xyLineThicknesses        = (/8.0,8.0,8.0,4.0,4.0,4.0/)
+res@xyLineColors             = modelcolors
 res@xyMonoDashPattern        = False              ; all solid
-res@xyDashPatterns = (/0,0,1,1/)
+res@xyDashPatterns = (/0,0,0,1,1,1/)
 res@tiYAxisString            = "Frequency (%)"
-res@tiXAxisString            = "MSLP (hPa)"
+res@tiXAxisString            = "Minimum central pressure (hPa)"
 
 res@trXMinF           = 935.
 res@trXMaxF           = 1015.
 plot(0) = gsn_csm_xy (wks, xx, yy, res)
 
 lgres                    = True
-lgres@lgLabelFontHeightF = .08
-lgres@vpWidthF           = 0.22
-lgres@vpHeightF          = 0.13
+lgres@lgLabelFontHeightF = .1
+lgres@vpWidthF           = 0.15
+lgres@vpHeightF          = 0.08
 lgres@lgPerimColor       = "black"
 lgres@lgPerimThicknessF  = 1.0
 lgres@lgItemType         = "Lines"
-lgres@lgLineColors     = res@xyLineColors(::-1)
-lgres@lgDashIndexes = res@xyDashPatterns(::-1)
+lgres@lgLineColors     = res@xyLineColors
+lgres@lgDashIndexes = res@xyDashPatterns
 lgres@lgMonoLineThickness = False
-lgres@lgLineThicknesses = res@xyLineThicknesses(::-1)
-lbid = gsn_create_legend(wks,4,(/"2081-2090 (RSI<1)","1990-2005 (RSI<1)","2081-2090 (RSI>=1)","1990-2005 (RSI>=1)"/),lgres)
+lgres@lgLineThicknesses = res@xyLineThicknesses
+lbid = gsn_create_legend(wks,3,labelsArr,lgres)
 
 
 amres = True
-amres@amParallelPosF   = -0.27             ; move legend to the right
-amres@amOrthogonalPosF = -.36             ; move the legend down
+amres@amParallelPosF   = -0.48    ; This is the left edge of the plot.
+amres@amOrthogonalPosF = -0.48    ; This is the top edge of the plot.
+amres@amJust           = "TopLeft"
 annoid1 = gsn_add_annotation(plot,lbid(0),amres)   ; add legend to plot
 
 resP = True
