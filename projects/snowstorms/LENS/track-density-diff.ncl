@@ -6,20 +6,20 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
-load "/glade/u/home/zarzycki/ncl/functions/getTrajectories.ncl"
-load "/glade/u/home/zarzycki/ncl/functions/trackDensity.ncl"
+load "../../../functions/getTrajectories.ncl"
+load "../../../functions/trackDensity.ncl"
 
 ;========================================================
 begin
 
 out_type="pdf"
-RSIthresh=0
+RSIthresh=3
 prescut=1090.  ; 1000 for AGU
 plot_diff_abs=True
 plotname = "pdf/etcdens-absdiff-RSIthresh_"+RSIthresh
 
-trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.ALL","/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.2071.ALL"/)
-RSIfile = (/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.PRECT.tempest.csv"/)
+trajfile=(/"/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.1990.CAT","/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.2071.CAT"/)
+RSIfile = (/"/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.PRECT.tempest.csv"/)
 nyrs = (/16*35,10*35/)
 nyrs = nyrs / 10   ; change normalization to "per decade"
 
@@ -167,7 +167,7 @@ else if (RSIthresh .eq. 1) then
 else
   res@cnLevelSelectionMode  = "ManualLevels"
   res@cnMinLevelValF        = 4.0
-  res@cnMaxLevelValF        = 48.0
+  res@cnMaxLevelValF        = 60.0
   res@cnLevelSpacingF       = res@cnMaxLevelValF/12.
 end if
 end if
@@ -199,8 +199,8 @@ if (plot_diff_abs) then
     res@cnMinLevelValF        = -36.0
     res@cnMaxLevelValF        = 36.0
   else
-    res@cnMinLevelValF        = -12.0
-    res@cnMaxLevelValF        = 12.0
+    res@cnMinLevelValF        = -15.0
+    res@cnMaxLevelValF        = 15.0
   end if
   end if
   res@cnLevelSpacingF       = (res@cnMaxLevelValF-res@cnMinLevelValF)/12.

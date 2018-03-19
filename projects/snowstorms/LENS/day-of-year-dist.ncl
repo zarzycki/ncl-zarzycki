@@ -11,13 +11,16 @@ begin
 
 plot_log=False
 out_type="pdf"
-RSIthresh=1
-PRECTSNOW="SNOW"
+RSIthresh=3
+PRECTSNOW="PRECT"
 
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
+;PATHTORSI="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+PATHTORSI="/loan/hires/zarzycki/tarfolder/stats/"
+modelfiles=(/PATHTORSI+"/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv",PATHTORSI+"/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv",PATHTORSI+"/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
 modelcolors=(/"blue2","green2","red2"/)
 labelsArr=(/"  1990-2005","  2026-2035","  2071-2080"/)
 nyearsPerSample=(/35*16,35*10,35*10/)
+
 
 ;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.JRA.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
 ;modelcolors=(/"blue","red"/)
@@ -103,12 +106,23 @@ if (nCases .gt. 1) then
   end if
 end if
 
+print(nyearsPerSample)
+
+print(num(doyArray(0,:)))
+print(num(doyArray(1,:)))
+print(num(doyArray(2,:)))
+
+print(sum(ap*num(doyArray(0,:))/100.))
+print(sum(bp*num(doyArray(1,:))/100.))
+print(sum(cp*num(doyArray(2,:))/100.))
+
+
 yy      = new ( (/nVar, nBin/), typeof(ap))
 yy(0,:) = (/ ap*num(doyArray(0,:))/100./nyearsPerSample(0) /)
 if (nCases .gt. 1) then
   yy(1,:) = (/ bp*num(doyArray(1,:))/100./nyearsPerSample(1) /)
   if (nCases .gt. 2) then
-    yy(2,:) = (/ bp*num(doyArray(2,:))/100./nyearsPerSample(2) /)
+    yy(2,:) = (/ cp*num(doyArray(2,:))/100./nyearsPerSample(2) /)
   end if
 end if
 ;yy(0,0) = 
@@ -125,10 +139,13 @@ res@xyLineThicknesses        = (/12.0,12.0,12.0/)
 res@xyLineColors             = modelcolors
 res@xyMonoDashPattern        = False              ; all solid
 res@xyDashPatterns = (/0,0,0/)
-res@tiYAxisString            = "Biweekly prob. (%)"
+res@tiYAxisString            = "Annual storms per biweekly period"
 res@tiXAxisString            = "Day of Year"
-res@tiMainString         = "Storm probability (RSI ~F34~3~F21~ "+RSIthresh+")"
-
+if (PRECTSNOW .eq. "SNOW")
+  res@tiMainString         = "Storm frequency (RSI ~F34~3~F21~ "+RSIthresh+")"
+else
+  res@tiMainString         = "Storm frequency (RPI ~F34~3~F21~ "+RSIthresh+")"
+end if
 
 res@trXMinF           = 0.
 res@trXMaxF           = 365.
@@ -142,7 +159,7 @@ res@tmXBValues= (/0,61,122,182,242,303,365/)
 res@tmXBLabels= (/"Aug 1","Oct 1","Dec 1","Feb 1","Apr 1","Jun 1","Aug 1"/)
 res@tmXBMinorValues = (/0,31,61,92,122,153,182,211,242,272,303,334,365/)
 
-plot_wo_grid = gsn_csm_xy (wks, xx, yy*100., res)
+plot_wo_grid = gsn_csm_xy (wks, xx, yy, res)
 
 res@tmXMajorGrid      = True
 res@tmYMajorGrid      = True
@@ -151,7 +168,7 @@ res@tmYMajorGridLineColor = "grey60"
 res@tmXMajorGridLineDashPattern = 7
 res@tmYMajorGridLineDashPattern = 7
 
-plot_w_grid = gsn_csm_xy (wks, xx, yy*100., res)
+plot_w_grid = gsn_csm_xy (wks, xx, yy, res)
 
 annoid = gsn_add_annotation(plot_w_grid,plot_wo_grid,False) 
 
