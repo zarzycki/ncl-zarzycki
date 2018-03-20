@@ -33,7 +33,7 @@ filename = modelfiles(z)
 lines = asciiread(filename,-1,"string")
 delim = ","
 member  =           str_get_field(lines,1,delim)
-stormID  =           tointeger(str_get_field(lines,2,delim))
+;stormID  =           tointeger(str_get_field(lines,2,delim))
 RSIval = tofloat(str_get_field(lines,3,delim))
 if (z .eq. -1)
   RSIcat  =   tointeger(str_get_field(lines,4,delim))
@@ -49,8 +49,10 @@ tst_dtime = str_split_by_length(YYYYMMDDHH, dtime_map)
 YYYY=toint(tst_dtime(:,0))
 MM=toint(tst_dtime(:,1))
 
+print("Total ETCs: "+num(RSIcat))
 do i = 0,dimsizes(RSIcatArray)-1
   RSInumArray(z,i) = num(RSIcat.eq.RSIcatArray(i))
+  print("Total storms RSI > "+RSIcatArray(i)+" = "+RSInumArray(z,i))
 end do
 
 MM=where(RSIcat.ge.1,MM,MM@_FillValue)
@@ -60,7 +62,7 @@ end do
 
 delete(lines)
 delete(member)
-delete(stormID)
+;delete(stormID)
 delete(RSIcat)
 delete(RSIval)
 
