@@ -12,10 +12,10 @@ begin
 plot_log=False
 out_type="pdf"
 RSIthresh=3
-PRECTSNOW="PRECT"
+PRECTSNOW="SNOW"
 
-;PATHTORSI="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
-PATHTORSI="/loan/hires/zarzycki/tarfolder/stats/"
+PATHTORSI="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+;PATHTORSI="/loan/hires/zarzycki/tarfolder/stats/"
 modelfiles=(/PATHTORSI+"/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv",PATHTORSI+"/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv",PATHTORSI+"/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
 modelcolors=(/"blue2","green2","red2"/)
 labelsArr=(/"  1990-2005","  2026-2035","  2071-2080"/)
@@ -135,7 +135,8 @@ res  = True
 res@gsnDraw=False
 res@gsnFrame=False
 
-res@xyLineThicknesses        = (/12.0,12.0,12.0/)
+liThickness=10.0
+res@xyLineThicknesses        = (/liThickness,liThickness,liThickness/)
 res@xyLineColors             = modelcolors
 res@xyMonoDashPattern        = False              ; all solid
 res@xyDashPatterns = (/0,0,0/)

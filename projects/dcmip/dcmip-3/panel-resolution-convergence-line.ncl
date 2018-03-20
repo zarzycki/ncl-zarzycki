@@ -265,7 +265,7 @@ end do
 ;------------------------------------------------
 
   resw@tiXAxisOn = True
-  if (ii .ge. 6) then
+  if (ii .ge. 5) then
     resw@tiXAxisString = "time (s)"
   else
     resw@tiXAxisString = ""
@@ -284,13 +284,13 @@ end do
   if (whatVar .eq. "W" .or. whatVar .eq. "w") then
     resw@trYMinF = 0.0
     resw@trYMaxF = 70.0
-    if ( ii .eq. 0 .or. ii .eq. 3 .or. ii .eq. 6 ) then
+    if ( ii .eq. 0 .or. ii .eq. 5 ) then
       resw@tiYAxisString = "maximum vertical velocity (m/s)"
     end if
   else
     resw@trYMinF = 0.0
     resw@trYMaxF = 275.0
-    if ( ii .eq. 0 .or. ii .eq. 3 .or. ii .eq. 6 ) then
+    if ( ii .eq. 0 .or. ii .eq. 5 ) then
       resw@tiYAxisString = "integrated precip. rate (x10^5 kg/s)"
     end if
   end if

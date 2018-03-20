@@ -12,8 +12,8 @@ begin
 
 
 
-ibstyr=1999
-ibenyr=1999
+ibstyr=1980
+ibenyr=2012
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
