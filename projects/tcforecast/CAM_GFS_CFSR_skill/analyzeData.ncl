@@ -2,6 +2,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
+load "calc_acc.ncl"
 
 begin
 
@@ -102,7 +103,8 @@ if (do_cam) then
     wgt_file = "/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_mp15a-120a-US_to_0.25x0.25glob_patch.nc"
   else
     if (.not.ismissing(str_match(fcst_config, "conus_30_x8"))) then
-      wgt_file = "/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_conus_30_x8_to_0.25x0.25glob_patch.nc"
+;      wgt_file = "/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_conus_30_x8_to_0.25x0.25glob_patch.nc"
+      wgt_file = "/glade/scratch/zarzycki/conus_30_x8_to_0.25x0.25_patch.nc"
     else if (.not.ismissing(str_match(fcst_config, "conus_60_x4"))) then
       wgt_file = "/glade/p/work/zarzycki/maps/VR_to_latlon/map_conus_60_x4_to_0.25x0.25glob_patch.nc"
     else if (.not.ismissing(str_match(fcst_config, "conus_15_x16"))) then
@@ -335,14 +337,15 @@ Z500gfsAnom  = Z500gfs - Z500climo
 Z500analAnom = Z500anal - Z500climo
 
 print("Calculating anomaly correlations...")
-ACCgfs =      sum(     Z500gfsAnom({minLat:maxLat},{minLon:maxLon})*Z500analAnom({minLat:maxLat},{minLon:maxLon})) / sqrt(sum(     Z500gfsAnom({minLat:maxLat},{minLon:maxLon})^2)*sum(Z500analAnom({minLat:maxLat},{minLon:maxLon})^2))
+
+ACCgfs = calc_acc(Z500gfsAnom,Z500analAnom,minLat,maxLat,minLon,maxLon)
 print("GFS forecast: "+ACCgfs)
 
 if (do_cam) then
-  ACCforecast = sum(Z500forecastAnom({minLat:maxLat},{minLon:maxLon})*Z500analAnom({minLat:maxLat},{minLon:maxLon})) / sqrt(sum(Z500forecastAnom({minLat:maxLat},{minLon:maxLon})^2)*sum(Z500analAnom({minLat:maxLat},{minLon:maxLon})^2))
+  ACCforecast = calc_acc(Z500forecastAnom,Z500analAnom,minLat,maxLat,minLon,maxLon)
   print("CAM forecast: "+ACCforecast)
   if (do_comparison) then
-    ACCcomparison = sum(Z500forecastAnom({minLat:maxLat},{minLon:maxLon})*Z500gfsAnom({minLat:maxLat},{minLon:maxLon})) / sqrt(sum(Z500forecastAnom({minLat:maxLat},{minLon:maxLon})^2)*sum(Z500gfsAnom({minLat:maxLat},{minLon:maxLon})^2))
+    ACCcomparison = calc_acc(Z500forecastAnom,Z500gfsAnom,minLat,maxLat,minLon,maxLon)
     print("CAM/GFS comparison: "+ACCcomparison)
   else
     ACCcomparison = 0.
