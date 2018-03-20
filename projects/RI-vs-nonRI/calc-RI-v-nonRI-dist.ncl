@@ -1,14 +1,16 @@
 ;========================================================
-; This file reads in a traj file produced by the TC tracker
-; and produces a lat-lon plot of trajectories color-coded by intensity
+; This code reads in TC trajectories, uses backwards difference to calculate intensification rate
+; and assesses whether or not a storm is undergoing RI. 
+; can plot subset distribution of storms undergoing RI versus not and/or joint probability
+; functions of intensification rate and wind speed before/after RI 
 ;========================================================
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
-load "/glade/u/home/zarzycki/ncl/functions/surfaceWindCorrFactor.ncl"
-load "/glade/u/home/zarzycki/ncl/functions/getTrajectories.ncl"
-load "~/ncl/functions/mask_tc.ncl"
+load "../../functions/surfaceWindCorrFactor.ncl"
+load "../../functions/getTrajectories.ncl"
+load "../../functions/mask_tc.ncl"
 ;========================================================
 
 ; cat 1994/traj_out.txt 1995/traj_out.txt 1996/traj_out.txt 1997/traj_out.txt 1998/traj_out.txt 1999/traj_out.txt 2000/traj_out.txt 2001/traj_out.txt 2002/traj_out.txt 2003/traj_out.txt 2004/traj_out.txt 2005/traj_out.txt > ~/cam5_1_amip_run9.ens.txt
@@ -188,6 +190,7 @@ system("rm "+outName)
 quote = inttochar(34)
 do ii = 0,nstorms-1
 ;do ii = 0,3
+ print(ii+" of "+(nstorms-1))
  system("echo "+quote+ "start"+delim+yyyy(ii,0)+delim+mm(ii,0)+delim+dd(ii,0)+delim+hh(ii,0)+quote+">> "+outName)
  do jj = 0,ntimes-1
    if (.not.ismissing(lat(ii,jj)))
