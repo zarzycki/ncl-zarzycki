@@ -10,9 +10,8 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 
-dstGridFile="conus_60_x4.g_scrip.nc"
 GFSres="0.25" ;0.50 or 0.25
-gridName="conus_60_x4"
+gridName="ne30np4"
 InterpMethod="patch"
 
 if (InterpMethod .eq. "patch") then
@@ -21,7 +20,10 @@ else
   shortInterpName=InterpMethod
 end if
 
-dstGridDir="/glade/p/work/zarzycki/grids/scrip/"
+;dstGridDir="/glade/p/work/zarzycki/grids/scrip/"
+;dstGridFile="conus_60_x4.g_scrip.nc"
+dstGridDir="/glade/p/cesmdata/cseg/mapping/grids/"
+dstGridFile="ne30np4_091226_pentagons.nc"
 
 srcGridDir="/glade/p/work/zarzycki/grids/scrip/"
 srcGridFile="gfs_"+GFSres+"x"+GFSres+"_scrip.nc"

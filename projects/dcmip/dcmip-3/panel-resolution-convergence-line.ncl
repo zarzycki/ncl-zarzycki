@@ -14,7 +14,7 @@ begin
 
 out_type="pdf"
 
-thisVar="PRECL"  ; W or PRECL
+thisVar="W"  ; W or PRECL
 
 modellist=(/"ACME","CSU_CP","FV3","FVM","GEM","ICON","MPAS","NICAM","OLAM","TEMPEST"/)
 
@@ -255,7 +255,11 @@ end do
   res@xyMarkLineMode    = "Lines"
   res@xyLineColors = colors
 
-  res@tiMainString = model+""
+  if (model .eq. "ACME") then
+    res@tiMainString = "ACME-A (E3SM)"
+  else
+    res@tiMainString = model+""
+  end if
   res@tiMainFontHeightF = 0.04
 
   resw = res
@@ -265,7 +269,7 @@ end do
 ;------------------------------------------------
 
   resw@tiXAxisOn = True
-  if (ii .ge. 5) then
+  if (ii .eq. 0) then
     resw@tiXAxisString = "time (s)"
   else
     resw@tiXAxisString = ""
@@ -273,24 +277,24 @@ end do
 
   resw@tiYAxisOn = True
 
-  resw@tmXBLabelFontHeightF = 0.03
+  resw@tmXBLabelFontHeightF = 0.035
   resw@tmYLLabelFontHeightF = resw@tmXBLabelFontHeightF
   resw@trXMinF = 0.0
   resw@trXMaxF = 7200.0
 
-  resw@tiXAxisFontHeightF = 0.03
+  resw@tiXAxisFontHeightF = 0.035
   resw@tiYAxisFontHeightF = resw@tiXAxisFontHeightF
   resw@tiYAxisString=""
   if (whatVar .eq. "W" .or. whatVar .eq. "w") then
     resw@trYMinF = 0.0
-    resw@trYMaxF = 70.0
-    if ( ii .eq. 0 .or. ii .eq. 5 ) then
+    resw@trYMaxF = 72.0
+    if ( ii .eq. 0 ) then
       resw@tiYAxisString = "maximum vertical velocity (m/s)"
     end if
   else
     resw@trYMinF = 0.0
     resw@trYMaxF = 275.0
-    if ( ii .eq. 0 .or. ii .eq. 5 ) then
+    if ( ii .eq. 0 ) then
       resw@tiYAxisString = "integrated precip. rate (x10^5 kg/s)"
     end if
   end if
@@ -316,10 +320,10 @@ end do
     lgres@lgMonoLineDashSegLen = True
     lgres@lgMonoDashIndex = True
     lgres@lgDashIndexes      = (/0,3,15,1,2/)
-    lgres@lgLabelFontHeightF = .06
+    lgres@lgLabelFontHeightF = 0.075
     lgres@lgBoxMinorExtentF  = 0.35
-    lgres@vpWidthF           = 0.30           ; width of legend (NDC)
-    lgres@vpHeightF          = 0.20           ; height of legend (NDC)
+    lgres@vpWidthF           = 0.35           ; width of legend (NDC)
+    lgres@vpHeightF          = 0.25           ; height of legend (NDC)
     labels = reslist
     id0 = gsn_create_legend(wks,nboxes,labels,lgres)
     amres                  = True
@@ -347,7 +351,7 @@ end do
   pres@gsnPanelTop = 0.9
   pres@gsnPanelYWhiteSpacePercent = 5
   pres@gsnPanelXWhiteSpacePercent = 5
-  gsn_panel(wks, plot, (/2,5/), pres)
+  gsn_panel(wks, plot, (/3,4/), pres)
 
 end
 

@@ -37,12 +37,12 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 ;---Data file containing source grid
-    src_file = "/home/zarzycki/cam5_work/CAM5NODEEP.refined.tc.test.ne120/data_output/camrun.cam.h0.0000-09-07-00000.nc"                    ;;---Change (likely)
+    src_file = "/glade/u/home/zarzycki/work/unigridFiles/natlantic_30_x4/topo/topo_natlantic_30_x4_smooth.nc"                    ;;---Change (likely)
     sfile    = addfile(src_file,"r")
 
 ;---Get variable to regrid
-    var_name = "PRECT"                      ;;---Change (likely)
-    var      = sfile->$var_name$(0,:)       ;;---Change (likely)
+    var_name = "PHIS"                      ;;---Change (likely)
+    var      = sfile->$var_name$(:)       ;;---Change (likely)
     src_lat  = sfile->lat                   ;;---Change (maybe)
     src_lon  = sfile->lon                   ;;---Change (maybe)
 
