@@ -1,34 +1,12 @@
-;----------------------------------------------------------------------
-; ESMF_unstruct_to_0.25deg.ncl
-;
+;----------------------------------------------------------------------;
 ; This is an NCL/ESMF template file for regridding from an 
-; unstructured grid to a 0.25 degree grid. It uses ESMF_regrid
+; unstructured SE/MPAS grid to a RLL grid. It uses ESMF_regrid
 ; to do the regridding.
 ;
 ; This script can be easily modified to do use something other than
 ; a 0.25 degree grid: "1x1", "G64", "5deg", etc.
 ;
-; The unstructured grid is assumed to be contained in a NetCDF file.
-; 
-; Search for lines with ";;---Change (likely)" or ";;---Change (maybe)".
-; These are the lines you will likely or maybe have to change.
-;
-; Of course, you'll probably want to change other aspects of this
-; code, like the options for plotting (titles, colors, etc).
-;
-; For more information on ESMF_regrid, see: 
-;
-;    http://www.ncl.ucar.edu/Document/Functions/ESMF/ESMF_regrid.shtml
-;----------------------------------------------------------------------
-; This example uses the ESMF application "ESMF_RegridWeightGen" to 
-; generate the weights.
-;
-; For more information about ESMF:
-;
-;        http://www.earthsystemmodeling.org/
-;
-; This script uses built-in functions that are only available in 
-; NCL V6.1.0-beta and later.
+; The unstructured grid is assumed to be contained in a NetCDF file. 
 ;----------------------------------------------------------------------
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
@@ -42,9 +20,9 @@ begin
 
 ;---Get variable to regrid
     var_name = "PHIS"                      ;;---Change (likely)
-    var      = sfile->$var_name$(:)       ;;---Change (likely)
-    src_lat  = sfile->lat                   ;;---Change (maybe)
-    src_lon  = sfile->lon                   ;;---Change (maybe)
+    var      = sfile->$var_name$(:)        ;;---Change (likely)
+    src_lat  = sfile->lat                  ;;---Change (maybe)
+    src_lon  = sfile->lon                  ;;---Change (maybe)
 
 ;---Set up regridding options
     Opt                = True
@@ -79,7 +57,7 @@ begin
 ; This section creates filled contour plots of both the original
 ; data and the regridded data, and panels them.
 ;----------------------------------------------------------------------
-    wks = gsn_open_wks("x11","unstruct_to_0.125deg")
+    wks = gsn_open_wks("x11","se_to_0.25deg")
 
 ;---Resources to share between both plots
     res                      = True              ; Plot mods desired

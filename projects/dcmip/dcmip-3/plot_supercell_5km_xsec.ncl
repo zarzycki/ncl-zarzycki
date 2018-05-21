@@ -30,8 +30,8 @@ begin
 ;     lat:   arbitrary
 ;----------------------------------------------------------------------------
 
-model="OLAM"
-resol="r50"
+;model="FVM"
+;resol="r400"
 out_type="pdf"
 
 if (model .eq. "CSU_LZ" .or. model .eq. "CSU_CP") then
@@ -52,8 +52,10 @@ if (model .eq. "TEMPEST") then
 end if
 
 if (model .eq. "FVM") then
-  w_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
+  ;w_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
+  w_data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
+  ;qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
+  qr_data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
   correctLon=True
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")

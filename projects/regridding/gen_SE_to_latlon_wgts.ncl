@@ -10,14 +10,15 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 
-gridName="natlantic_30_x4"
+gridName="ne0np4natlanticref.ne30x4"
 InterpMethod="bilinear"
-outres="0.25x0.25"
+;outres="0.25x0.25"
 ;outres="0.125x0.125"
 ;outres="0.5x0.5"
 ;outres="1x1"
-dstGridDir="/glade/scratch/zarzycki/TMP/"
-;dstGridDir="/glade/p/work/zarzycki/grids/scrip/"
+outres="2x2"
+;dstGridDir="/glade/scratch/zarzycki/TMP/"
+dstGridDir="/glade/p/work/zarzycki/grids/scrip/"
 dstGridFile=outres+"_SCRIP.nc"
 ;srcGridDir="/glade/p/cesmdata/cseg/mapping/grids/"
 srcGridDir="/glade/u/home/zarzycki/work/grids/scrip/"
@@ -27,7 +28,7 @@ srcGridDir="/glade/u/home/zarzycki/work/grids/scrip/"
 ;srcGridFile="ne120np4_pentagons_100310.nc"
 srcGridFile=gridName+".g_scrip.nc"
 wgtFileDir="/glade/scratch/zarzycki/"
-wgtFileName=gridName+"_to_"+outres+"_"+InterpMethod+".nc"
+wgtFileName="map_"+gridName+"_to_"+outres+"_"+InterpMethod+".nc"
 
 ;----------------------------------------------------------------------
 

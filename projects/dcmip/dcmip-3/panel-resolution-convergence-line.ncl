@@ -14,7 +14,7 @@ begin
 
 out_type="pdf"
 
-thisVar="W"  ; W or PRECL
+thisVar="PRECL"  ; W or PRECL
 
 modellist=(/"ACME","CSU_CP","FV3","FVM","GEM","ICON","MPAS","NICAM","OLAM","TEMPEST"/)
 
@@ -117,7 +117,8 @@ do jj = 0,nres-1
     prec_units="ms"
   end if
   if (model .eq. "FVM") then
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
+    ;data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
+    data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
     time_units = "d"
     time_var_name="time"
     prec_units="ms"
@@ -153,7 +154,7 @@ do jj = 0,nres-1
     prec_units="ms"
   end if
   if (model .eq. "OLAM") then
-    data_file = "/glade/scratch/zarzycki/dcmip131_"+resol+"-DLL-2000-01-01-CAT.nc"
+    data_file = "/glade/u/home/zarzycki/work/dcmip-2016/olam/dcmip131_"+resol+"-DLL-2000-01-01-CAT.nc"
     time_units = "m"
     time_var_name="time"
     prec_units="ms"
