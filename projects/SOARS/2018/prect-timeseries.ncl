@@ -153,7 +153,7 @@ do zz = 0,dimsizes(ix_var)-1
     ;system("echo "+quote+cd_calendar(thisTime,2)+delim+PRECT(ii)+delim+TCorNO(ii)+     quote+" >> "+outputname)
   end do
 
-  alist   = [/cd_calendar(ftime,-2),PRECT,PSL,TCorNO/]
+  alist   = [/cd_calendar(ftime,-3),PRECT,PSL,TCorNO/]
   write_table(outputname, "w", alist, "%i,%6.1f,%8.1f,%s")
 
   ;print(TCorNO+" "+cd_calendar(ftime,2)+" "+tofloat(PRECT)+" "+ftime)
