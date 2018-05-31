@@ -15,7 +15,8 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 ;---Data file containing source grid
-    src_file = "/glade/u/home/zarzycki/work/unigridFiles/natlantic_30_x4/topo/topo_natlantic_30_x4_smooth.nc"                    ;;---Change (likely)
+    ;src_file = "/glade/u/home/zarzycki/work/unigridFiles/natlantic_30_x4/topo/topo_natlantic_30_x4_smooth.nc"                    ;;---Change (likely)
+    src_file = "/glade/p/cesmdata/inputdata/atm/cam/topo/USGS-gtopo30_ne120np4_16xdel2-PFC-consistentSGH.nc"                    ;;---Change (likely)
     sfile    = addfile(src_file,"r")
 
 ;---Get variable to regrid
@@ -38,10 +39,10 @@ begin
     Opt@SrcMask2D        = where(.not.ismissing(var),1,0) ; Necessary if has
                                                           ; missing values.
 
-    Opt@DstGridType      = "0.25deg"        ; destination grid
-    Opt@DstTitle         = "World Grid 0.25 degree resolution"
-    Opt@DstLLCorner      = (/-89.75d,   0.00d /)      ;;--Change (maybe)
-    Opt@DstURCorner      = (/ 89.75d, 359.75d /)      ;;--Change (maybe)
+    Opt@DstGridType      = "1.00deg"        ; destination grid
+    Opt@DstTitle         = "World Grid 1.00 degree resolution"
+    Opt@DstLLCorner      = (/-89.00d,   0.00d /)      ;;--Change (maybe)
+    Opt@DstURCorner      = (/ 89.00d, 359.00d /)      ;;--Change (maybe)
 
     Opt@ForceOverwrite   = True
     Opt@Debug            = True

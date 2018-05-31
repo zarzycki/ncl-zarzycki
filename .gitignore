@@ -1,3 +1,4 @@
+*.tar.gz
 *.out
 timeseries.*.csv
 projects/tcforecast/CAM_GFS_CFSR_skill/out-stats/*
