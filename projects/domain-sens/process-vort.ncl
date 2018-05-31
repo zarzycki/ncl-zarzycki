@@ -67,6 +67,12 @@ VORT600@units="1/s"
 VORT600@long_name="Vorticity"
 print("... done with relative vorticity.")
 
+print("flipping SH vort sign...")
+VORT600=where(conform(VORT600,lat,1) .lt. 0.0,-VORT600,VORT600)
+print("... done flipping SH vort sign.")
+
+
+
 outfilename=str_sub_str(infile,"h2","h9")
 outfilename=str_sub_str(outfilename,".nc",".VORT600.2p00.nc")
 print(outfilename)
