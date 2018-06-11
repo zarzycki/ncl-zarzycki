@@ -12,7 +12,7 @@ begin
 plot_log=False
 out_type="pdf"
 RSIthresh=3
-PRECTSNOW="SNOW"
+PRECTSNOW="PRECT"
 
 PATHTORSI="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
 ;PATHTORSI="/loan/hires/zarzycki/tarfolder/stats/"

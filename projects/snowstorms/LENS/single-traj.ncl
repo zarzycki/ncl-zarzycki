@@ -10,11 +10,9 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="pdf"
+output_type="x11"
 smooth_traj=True    ; do a running average on lat/lon to produce smoother PSL trajs
 underlayPop=True
-
-
 
 
 ;;; JRA
@@ -26,13 +24,55 @@ underlayPop=True
 ;trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.JRA."+year+"."+year
 ;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
 
-
 ;;; LENS
-ensmem="035"
-stormID=346
-year=1990
-trajfile="/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS."+year+"."+ensmem
+;ensmem="035"
+;stormID=346
+;year=2071
+
+print("ensmem: "+ensmem+"   stormID: "+stormID+"   year: "+year)
+
+trajfile="/glade/u/home/zarzycki/snow-tracking/tracking/traj/tempest.LENS."+year+"."+ensmem
 stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
+RSIfile="/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS."+year+"."+ensmem+".5e-9_12.csv.SNOW.tempest.csv"
+imgDir="/glade/scratch/zarzycki/LES-snow/images/"+year+"_"+ensmem+"/"
+
+lines = asciiread(RSIfile,-1,"string")
+delim = ","
+RSImemberfile = str_get_field(lines,1,delim)
+RSIstormID = tointeger(str_get_field(lines,3,delim))
+RSIval = tofloat(str_get_field(lines,6,delim))
+RSIcat  =   tointeger(str_get_field(lines,7,delim))
+RSIYYYYMMDDHH = str_get_field(lines,4,delim)
+RSIduration = tointeger(str_get_field(lines,5,delim))
+
+;RSIarea0=tofloat(str_get_field(lines,8,delim))
+;RSIpopu0=tofloat(str_get_field(lines,9,delim))
+;RSIarea1=tofloat(str_get_field(lines,10,delim))
+;RSIpopu1=tofloat(str_get_field(lines,11,delim))
+;RSIarea2=tofloat(str_get_field(lines,12,delim))
+;RSIpopu2=tofloat(str_get_field(lines,13,delim))
+;RSIarea3=tofloat(str_get_field(lines,14,delim))
+;RSIpopu3=tofloat(str_get_field(lines,15,delim))
+
+RSImemnum = RSImemberfile
+RSIyear = RSIduration
+do ii = 0,dimsizes(RSImemnum)-1
+  tmp = str_split(RSImemberfile(ii),".")
+  RSImemnum(ii)=tmp(3)
+  RSIyear(ii)=tointeger(tmp(2))
+  delete(tmp)
+end do
+
+iz = ind(RSImemnum.eq.ensmem .and. RSIstormID.eq.stormID)
+print(iz)
+print(RSIval(iz)+" "+RSIcat(iz))
+
+; split times
+dtime_map = (/4,2,2,2/)
+tst_dtime = str_split_by_length(RSIYYYYMMDDHH, dtime_map)
+YYYY=toint(tst_dtime(:,0))
+MM=toint(tst_dtime(:,1))
+DD=toint(tst_dtime(:,2))
 
 if (underlayPop) then
   popFile=addfile("/glade/u/home/zarzycki/snow-tracking/gen_pop_files/population.nc","r")
@@ -89,7 +129,9 @@ end if
 
 ;--------------------------------------------------------
 print("Beginning plot sequence")
-wks  = gsn_open_wks(output_type,"./pdf/single-storm-traj")
+system("mkdir -p "+imgDir)
+wks = gsn_open_wks("png",imgDir+"/storm.LENS."+year+"_"+RSImemnum(iz)+"_"+sprinti("%0.4i", stormID)+"_"+yyyystr(0)+mmstr(0)+ddstr(0)+"_"+sprinti("%0.3i", RSIduration(iz))+"_"+RSIcat(iz))               ; open workstation
+;wks  = gsn_open_wks(output_type,"./pdf/single-storm-traj")
 map = new(1,graphic)
 
 res  = True
@@ -181,7 +223,7 @@ mpid=gsn_csm_contour(wks,SNOW,cnres)
 overlay(map,mpid)
 
 ;;;;;;;;;
-maskfile=addfile("/glade/u/home/zarzycki/snow-tracking/LES_tracking/NEmask.nc","r")
+maskfile=addfile("/glade/u/home/zarzycki/snow-tracking/calc_RSI/NEmask.nc","r")
 RSIOUT=maskfile->MASK
 
 res_outline=True
@@ -217,7 +259,6 @@ dum = new((/2,ntimes/),graphic)
 mbthresh=(/1010,1000,990,980,970/)
 
 cmap = RGBtoCmap("cb-mono-orange-rgb.txt")
-print(cmap)
 
 do j = 0,ntimes-1
 
@@ -320,7 +361,18 @@ annoid1 = gsn_add_annotation(map,legend,amres)   ; add legend to plot
 nboxes = 5                            ; # of labelbar boxes
 
 quote = inttochar(34)
-lblabels    = (/"1-4"+quote,"4-10"+quote,"10-20"+quote,"20-30"+quote,"30"+quote+"+"/)
+lblabels    = (/"1-4"+quote,    \
+                "4-10"+quote,           \
+                "10-20"+quote,          \
+                "20-30"+quote,          \
+                "30"+quote+"+"/)
+
+;lblabels    = (/"1-4"+quote+"  "   +"10~S~3~N~ mi~S~2~N~"               +"  "+"10~S~3~N~ #"            ,    \
+;                "4-10"+quote+"  "   +sprinti("%6.1i",toint(RSIarea0(iz)))+"  "+sprinti("%5.1i",toint(RSIpopu0(iz)/1000.))           ,           \
+;                "10-20"+quote+" "   +sprinti("%6.1i",toint(RSIarea1(iz)))+"  "+sprinti("%5.1i",toint(RSIpopu1(iz)/1000.))          ,          \
+;                "20-30"+quote+" "   +sprinti("%6.1i",toint(RSIarea2(iz)))+"  "+sprinti("%5.1i",toint(RSIpopu2(iz)/1000.))          ,          \
+;                " 30"+quote+"+"+"  "+sprinti("%6.1i",toint(RSIarea3(iz)))+"  "+sprinti("%5.1i",toint(RSIpopu3(iz)/1000.))        /)
+;lbres@lbLabelConstantSpacingF = 0.8
 
 lbres                           = True
 lbres@lbAutoManage              = False         ; we control label bar
@@ -335,6 +387,7 @@ lbres@lbPerimFill        = 0
 lbres@lbPerimFillColor   = "Background"
 
 lbres@lbLabelFontHeightF = 0.018
+
 
 lbres@lbBoxMinorExtentF  = 0.2	; controls how wide the box holding the legend items (lines and markers) can be in relation to legend
 
@@ -358,7 +411,8 @@ print("Drawing plot")
 resP = True
 resP@amJust           = "TopLeft"
 
-resP@gsnPanelFigureStrings= (/"ST: "+yyyystr(0)+"-"+mmstr(0)+"-"+ddstr(0)+" "+hhstr(0)+"Z"/)
+;resP@gsnPanelFigureStrings= (/yyyystr(0)+"-"+mmstr(0)+"-"+ddstr(0)+" "+hhstr(0)+"Z"+" (+"+RSIduration(iz)+"hr)  RSI: "+RSIval(iz)+" ("+RSIcat(iz)+")"/)
+resP@gsnPanelFigureStrings= (/yyyystr(0)+"-"+mmstr(0)+"-"+ddstr(0)+" (+"+RSIduration(iz)+"h) | RSI: "+RSIval(iz)+" ("+RSIcat(iz)+")"/)
 resP@gsnPanelFigureStringsFontHeightF = 0.027
 gsn_panel(wks,map,(/1,1/),resP)             ; now draw as one plot
 

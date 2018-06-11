@@ -207,7 +207,7 @@ begin
 	res_p             = True
 	res_p@gsLineColor      = linecolor                    ; color of lines
   res_p@gsLineThicknessF = linethick
-	
+res_p@gsLineOpacityF = 0.8	
 	res2 = True
  res2@trYMaxF      = 90
  res2@trYMinF      = -90

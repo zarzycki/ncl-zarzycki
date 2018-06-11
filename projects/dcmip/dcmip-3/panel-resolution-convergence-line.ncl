@@ -14,14 +14,15 @@ begin
 
 out_type="pdf"
 
-thisVar="PRECL"  ; W or PRECL
+thisVar="W"  ; W or PRECL
 
-modellist=(/"ACME","CSU_CP","FV3","FVM","GEM","ICON","MPAS","NICAM","OLAM","TEMPEST"/)
+modellist=(/"ACME","CSU_LZ","FV3","FVM","GEM","ICON","MPAS","NICAM","OLAM","TEMPEST"/)
 
 ;modellist=(/"CSU_CP","CSU_LZ"/)
 reslist=(/"r50","r100","r200","r400"/)
 nres = dimsizes(reslist)
-colors = (/"black","grey40","grey60","grey85"/)
+;colors = (/"black","grey40","grey60","grey85"/)
+colors = (/"black","turquoise3","violetred2","lightpink1"/)
 
 ;------------------------------------------------
 ; Workspace
@@ -246,20 +247,32 @@ end do
   res@tmXBLabelsOn      = True
   res@tmXBOn            = True
 
-  res@tmXTLabelsOn      = False
-  res@tmXTOn            = False
-
+  ; turn on minor tickmarks
   res@tmXBMinorOn       = True
   res@tmYLMinorOn       = True
 
-  res@xyLineThicknessF  = 4.0
+  ; no top X labels, turn top X tickmarks inside box for reference
+  res@tmXTLabelsOn      = False
+  ;res@tmXTOn            = False
+  res@tmXUseBottom = False
+  res@tmXTMajorOutwardLengthF = 0.0
+  res@tmXTMinorOutwardLengthF = 0.0
+
+  ;res@xyLineThicknessF  = 4.0
+  res@xyLineThicknesses = (/5.5,4.9,4.3,3.7/)
   res@xyMarkLineMode    = "Lines"
   res@xyLineColors = colors
 
   if (model .eq. "ACME") then
     res@tiMainString = "ACME-A (E3SM)"
+  else if (model .eq. "CSU_LZ") then
+    res@tiMainString = "CSU"
+  else if (model .eq. "FV3") then
+    res@tiMainString = "FV~S~3~N~"
   else
     res@tiMainString = model+""
+  end if
+  end if
   end if
   res@tiMainFontHeightF = 0.04
 
@@ -288,15 +301,15 @@ end do
   resw@tiYAxisString=""
   if (whatVar .eq. "W" .or. whatVar .eq. "w") then
     resw@trYMinF = 0.0
-    resw@trYMaxF = 72.0
+    resw@trYMaxF = 67.0
     if ( ii .eq. 0 ) then
-      resw@tiYAxisString = "maximum vertical velocity (m/s)"
+      resw@tiYAxisString = "max. vert. velocity (m s~S~-1~N~)"
     end if
   else
     resw@trYMinF = 0.0
-    resw@trYMaxF = 275.0
+    resw@trYMaxF = 265.0
     if ( ii .eq. 0 ) then
-      resw@tiYAxisString = "integrated precip. rate (x10^5 kg/s)"
+      resw@tiYAxisString = "precip. rate (x10~S~5~N~ kg s~S~-1~N~)"
     end if
   end if
 
@@ -317,15 +330,17 @@ end do
     lgres                    = True          ; labelbar only resources
     lgres@lgPerimOn          = False
     lgres@lgLineColors       = colors ; labelbar colors
-    lgres@lgLineThicknessF   = res@xyLineThicknessF
+    ;lgres@lgLineThicknessF   = res@xyLineThicknessF
+    lgres@lgMonoLineThickness = False
+    lgres@lgLineThicknesses   = res@xyLineThicknesses
     lgres@lgMonoLineDashSegLen = True
     lgres@lgMonoDashIndex = True
     lgres@lgDashIndexes      = (/0,3,15,1,2/)
-    lgres@lgLabelFontHeightF = 0.075
+    lgres@lgLabelFontHeightF = 0.09
     lgres@lgBoxMinorExtentF  = 0.35
     lgres@vpWidthF           = 0.35           ; width of legend (NDC)
     lgres@vpHeightF          = 0.25           ; height of legend (NDC)
-    labels = reslist
+    labels = (/" 0.5km"," 1km"," 2km"," 4km"/)
     id0 = gsn_create_legend(wks,nboxes,labels,lgres)
     amres                  = True
     if (whatVar .eq. "W" .or. whatVar .eq. "w") then
@@ -348,10 +363,10 @@ end do
 ;------------------------------------------------
 
   pres = True
-  pres@gsnPanelBottom = 0.1
-  pres@gsnPanelTop = 0.9
-  pres@gsnPanelYWhiteSpacePercent = 5
-  pres@gsnPanelXWhiteSpacePercent = 5
+  ;pres@gsnPanelBottom = 0.1
+  ;pres@gsnPanelTop = 0.9
+  pres@gsnPanelYWhiteSpacePercent = 3
+  pres@gsnPanelXWhiteSpacePercent = 0
   gsn_panel(wks, plot, (/3,4/), pres)
 
 end

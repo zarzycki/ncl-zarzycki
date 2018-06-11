@@ -40,6 +40,17 @@ if (model .eq. "CSU_LZ" .or. model .eq. "CSU_CP") then
   end if
 end if
 
+modeltitle = model
+if (model .eq. "ACME") then
+  modeltitle = "ACME-A (E3SM)"
+end if
+if (model .eq. "CSU_LZ" .or. model .eq. "CSU_CP") then
+  modeltitle = "CSU"
+end if
+if (model .eq. "FV3") then
+  modeltitle = "FV~S~3~N~"
+end if
+
 if (model .eq. "TEMPEST") then
   w_data_file = "/glade/p/vetssg/data/DCMIP_2016/tempest/publish/tempest.163."+resol+".L40.interp_latlon.nonhydro.W.nc"
   qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/tempest/publish/tempest.163."+resol+".L40.interp_latlon.nonhydro.Qr.nc"
@@ -128,6 +139,7 @@ if (model .eq. "ACME") then
 
   qr_interp= linint1_n_Wrap(z,qr,False,5000.0,0,1)
   qr_5km   = qr_interp(:,0,:,:)
+
 end if
 
 if (model .eq. "GEM") then
@@ -678,8 +690,8 @@ end if
   pres@gsnPanelTop = 0.8
   ;pres@gsnPanelYWhiteSpacePercent = 5
   ;pres@gsnPanelXWhiteSpacePercent = 5
-  ;pres@txString           = model+" "+resol     ; use this for NCL V6.3.0 and earlier
-  pres@txString           = model+""     ; use this for NCL V6.3.0 and earlier
+  pres@gsnPanelMainString           = modeltitle+""    ; use this for NCL V6.3.0 and earlier
+  pres@gsnPanelMainFontHeightF = .03
 
   gsn_panel(wks, plot, (/2,1/), pres)
 

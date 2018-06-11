@@ -15,8 +15,8 @@ out_type="pdf"
 do_non_snow=False
 
 PRECTSNOW="PRECT"
-trajfile=(/"/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.1990.CAT","/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.2026.CAT","/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.2071.CAT"/)
-RSIfile = (/"/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
+trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.ALL","/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.2026.ALL","/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.2071.ALL"/)
+RSIfile=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
 modelcolors=(/"blue2","green2","red2"/)
 labelsArr=(/"  1990-2005","  2026-2035","  2071-2080"/)
 ncols = 9                     ; assign number of columns
@@ -120,7 +120,7 @@ do z = 0,ncases-1
   end if
 end do
 
-wks  = gsn_open_wks (out_type,"MSLP_freq_comp_"+PRECTSNOW)
+wks  = gsn_open_wks (out_type,"pdf/MSLP_freq_comp_"+PRECTSNOW)
 
 plot = new(1,graphic)
 

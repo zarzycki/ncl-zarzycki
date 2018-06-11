@@ -23,7 +23,7 @@ basinfilt = 1
 maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
-thefile="ibtracs-1979-2012-NATL_only.txt"
+thefile="ibtracs-1979-2012-GLOB.txt"
 ;thefile="trajectories.txt.MP15A-120A-US"
 ncols = 10                    ; assign number of columns
 maxLines = -1

@@ -13,13 +13,13 @@ load "../../../functions/trackDensity.ncl"
 begin
 
 out_type="pdf"
-RSIthresh=3
+RSIthresh=0   ;0 for all ETCs
 prescut=1090.  ; 1000 for AGU
 plot_diff_abs=True
 plotname = "pdf/etcdens-absdiff-RSIthresh_"+RSIthresh
 
-trajfile=(/"/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.1990.CAT","/home/zarzycki/snow/snow-tracking/LES_tracking/traj/tempest.LENS.2071.CAT"/)
-RSIfile = (/"/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/loan/hires/zarzycki/tarfolder/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.PRECT.tempest.csv"/)
+trajfile=(/"/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.1990.ALL","/glade/u/home/zarzycki/snow-tracking/LES_tracking/traj/tempest.LENS.2071.ALL"/)
+RSIfile = (/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv.PRECT.tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv.PRECT.tempest.csv"/)
 nyrs = (/16*35,10*35/)
 nyrs = nyrs / 10   ; change normalization to "per decade"
 

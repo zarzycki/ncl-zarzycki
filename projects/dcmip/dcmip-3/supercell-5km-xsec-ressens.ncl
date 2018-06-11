@@ -30,7 +30,7 @@ begin
 ;     lat:   arbitrary
 ;----------------------------------------------------------------------------
 
-;model="OLAM"
+;model="CSU_LZ"
 resols=(/"r400","r200","r100","r50"/)
 out_type="pdf"
 
@@ -48,6 +48,18 @@ out_type="pdf"
   wplot = new(3,graphic)
   qrplot = new(3,graphic)
   text = new(20,graphic)
+
+modeltitle = model
+
+if (model .eq. "ACME") then
+  modeltitle = "ACME-A (E3SM)"
+end if
+if (model .eq. "CSU_LZ" .or. model .eq. "CSU_CP") then
+  modeltitle = "CSU"
+end if
+if (model .eq. "FV3") then
+  modeltitle = "FV~S~3~N~"
+end if
 
 do ii = 0,dimsizes(resols)-1
 resol=resols(ii)
@@ -560,8 +572,8 @@ end do
   pres@gsnPanelTop = 0.8
   ;pres@gsnPanelYWhiteSpacePercent = 5
   ;pres@gsnPanelXWhiteSpacePercent = 5
-  ;pres@txString           = model+", +7200s, r400 -> r50"     ; use this for NCL V6.3.0 and earlier
-  pres@txString           = model+""    ; use this for NCL V6.3.0 and earlier
+  pres@gsnPanelMainString           = modeltitle+""    ; use this for NCL V6.3.0 and earlier
+  pres@gsnPanelMainFontHeightF = .03
 
   ;gsn_text_ndc(wks,label,-0.,-0.,txres)
 
