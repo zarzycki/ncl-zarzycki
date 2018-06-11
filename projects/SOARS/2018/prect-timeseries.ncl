@@ -12,20 +12,29 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/contrib/time_axis_labels.ncl"
 
 begin
 
-filename = "indices.csv"
-lines = asciiread(filename,-1,"string")
-delim = ","
-ix_var   = tointeger(str_get_field(lines,1,delim))
-name_var =           str_get_field(lines,2,delim)
-lat_var =   tofloat(str_get_field(lines,3,delim))
-lon_var =   tofloat(str_get_field(lines,4,delim))
+filename     = "indices.csv"
+lines        = asciiread(filename,-1,"string")
+delim        = ","
+ix_var       = tointeger(str_get_field(lines,1,delim))
+name_var     =           str_get_field(lines,2,delim)
+lat_var      =   tofloat(str_get_field(lines,3,delim))
+lon_var      =   tofloat(str_get_field(lines,4,delim))
+longname_var =           str_get_field(lines,5,delim)
 
 print("Name is '" + name_var + "', ix is " + ix_var)
 
-TCDISTTHRESH=800.
+TCDISTTHRESH=500.
+ENSMEM="003"
+SIMYRS="1979_2012"     ; 1979_2012, RCP85_2070_2099, 
 
-thefile="~/tempest-scripts/hyperion/trajectories.txt.CHEY.VR28.NATL.WAT.CAM5.4CLM5.0.dtime900"
-filelist = systemfunc ("ls /glade/scratch/zarzycki/tmp/*cam.h2*") ; file paths
+thefile="~/tempest-scripts/nan-ne120/trajectories.txt.TEST.NE120."+SIMYRS+"."+ENSMEM
+filelist = systemfunc ("ls /glade/scratch/zarzycki/tmp/f.e13.*.ne120_ne120."+SIMYRS+"."+ENSMEM+".cam.h2.PRECT.*.nc") ; file paths
+
+if (SIMYRS .eq. "1979_2012") then
+  yrlabel="1980_2009"
+else
+  yrlabel="2070_2099"
+end if
 
 f    = addfiles (filelist, "r")   
 ListSetType (f, "cat")        ; concatenate (=default)
@@ -39,6 +48,7 @@ nftim = dimsizes(ftime)
 basin="atlantic"
 cutwind=0.0
 factor = surfaceWindCorrFactor(-1,-1,"log")
+factorland = surfaceWindCorrFactor(-1,1.0,"log")
 
 basinfilt = 1
 maskspacing=1.0
@@ -66,6 +76,8 @@ ntimes = ndims(1)
 
 onedtlat=ndtooned(tlat)
 onedtlon=ndtooned(tlon)
+onedtpres=ndtooned(tpres)
+onedtwind=ndtooned(twind)
 onedtyyyy=ndtooned(tyyyy)
 onedtmm=ndtooned(tmm)
 onedtdd=ndtooned(tdd)
@@ -83,10 +95,33 @@ iz = ind(.not.ismissing(onedtlon))
 if (.not.all(ismissing(iz))) 
   tlonfilt=onedtlon(iz)  
   tlatfilt=onedtlat(iz) 
-  tcalfilt=onedtcal(iz) 
+  tcalfilt=onedtcal(iz)
+  tpresfilt=onedtpres(iz) 
+  twindfilt=onedtwind(iz) 
 else
   print ("something is wrong, all traj values are missing...")
 end if
+
+; LOAD OTHER FILES
+filelist = systemfunc ("ls /glade/scratch/zarzycki/tmp/f.e13.*.ne120_ne120."+SIMYRS+"."+ENSMEM+".cam.h2.TMQ.*.nc") ; file paths
+fTMQ = addfiles (filelist, "r")
+ListSetType (fTMQ, "cat")
+
+filelist = systemfunc ("ls /glade/scratch/zarzycki/tmp/f.e13.*.ne120_ne120."+SIMYRS+"."+ENSMEM+".cam.h4.PSL.*.nc") ; file paths
+fPSL = addfiles (filelist, "r")
+ListSetType (fPSL, "cat")
+
+filelist = systemfunc ("ls /glade/scratch/zarzycki/tmp/f.e13.*.ne120_ne120."+SIMYRS+"."+ENSMEM+".cam.h4.UBOT.*.nc") ; file paths
+fUBOT = addfiles (filelist, "r")
+ListSetType (fUBOT, "cat")
+
+filelist = systemfunc ("ls /glade/scratch/zarzycki/tmp/f.e13.*.ne120_ne120."+SIMYRS+"."+ENSMEM+".cam.h4.VBOT.*.nc") ; file paths
+fVBOT = addfiles (filelist, "r")
+ListSetType (fVBOT, "cat")
+
+filelist = systemfunc ("ls /glade/scratch/zarzycki/tmp/f.e13.*.ne120_ne120."+SIMYRS+"."+ENSMEM+".cam.h4.TS.*.nc") ; file paths
+fTS = addfiles (filelist, "r")
+ListSetType (fTS, "cat")
 
 do zz = 0,dimsizes(ix_var)-1
 
@@ -108,22 +143,39 @@ do zz = 0,dimsizes(ix_var)-1
   PRECT    = f[:]->PRECT(:,ix)
   PRECT = PRECT*8.64e7/4.  ; convert to mm/6hr
   PRECT@_FillValue=-9.999e-9
+  PRECT = where(PRECT.lt.1e-3,0,PRECT)   ; correct for small eps values
 
-  PSL = f[:]->PSL(:,ix)
+  TMQ = fTMQ[:]->TMQ(:,ix)
+
+  PSL = fPSL[:]->PSL(::2,ix)
   PSL = PSL/100.  ; convert to hPa/mb from Pa
-  
+
+  UBOT = fUBOT[:]->UBOT(::2,ix)
+  VBOT = fVBOT[:]->VBOT(::2,ix)
+  U10 = UBOT
+  U10 = factorland*sqrt(UBOT^2 + VBOT^2)
+  delete(UBOT)
+  delete(VBOT)
+
+  TS = fTS[:]->TS(::2,ix)
+  TS = TS - 273.15
+
   ; -------------------------------------------------------------------------
 
-  outputname="timeseries."+CITYNAME+".csv"
+  outputname="station."+CITYNAME+"."+yrlabel+"."+ENSMEM+".csv"
   system("rm "+outputname)
   quote = inttochar(34)
   delim = ","
 
-  filelist = systemfunc ("ls /glade/scratch/zarzycki/tmp/*cam.h2*") ; file paths
-  ;filelist = systemfunc ("ls ~/scratch/archive/CHEY.VR28.NATL.REF.CAM5.4CLM5.0.dtime900/atm/hist/*cam.h2*") ; file paths
-
   TCorNO=new(nftim,"logical")
   TCorNO=False
+  TCorNOstr=new(nftim,"string")
+  TCpres=new(nftim,"float")
+  TCpres=-999.
+  TCwind=TCpres
+  TClat=TCpres
+  TClon=TCpres
+
   do ii = 0,nftim-1
     thisTime=ftime(ii)
     ;print(thisTime+"")
@@ -141,6 +193,10 @@ do zz = 0,dimsizes(ix_var)-1
         if (disttoTC .lt. TCDISTTHRESH) then
           ;print("we have found a TC: "+disttoTC+" "+tlatfilt(ib)+" "+tlonfilt(ib))
           TCorNO(ii) = True
+          TCpres(ii) = tpresfilt(ib)
+          TCwind(ii) = twindfilt(ib)
+          TClat(ii) = tlatfilt(ib)
+          TClon(ii) = tlonfilt(ib)
           break
         else
           ;print("no TC "+disttoTC+" "+tlatfilt(ib)+" "+tlonfilt(ib))
@@ -153,14 +209,19 @@ do zz = 0,dimsizes(ix_var)-1
     ;system("echo "+quote+cd_calendar(thisTime,2)+delim+PRECT(ii)+delim+TCorNO(ii)+     quote+" >> "+outputname)
   end do
 
-  alist   = [/cd_calendar(ftime,-3),PRECT,PSL,TCorNO/]
-  write_table(outputname, "w", alist, "%i,%6.1f,%8.1f,%s")
+  TCorNOstr=where(TCorNO.eq.True,"     TRUE","    FALSE")
+
+  alist   = [/conform(ftime,CITYNAME,-1),conform(ftime,TESTLAT,-1),conform(ftime,TESTLON,-1),"   "+tostring(cd_calendar(ftime,-3)),PRECT,PSL,TMQ,U10,TS,TCorNOstr,TClat,TClon,TCpres,TCwind/]
+  write_table(outputname, "w", alist, "%s,%7.1f,%7.1f,%s,%7.1f,%9.1f,%7.1f,%7.1f,%7.1f,%s,%7.1f,%7.1f,%9.1f,%7.1f")
+
+  ;alist   = [/cd_calendar(ftime,-3),PRECT,TCorNO/]
+  ;write_table(outputname, "w", alist, "%i,%6.1f,%s")
 
   ;print(TCorNO+" "+cd_calendar(ftime,2)+" "+tofloat(PRECT)+" "+ftime)
 
   ; plotting
 
-  wks          = gsn_open_wks ("png","series."+CITYNAME) ; send graphics to PNG file
+  wks          = gsn_open_wks ("png","img."+CITYNAME+"."+yrlabel+"."+ENSMEM) ; send graphics to PNG file
 
   res          = True                   ; plot mods desired
   res@gsnFrame = False                  ; don't advance frame yet      
@@ -176,14 +237,13 @@ do zz = 0,dimsizes(ix_var)-1
 
   PRECT=where(TCorNO.eq.True,PRECT,PRECT@_FillValue)
   res@xyLineColor="red"
-  res@xyLineThicknessF=4.0
+  res@xyLineThicknessF=3.0
   plotTC = gsn_csm_xy (wks,ftime,PRECT,res)        ; create plot
 
   overlay(plot,plotTC)
 
   draw(plot)
   frame(wks)
-
 
   delete(res)
   delete(plot)
