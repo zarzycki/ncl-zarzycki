@@ -31,8 +31,9 @@ begin
 ;----------------------------------------------------------------------------
 
 ;model="FVM"
-;resol="r400"
+;resol="r50"
 out_type="pdf"
+cnFillOpt="raster"  ; raster or smooth
 
 if (model .eq. "CSU_LZ" .or. model .eq. "CSU_CP") then
   if (resol .eq. "r50") then
@@ -63,10 +64,21 @@ if (model .eq. "TEMPEST") then
 end if
 
 if (model .eq. "FVM") then
-  ;w_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
   w_data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
-  ;qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
   qr_data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
+  correctLon=True
+  conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
+  w_data = addfile(w_data_file,"r")
+  qr_data = addfile(qr_data_file,"r")
+  lev=w_data->lev(:)
+  print(lev)   ;5000 is the 10th index
+  w_5km = w_data->W((/6,12,18,24/),10,:,:)
+  qr_5km = qr_data->QR((/6,12,18,24/),10,:,:)
+end if
+
+if (model .eq. "FVM_OLD") then
+  w_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
+  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
   correctLon=True
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -587,13 +599,21 @@ end if
 ;  res@gsnMaximize         = True
   res@gsnPaperOrientation = "landscape"
 
+
   res@cnFillOn          = True
-  res@cnLinesOn         = True
+
   res@cnLineLabelsOn    = False
   res@lbLabelAutoStride = True
   res@cnInfoLabelOn     = False
   res@tmXBLabelsOn      = True
   res@tmXBOn            = True
+
+  if (cnFillOpt .eq. "raster") then
+    res@cnFillMode = "RasterFill"
+    res@cnLinesOn         = False
+  else
+    res@cnLinesOn         = True
+  end if
 
   res@tmXTLabelsOn      = False
   res@tmXTOn            = False

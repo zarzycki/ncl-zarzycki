@@ -30,9 +30,10 @@ begin
 ;     lat:   arbitrary
 ;----------------------------------------------------------------------------
 
-;model="CSU_LZ"
+;model="FVM"
 resols=(/"r400","r200","r100","r50"/)
 out_type="pdf"
+cnFillOpt="raster"  ; raster or smooth
 
 ;------------------------------------------------
 ; Workspace
@@ -82,6 +83,21 @@ if (model .eq. "TEMPEST") then
 end if
 
 if (model .eq. "FVM") then
+  w_data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
+  qr_data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
+
+  correctLon=True
+  conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
+  w_data = addfile(w_data_file,"r")
+  qr_data = addfile(qr_data_file,"r")
+  ; CMZ -- still need to interpolate since 5000 falls between two levels in output
+  lev=w_data->lev(:)
+  print(lev)   ;5000 is the 10th index
+  w_5km = w_data->W((/6,12,18,24/),10,:,:)
+  qr_5km = qr_data->QR((/6,12,18,24/),10,:,:)
+end if
+
+if (model .eq. "FVM_OLD") then
   w_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
   qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
   correctLon=True
@@ -470,6 +486,13 @@ end if
   res@tmXBLabelsOn      = True
   res@tmXBOn            = True
 
+  if (cnFillOpt .eq. "raster") then
+    res@cnFillMode = "RasterFill"
+    res@cnLinesOn         = False
+  else
+    res@cnLinesOn         = True
+  end if
+
   res@tmXTLabelsOn      = False
   res@tmXTOn            = False
 ; turn off ticks on bottom
@@ -493,6 +516,7 @@ end if
 
   res@gsnContourZeroLineThicknessF = 0.0
   res@gsnContourNegLineDashPattern = 1
+
 
 
 
