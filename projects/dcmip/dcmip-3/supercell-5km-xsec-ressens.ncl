@@ -33,7 +33,8 @@ begin
 ;model="FVM"
 resols=(/"r400","r200","r100","r50"/)
 out_type="pdf"
-cnFillOpt="raster"  ; raster or smooth
+cnFillOpt="smooth"  ; raster or smooth
+cnLineOn=True
 
 ;------------------------------------------------
 ; Workspace
@@ -488,10 +489,8 @@ end if
 
   if (cnFillOpt .eq. "raster") then
     res@cnFillMode = "RasterFill"
-    res@cnLinesOn         = False
-  else
-    res@cnLinesOn         = True
   end if
+  res@cnLinesOn         = cnLineOn 
 
   res@tmXTLabelsOn      = False
   res@tmXTOn            = False

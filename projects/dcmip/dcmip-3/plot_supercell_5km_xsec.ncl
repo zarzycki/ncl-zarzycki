@@ -33,7 +33,8 @@ begin
 ;model="FVM"
 ;resol="r50"
 out_type="pdf"
-cnFillOpt="raster"  ; raster or smooth
+cnFillOpt="smooth"  ; raster or smooth
+cnLineOn=True  ; raster or smooth
 
 if (model .eq. "CSU_LZ" .or. model .eq. "CSU_CP") then
   if (resol .eq. "r50") then
@@ -610,10 +611,9 @@ end if
 
   if (cnFillOpt .eq. "raster") then
     res@cnFillMode = "RasterFill"
-    res@cnLinesOn         = False
-  else
-    res@cnLinesOn         = True
   end if
+  res@cnLinesOn         = cnLineOn 
+
 
   res@tmXTLabelsOn      = False
   res@tmXTOn            = False
