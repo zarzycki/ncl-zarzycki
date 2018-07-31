@@ -14,7 +14,7 @@ begin
 
 out_type="pdf"
 
-thisVar="W"  ; W or PRECL
+thisVar="PRECL"  ; W or PRECL
 
 modellist=(/"ACME","CSU_LZ","FV3","FVM","GEM","ICON","MPAS","NICAM","OLAM","TEMPEST"/)
 
@@ -42,7 +42,7 @@ time_s = fspan(0.0, 7200.0, ntimes)
 
 maxw = new((/nres,ntimes/),"float")
 
-if ((model .eq. "ICON" .or. model .eq. "TEMPEST" .or. model .eq. "CSU_LZ" .or. model .eq. "CSU_CP" .or. model .eq. "ACME" .or. model .eq. "GEM" .or. model .eq. "DYNAMICO" .or. model .eq. "FVM") .and. whatVar .eq. "PRECL")
+if ((model .eq. "ICON" .or. model .eq. "TEMPEST" .or. model .eq. "CSU_LZ" .or. model .eq. "CSU_CP" .or. model .eq. "ACME" .or. model .eq. "GEM" .or. model .eq. "DYNAMICO" .or. model .eq. "FVM" .or. model .eq. "FVM_OLD") .and. whatVar .eq. "PRECL")
   whatVar="PRECT"
 end if
 
@@ -118,8 +118,13 @@ do jj = 0,nres-1
     prec_units="ms"
   end if
   if (model .eq. "FVM") then
-    ;data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
     data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
+    time_units = "d"
+    time_var_name="time"
+    prec_units="ms"
+  end if
+  if (model .eq. "FVM_OLD") then
+    data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
     time_units = "d"
     time_var_name="time"
     prec_units="ms"

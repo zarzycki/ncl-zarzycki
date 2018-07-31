@@ -10,7 +10,7 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="x11"
+output_type="pdf"
 smooth_traj=True    ; do a running average on lat/lon to produce smoother PSL trajs
 underlayPop=True
 
@@ -25,16 +25,17 @@ underlayPop=True
 ;stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.JRA."+year+"."+year+".5e-9_12.nc.tempest.nc"
 
 ;;; LENS
-;ensmem="035"
-;stormID=346
-;year=2071
+ensmem="035"
+stormID=346
+year=1990
 
 print("ensmem: "+ensmem+"   stormID: "+stormID+"   year: "+year)
 
 trajfile="/glade/u/home/zarzycki/snow-tracking/tracking/traj/tempest.LENS."+year+"."+ensmem
 stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
 RSIfile="/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS."+year+"."+ensmem+".5e-9_12.csv.SNOW.tempest.csv"
-imgDir="/glade/scratch/zarzycki/LES-snow/images/"+year+"_"+ensmem+"/"
+;imgDir="/glade/scratch/zarzycki/LES-snow/images/"+year+"_"+ensmem+"/"
+imgDir="./"
 
 lines = asciiread(RSIfile,-1,"string")
 delim = ","
@@ -130,7 +131,7 @@ end if
 ;--------------------------------------------------------
 print("Beginning plot sequence")
 system("mkdir -p "+imgDir)
-wks = gsn_open_wks("png",imgDir+"/storm.LENS."+year+"_"+RSImemnum(iz)+"_"+sprinti("%0.4i", stormID)+"_"+yyyystr(0)+mmstr(0)+ddstr(0)+"_"+sprinti("%0.3i", RSIduration(iz))+"_"+RSIcat(iz))               ; open workstation
+wks = gsn_open_wks(output_type,imgDir+"/storm.LENS."+year+"_"+RSImemnum(iz)+"_"+sprinti("%0.4i", stormID)+"_"+yyyystr(0)+mmstr(0)+ddstr(0)+"_"+sprinti("%0.3i", RSIduration(iz))+"_"+RSIcat(iz))               ; open workstation
 ;wks  = gsn_open_wks(output_type,"./pdf/single-storm-traj")
 map = new(1,graphic)
 
