@@ -102,15 +102,15 @@ count_diff3 = where(count_diff3.eq.0, count_diff3@_FillValue,count_diff3)
 ; create plot
 ;************************************************
 if (prescut .lt. 1020.0) then
-  plotname = "anntrackdens_lt"+prescut
+  plotname = "anntrackdens_aew_lt"+prescut
 else
-  plotname = "anntrackdens_all"
+  plotname = "anntrackdens_aew_all"
 end if
 wks = gsn_open_wks(out_type,plotname)
-plot = new(12,"graphic")
+plot = new(6,"graphic")
 
-colorMap1="BlAqGrYeOrRe"
-colorMap2="BlWhRe"
+colorMap1="WhiteBlueGreenYellowRed"
+colorMap2="BlueWhiteOrangeRed"
 
 res                       = True     ; plot mods desired
 res@gsnDraw = False
@@ -134,20 +134,20 @@ res@mpMaxLonF             = 60.
 res@cnLevelSelectionMode  = "ManualLevels"
 ; 0-120
 res@cnMinLevelValF        = 0.0
-res@cnMaxLevelValF        = 360.0
+res@cnMaxLevelValF        = 260.0
 res@cnLevelSpacingF       = res@cnMaxLevelValF/20.
 res@cnFillPalette=colorMap1
 print("min: "+min(count1(:,:))+"   max: "+max(count1(:,:)))
 print("min: "+min(count2(:,:))+"   max: "+max(count2(:,:)))
 print("min: "+min(count3(:,:))+"   max: "+max(count3(:,:)))
-plot(4) = gsn_csm_contour_map_ce(wks,count1(:,:),res)
-plot(7) = gsn_csm_contour_map_ce(wks,count2(:,:),res)
-plot(10) = gsn_csm_contour_map_ce(wks,count3(:,:),res)
+plot(0) = gsn_csm_contour_map_ce(wks,count1(:,:),res)
+plot(2) = gsn_csm_contour_map_ce(wks,count2(:,:),res)
+plot(4) = gsn_csm_contour_map_ce(wks,count3(:,:),res)
 ; plot differences
 res@cnLevelSelectionMode  = "ManualLevels"
 ; -40-40
-res@cnMinLevelValF        = -50.0
-res@cnMaxLevelValF        = 50.0
+res@cnMinLevelValF        = -60.0
+res@cnMaxLevelValF        = 60.0
 res@cnLevelSpacingF       = res@cnMaxLevelValF/20.
 res@cnFillPalette=colorMap2
 
@@ -163,20 +163,20 @@ res@cnFillPalette=colorMap2
 print("min: "+min(count_diff1(:,:))+"   max: "+max(count_diff1(:,:)))
 print("min: "+min(count_diff2(:,:))+"   max: "+max(count_diff2(:,:)))
 ;print("min: "+count3(:,:)+"   max: "+count3(:,:))
-plot(5) = gsn_csm_contour_map_ce(wks,count_diff1(:,:),res)
-plot(8) = gsn_csm_contour_map_ce(wks,count_diff2(:,:),res)
+plot(1) = gsn_csm_contour_map_ce(wks,count_diff1(:,:),res)
+plot(3) = gsn_csm_contour_map_ce(wks,count_diff2(:,:),res)
 ;plot(11) = gsn_csm_contour_map_ce(wks,count_diff3(:,:),res)
 
 resP = True
 if (prescut .lt. 1020.0) then
-  resP@txString           = "Annual TC track density, < "+prescut+" mb"
+  resP@txString           = "Annual 600mb AEW track density, < "+prescut+" mb"
 else
-  resP@txString           = "Annual TC track density, all storms"
+  resP@txString           = "Annual 600mb AEW track density, all storms"
 end if
 resP@amJust           = "TopLeft"
 resP@gsnPanelFigureStringsFontHeightF = 0.014
-resP@gsnPanelFigureStrings= (/"OBS","","","WAT-OBS","WAT","WAT-EXT","REF-OBS","REF","REF-EXT","EXT-OBS","EXT",""/)
+resP@gsnPanelFigureStrings= (/"WAT","WAT-EXT","REF","REF-EXT","EXT",""/)
 
-gsn_panel(wks,plot,(/4,3/),resP)
+gsn_panel(wks,plot,(/3,2/),resP)
 
 end

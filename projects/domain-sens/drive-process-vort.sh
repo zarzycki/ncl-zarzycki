@@ -17,7 +17,7 @@
 #SBATCH -C knl,quad,cache   #Use KNL nodes in quad cache format (default, recommended)
 ################################################################
 
-GRID=WAT
+GRID=EXT
 CONFIG=dtime900.002
 
 starttime=$(date -u +"%s")
@@ -29,7 +29,7 @@ NUMCORES=8
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
-nclweightfile="/global/homes/c/czarzyck/scratch/maps/hyperion/map_ne0np4natlantic${GRID,,}.ne30x4_to_2x2_bilinear.nc"
+nclweightfile="/global/homes/c/czarzyck/scratch/maps/hyperion/map_ne0np4natlantic${GRID,,}.ne30x4_to_2.0x2.0_GLOB.nc"
 for f in /global/homes/c/czarzyck/scratch/hyperion/CHEY.VR28.NATL.${GRID}.CAM5.4CLM5.0.${CONFIG}/atm/hist/*.h2.*.nc
 do
   #ncl process-vort.ncl 'infile="'${f}'"' 'wgt_file="'${nclweightfile}'"'

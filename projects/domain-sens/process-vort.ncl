@@ -59,16 +59,16 @@ print("Begin relative vorticity... ")
 lat=UP_RLL&lat
 lon=UP_RLL&lon
 
-;VORT600=UP_RLL
-;uv2vrf(UP_RLL,VP_RLL,VORT600)
-VORT600 = uv2vr_cfd (UP_RLL(:,0,:,:),VP_RLL(:,0,:,:),lat,lon, 2)
-copy_VarMeta(UP_RLL(:,0,:,:),VORT600)
-VORT600@units="1/s"
-VORT600@long_name="Vorticity"
+;VORTXXX=UP_RLL
+;uv2vrf(UP_RLL,VP_RLL,VORTXXX)
+VORTXXX = uv2vr_cfd (UP_RLL(:,0,:,:),VP_RLL(:,0,:,:),lat,lon, 2)
+copy_VarMeta(UP_RLL(:,0,:,:),VORTXXX)
+VORTXXX@units="1/s"
+VORTXXX@long_name="Vorticity"
 print("... done with relative vorticity.")
 
 print("flipping SH vort sign...")
-VORT600=where(conform(VORT600,lat,1) .lt. 0.0,-VORT600,VORT600)
+VORTXXX=where(conform(VORTXXX,lat,1) .lt. 0.0,-VORTXXX,VORTXXX)
 print("... done flipping SH vort sign.")
 
 
@@ -85,7 +85,7 @@ fAtt@creation_date = systemfunc ("date")
 fileattdef( ncdf, fAtt )            ; copy file attributes
 filedimdef(ncdf,"time",-1,True) 
 
-ncdf->VORT600 = VORT600
+ncdf->VORT600 = VORTXXX
 ;===================================================================
 
 end
