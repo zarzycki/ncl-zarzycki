@@ -14,7 +14,7 @@ fileDir="/glade/scratch/zarzycki/LENS-snow/"
 configArr=(/"B20TRC5CNBDRD","BRCP85C5CNBDRD","BRCP85C5CNBDRD"/)
 yearsArr=(/"1990010100Z-2005123118Z","2026010100Z-2035123118Z","2071010100Z-2080123118Z"/)
 
-out_type="pdf"
+out_type="x11"
 out_name="spatdiff-PRECBSN_FREQ"
 
 nconfigs=dimsizes(configArr)
@@ -40,7 +40,7 @@ do ii = 0,nconfigs-1
   delete([/tmp,ensallvar,fall,all_files/])
 end do
 
-maskfile=addfile("/glade/u/home/zarzycki/snow-tracking/LES_tracking/NEmask.nc","r")
+maskfile=addfile("/glade/u/home/zarzycki/snow-tracking/calc_RSI/NEmask.nc","r")
 RSIOUT=maskfile->MASK
 printVarSummary(RSIOUT)
 MASKNATIVE=linint2_Wrap(RSIOUT&lon+360.,RSIOUT&lat,RSIOUT,False,ensavg&lon,ensavg&lat, 0)
