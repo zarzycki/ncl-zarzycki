@@ -1,13 +1,3 @@
-;----------------------------------------------------------------------;
-; This is an NCL/ESMF template file for regridding from an 
-; unstructured SE/MPAS grid to a RLL grid. It uses ESMF_regrid
-; to do the regridding.
-;
-; This script can be easily modified to do use something other than
-; a 0.25 degree grid: "1x1", "G64", "5deg", etc.
-;
-; The unstructured grid is assumed to be contained in a NetCDF file. 
-;----------------------------------------------------------------------
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
@@ -15,9 +5,9 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 ;---Data file containing source grid
-srcGridName="ne0np4tcfplane.ne15x16"
+srcGridName="ne0np4tcfplane.ne15x8"
 outDir="/glade/scratch/zarzycki/"
-outRes="0.1"
+outRes="0.2"
 do_regional=True
 
 ;mapNameTag="CONUS"
@@ -38,7 +28,7 @@ maxLon=20.0
 
 ;src_file = "/glade/u/home/zarzycki/work/unigridFiles/"+srcGridName+"/topo/topo_"+srcGridName+"_smooth.nc"
 ;var_name = "PHIS"
-src_file = "/glade/u/home/zarzycki/scratch/init_routine/initial_data.cam.ne0np4tcfplane.ne15x16_template.nc.L030.homme.nc"
+src_file = "/glade/u/home/zarzycki/scratch/init_routine/initial_data.cam.ne0np4tcfplane.ne15x8_template.nc.L030.homme.nc"
 var_name = "PS"
 
 
