@@ -3,8 +3,8 @@
 ##=======================================================================
 #PBS -N test_gnu
 #PBS -A P54048000 
-#PBS -l walltime=11:49:00
-#PBS -q regular
+#PBS -l walltime=09:49:00
+#PBS -q economy
 #PBS -k oe
 #PBS -m a 
 #PBS -M zarzycki@ucar.edu
@@ -20,9 +20,9 @@ NUMTIMES=120
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
-thedate="1999-12-17-00000"
+thedate="2012-12-12-00000"
 
-camconfig="ne0conus30x8_t12.exp003"
+camconfig="mp120a_g16.exp214"
 
 filetoprocess="/glade2/h2/acgd0005/archive/f.asd2017.cesm20b05.FAMIPC6CLM5."${camconfig}"/atm/hist/f.asd2017.cesm20b05.FAMIPC6CLM5."${camconfig}".cam.h2."${thedate}".nc"
 filetoprocessbase=`basename ${filetoprocess}`

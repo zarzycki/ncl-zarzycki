@@ -29,14 +29,14 @@ f = addfile(origfull,"r")
 
 print(""+origfull)
 
-if (config .eq. "mp120a_g16") then
-  toponame="/glade/p/work/zarzycki/ASD2017_files/atm/cam/topo/mp120a_topo_150430.nc"
-else if (config .eq. "mp15a-120a-US_t12" .or. config .eq. "mp15a-120a-US_t12.exp004") then
-  toponame="/glade/p/work/zarzycki/ASD2017_files/atm/cam/topo/mp15a-120a-US.topo.170118.nc"
-else if (config .eq. "ne30_g16") then
+if (config .eq. "mp120a_g16.exp214") then
+  toponame="/glade/work/zarzycki/ASD2017_files/atm/cam/topo/mp120a_topo_150430.nc"
+else if (config .eq. "mp15a-120a-US_t12.exp213") then
+  toponame="/glade/work/zarzycki/ASD2017_files/atm/cam/topo/mp15a-120a-US.topo.170118.nc"
+else if (config .eq. "ne30_g16.exp212") then
   toponame="/glade/p/cesmdata/cseg/inputdata/atm/cam/topo/USGS-gtopo30_ne30np4_16xdel2-PFC-consistentSGH.nc"
-else if (config .eq. "ne0conus30x8_t12" .or. config .eq. "ne0conus30x8_t12.exp003") then
-  toponame="/glade/p/work/zarzycki/ASD2017_files/atm/cam/topo/USGS_smoothed_ne0np4conus30x8_c161115.nc"
+else if (config .eq. "ne0conus30x8_t12.exp211") then
+  toponame="/glade/work/zarzycki/ASD2017_files/atm/cam/topo/USGS_smoothed_ne0np4conus30x8_c161115.nc"
 else
   print("cannot find topo file... exiting...")
   exit
@@ -63,8 +63,9 @@ lon = f->lon(::horizstride)
 lev = f->lev(:)
 nlev = dimsizes(lev)
 if (mpas) then
-  presname="f.asd2017.cesm20b05.FAMIPC6CLM5."+config+".cam.h2.1988-06-15-00000.nc.PRES.nc"
-  f3 = addfile(origdir+presname,"r")
+  print("used to load PRES file here, now on h2")
+  ;presname="f.asd2017.cesm20b05.FAMIPC6CLM5."+config+".cam.h2.1988-06-15-00000.nc.PRES.nc"
+  ;f3 = addfile(origdir+presname,"r")
 else
   hyam = f->hyam(:)
   hybm = f->hybm(:)
@@ -106,7 +107,7 @@ PHISf = f2->PHIS(::horizstride)
 TQVf = Tf * (1 + 0.61*QVf)
 HGTf = PHISf/9.81
 if (mpas) then
-  PRES = f3->PRESSURE(INIX,:,::horizstride)
+  PRES = f->PRESSURE(INIX,:,::horizstride)
   Z = f->Z3(INIX,:,::horizstride)
 end if
 
