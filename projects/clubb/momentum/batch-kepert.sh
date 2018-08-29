@@ -56,6 +56,8 @@ ncl kepert-repro.ncl 'config="newcyclone30x4_clubb_k10-0.3-NEW-lscale07"' 'cam5=
 ncl kepert-repro.ncl 'config="default-wrong-modifK10h"' 'cam5=False' 'k10=0.3'
 ncl kepert-repro.ncl 'config="dtime120s"' 'cam5=False' 'k10=0.3'
 
+ncl kepert-repro.ncl 'config="newcyclone30x4_clubb_k10-0.2-CDFLAT-L120"' 'cam5=False' 'k10=0.2'
+
 
 # x8 files
 ncl kepert-repro.ncl 'config="newcyclone30x8_CAM5"' 'cam5=True' 'k10=99999.0'

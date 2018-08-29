@@ -14,9 +14,8 @@ begin
 ;  "3.0-LscaleBlackadar-1500m","0.3-Lscalex3.0","0.3-L120"/)
 ;grid=(/"x4","x4","x8","x8","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4"/)
 
-configs=(/"0.1","0.3","1.2","0.3-Lscale","0.3-CDx0.5","0.1-CDx0.5","0.6-CDFLAT","CAM5"/)
-grid=(/"x4","x4","x4","x4","x4","x4","x4","x4"/)
-
+configs=(/"exp998","exp998","exp998","exp999","exp999","exp999"/)
+grid=(/"001","002","003","001","002","003"/)
 
 printVarSummary(configs)
 printVarSummary(grid)
@@ -35,38 +34,21 @@ data=new((/3,nruns/),"float")
 nEntries=50000
 ms_to_kts = 1.94384449
 
-
-
 ; get data
 do ii = 0,nruns-1
 
 day="10"
 
-config="newcyclone30"+grid(ii)+"_clubb_k10-"+configs(ii)
+config="RCE.QPC6.ne0np4tcfplane.ne15x8."+configs(ii)+"."+grid(ii)
+filedir="/glade/u/home/zarzycki/scratch/TC_PBL/"+config+"/run/"
 
-if (configs(ii) .eq. "CAM5")
-  config="newcyclone30x4_CAM5"
- ; filename = "/glade/u/home/zarzycki/scratch/cam5_work/CAM5-TC-test-VR/newcyclone30"+grid(ii)+"_CAM5/camrun.cam.h1.2000-01-"+day+"-00000.nc"
- ; f2= "/glade/u/home/zarzycki/scratch/cam5_work/CAM5-TC-test-VR/newcyclone30"+grid(ii)+"_CAM5/camrun.cam.h3.2000-01-"+day+"-00000.nc"
-  filename = "/glade/u/home/zarzycki/scratch/RCE.QPC5.ne0np4tcfplane.ne15x8/run/"+config+"/RCE.QPC5.ne0np4tcfplane.ne15x8.cam.h1.0001-01-10-00000.nc"
-  f2= "/glade/u/home/zarzycki/scratch/RCE.QPC5.ne0np4tcfplane.ne15x8/run/"+config+"/RCE.QPC5.ne0np4tcfplane.ne15x8.cam.h3.0001-01-10-00000.nc"
-  tf2 = addfile(f2,"r")
-else
-  filename = "/glade/u/home/zarzycki/scratch/RCE.QPC6.ne0np4tcfplane.ne15x8/run/"+config+"/RCE.QPC6.ne0np4tcfplane.ne15x8.cam.h1.0001-01-10-00000.nc"
-  f2= "/glade/u/home/zarzycki/scratch/RCE.QPC6.ne0np4tcfplane.ne15x8/run/"+config+"/RCE.QPC6.ne0np4tcfplane.ne15x8.cam.h3.0001-01-10-00000.nc"
-  tf2 = addfile(f2,"r")
-end if
+filename = filedir+"/"+config+".cam.h1.0001-01-10-00000.nc"
+f2= filedir+"/"+config+".cam.h3.0001-01-10-00000.nc"
 
-if (configs(ii) .eq. "cam5") then
-  k10 = -999.00
-else if (configs(ii) .eq. "1.2" .or. configs(ii) .eq. "0.6" .or. configs(ii) .eq. "0.3" .or. configs(ii) .eq. "0.1") then
-  k10 = tofloat(configs(ii))
-else
-  k10 = 0.3
-end if
-end if
+k10 = 0.5
 
 thefile = addfile(filename,"r")
+tf2 = addfile(f2,"r")
 
 timeStep=0
 

@@ -5,151 +5,40 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"  
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"  
 load "/glade/u/home/zarzycki/ncl/functions/surfaceWindCorrFactor.ncl"
-load "../../radial_plots/radialAvg.ncl"
+load "../../../functions/radialAvg.ncl"
 
 begin
 
-
 out_type="pdf"
 
-;config="newcyclone30x4_clubb_k10-0.3"
-;k10=0.3
-;cam5=False
-
-plot_vickery=True
-plot_blackadar=True
-plot_log_ref=True
-plot_10m=True
-plot_K_ref=True
-
-;if(cam5) then
-;  config="newcyclone30x8_CAM5"
-;end if
-
-if(cam5) then
-  filename = "/glade/scratch/zarzycki/cam5_work/CAM5-TC-test-VR/"+config+"/camrun.cam.h1.2000-01-08-00000.nc_regrid.nc"
-  f2= "/glade/u/home/zarzycki/scratch/cam5_work/CAM5-TC-test-VR/"+config+"/camrun.cam.h3.2000-01-08-00000.nc_regrid.nc"
-  kvmvar="UW_kvm"
-  tkevar="TKE"
-  lengthvar="UW_leng"
-else
-  filename = "/glade/scratch/zarzycki/cam5_work/clubb-TC-test-VR/"+config+"/camrun.cam.h1.2000-01-08-00000.nc_regrid.nc"
-  f2= "/glade/u/home/zarzycki/scratch/cam5_work/clubb-TC-test-VR/"+config+"/camrun.cam.h3.2000-01-08-00000.nc_regrid.nc"
-  kvmvar="KVM_CLUBB"
-  tkevar="TKE_CLUBB"
-  lengthvar="LSCALE_CLUBB"
-end if
-
-thefile = addfile(filename,"r")
-tf2 = addfile(f2,"r")
-
-
-stride = 1
-topLev = 750.
-botLev = 1050.
-maxLat=0.
-minLat=45.
-timeStep=0
-
-pi=3.14159
-
-lat = thefile->lat({maxLat:minLat:stride})
-lon = thefile->lon(::stride)
-lev = thefile->lev({topLev:botLev})
-lev@units = "hPa"
-hyam=thefile->hyam({topLev:botLev})
-hybm=thefile->hybm({topLev:botLev})
-hyai=thefile->hyai({topLev:botLev})
-hybi=thefile->hybi({topLev:botLev})
-P0=thefile->P0
-
-nlat = dimsizes(lat)
-nlon = dimsizes(lon)
-nlev = dimsizes(lev)
-
-U = thefile->U(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
-V = thefile->V(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
-PS1 = thefile->PS(timeStep,{maxLat:minLat:stride},::stride)
-T = thefile->T(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
-Q = thefile->Q(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
-OMEGA = thefile->OMEGA(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
-
-KVM_CLUBB_int = tf2->$kvmvar$(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
-if (.not.cam5) then
-  KVM_CLUBB_int = KVM_CLUBB_int*k10
-end if
-KVM_CLUBB = hyi2hyo_Wrap(P0,hyai,hybi,PS1,KVM_CLUBB_int,hyam,hybm,1)
-
-TKE_CLUBB_int = tf2->$tkevar$(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
-TKE_CLUBB = hyi2hyo_Wrap(P0,hyai,hybi,PS1,TKE_CLUBB_int,hyam,hybm,1)
-
-LSCALE_CLUBB_int = tf2->$lengthvar$(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
-LSCALE_CLUBB = hyi2hyo_Wrap(P0,hyai,hybi,PS1,LSCALE_CLUBB_int,hyam,hybm,1)
-
-PRES = pres_hybrid_ccm(PS1,P0,hyam,hybm)
-
-THETA=pot_temp(PRES,T,-1,False)
-
-W = omega_to_w(OMEGA, PRES, T)         ; w (m/s)
-
-;---FIND LOCATIONS OF PSMIN and WINDMAX
-a = new((/nlat,nlon/),float)
-a(:,:) = PS1(:,:)
-a1D      = ndtooned(a)
-dsizes_a = dimsizes(a)
-a_indices  = ind_resolve(minind(a1D),dsizes_a)
-psminlat = lat(a_indices(0,0))
-psminlon = lon(a_indices(0,1))
-
-; calculate radial stuff
-vComps = calcWindComponents(U,V,lat,lon,psminlat,psminlon,0,0)
-v_rad = vComps[0]
-v_theta = vComps[1]
-delete(vComps)
-
-; get Z from hybrid levels
-TV=T*(1.+0.61*Q) 
-PHIS=PS1
-PHIS=0.0
-Z = cz2ccm(PS1,PHIS,TV,P0,hyam(::-1),hybm(::-1),hyai(::-1),hybi(::-1))
-Z@units="m"
-
-; generate Zlev
-Zlev = fspan(10.,3000.,250)
-;Zlev = (/50.,100.,150.,200.,250.,300.,350.500.,750.,1000.,2000.,3000.,4000.,5000.,10000./)
-Zlev@units = "m"
-Zlev!0     = "Zlev"
-Zlev&Zlev = Zlev
-
-printVarSummary(W)
-printVarSummary(KVM_CLUBB)
-
-interp_type=1
-v_theta_Z  = int2p_n_Wrap(Z,v_theta,Zlev,interp_type,0)
-v_rad_Z    = int2p_n_Wrap(Z,v_rad,Zlev,interp_type,0)
-W_Z        = int2p_n_Wrap(Z,W,Zlev,interp_type,0)
-KVM_Z      = int2p_n_Wrap(Z,KVM_CLUBB,Zlev,interp_type,0)  
-TKE_Z      = int2p_n_Wrap(Z,TKE_CLUBB,Zlev,interp_type,0)  
-LSCALE_Z      = int2p_n_Wrap(Z,LSCALE_CLUBB,Zlev,interp_type,0)  
-THETA_Z      = int2p_n_Wrap(Z,THETA,Zlev,interp_type,0)  
-T_Z      = int2p_n_Wrap(Z,T,Zlev,interp_type,0)  
-Q_Z      = int2p_n_Wrap(Z,Q,Zlev,interp_type,0)  
-
-; do radial integrals
-rad_v_theta  = radialAvg3D(v_theta_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
-rad_v_rad    = radialAvg3D(v_rad_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
-rad_v_rad = -rad_v_rad  ; NEGATIVE FOR CONVENTION
-rad_W        = radialAvg3D(W_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
-rad_KVM      = radialAvg3D(KVM_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
-rad_TKE      = radialAvg3D(TKE_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
-rad_LSCALE      = radialAvg3D(LSCALE_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
-rad_THETA      = radialAvg3D(THETA_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
-rad_T      = radialAvg3D(T_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
-rad_Q      = radialAvg3D(Q_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
+config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp999"
+ncdf=addfile("./netcdf/"+config+".AVG.nc","r")
+rad_v_theta=ncdf->rad_v_theta
+rad_v_rad=ncdf->rad_v_rad
+rad_v_rad=ncdf->rad_v_rad
+rad_W=ncdf->rad_W
+rad_KVM=ncdf->rad_KVM
+rad_TKE=ncdf->rad_TKE
+rad_LSCALE=ncdf->rad_LSCALE
+rad_THETA=ncdf->rad_THETA
+rad_T=ncdf->rad_T
+rad_Q=ncdf->rad_Q
+rad_CLDLIQ=ncdf->rad_CLDLIQ 
+rad_CME=ncdf->rad_CME
+rad_DTCOND=ncdf->rad_DTCOND
+rad_MSE=ncdf->rad_MSE
 
 rad_dims=dimsizes(rad_v_theta)
 nlev_rad=rad_dims(0)
-nrad_rad=rad_dims(1)
+pi=3.14159
+Zlev=rad_v_theta&lev
+plot_vickery=True
+plot_blackadar=True
+plot_log_ref=False
+plot_10m=True
+plot_K_ref=False
+k10=-999.
+cam5=True
 
 ; find RMW
 rad_sfc_v_theta=rad_v_theta({70.},:)
@@ -170,6 +59,10 @@ rad_LSCALE_vert   = rad_v_theta_vert
 rad_THETA_vert   = rad_v_theta_vert
 rad_T_vert   = rad_v_theta_vert
 rad_Q_vert   = rad_v_theta_vert
+rad_CLDLIQ_vert   = rad_v_theta_vert
+rad_MSE_vert   = rad_v_theta_vert
+rad_CME_vert   = rad_v_theta_vert
+rad_DTCOND_vert   = rad_v_theta_vert
 
 
 rad_v_theta_vert(0,:) = tofloat(rad_v_theta(:,{rad_max}))
@@ -181,6 +74,10 @@ rad_LSCALE_vert(0,:) = tofloat(rad_LSCALE(:,{rad_max}))
 rad_THETA_vert(0,:) = tofloat(rad_THETA(:,{rad_max}))
 rad_T_vert(0,:) = tofloat(rad_T(:,{rad_max}))
 rad_Q_vert(0,:) = tofloat(rad_Q(:,{rad_max}))
+rad_CLDLIQ_vert(0,:) = tofloat(rad_CLDLIQ(:,{rad_max}))
+rad_MSE_vert(0,:) = tofloat(rad_MSE(:,{rad_max}))
+rad_CME_vert(0,:) = tofloat(rad_CME(:,{rad_max}))
+rad_DTCOND_vert(0,:) = tofloat(rad_DTCOND(:,{rad_max}))
 
 rad_v_theta_vert(1,:) = tofloat(rad_v_theta(:,{rad_max_2x}))
 rad_v_rad_vert(1,:) = tofloat(rad_v_rad(:,{rad_max_2x}))
@@ -191,6 +88,10 @@ rad_LSCALE_vert(1,:) = tofloat(rad_LSCALE(:,{rad_max_2x}))
 rad_THETA_vert(1,:) = tofloat(rad_THETA(:,{rad_max_2x}))
 rad_T_vert(1,:) = tofloat(rad_T(:,{rad_max_2x}))
 rad_Q_vert(1,:) = tofloat(rad_Q(:,{rad_max_2x}))
+rad_CLDLIQ_vert(1,:) = tofloat(rad_CLDLIQ(:,{rad_max_2x}))
+rad_MSE_vert(1,:) = tofloat(rad_MSE(:,{rad_max_2x}))
+rad_CME_vert(1,:) = tofloat(rad_CME(:,{rad_max_2x}))
+rad_DTCOND_vert(1,:) = tofloat(rad_DTCOND(:,{rad_max_2x}))
 
 ; find surface inflow angle
 do ii = 0,nlev_rad-1
@@ -304,7 +205,7 @@ end if
 
 
 wks   = gsn_open_wks (out_type,"panel_"+config)
-npanels=9
+npanels=12
 plot = new(npanels,"graphic")
 
 ; universal settings
@@ -312,7 +213,9 @@ res= True
 res@gsnDraw = False
 res@gsnFrame = False
 res@trYMinF           = 10.
-res@trYMaxF           = 2500.
+res@trYMaxF           = 2800.
+
+;res@xyMarkLineMode = "MarkLines"
 
 res@tiMainString  = "Radial Flow"
 res@tiXAxisString = "V_rad (m/s)"
@@ -375,18 +278,18 @@ if (plot_vickery)
   resover=True
   resover=res
   resover@xyLineColor="red"
-  ;plot1 = gsn_csm_xy (wks,data1x,data1y,resover)
-  ;overlay(plot(1),plot1)
-  ;plot2 = gsn_csm_xy (wks,data2x,data2y,resover)
-  ;overlay(plot(1),plot2)
-  plot3 = gsn_csm_xy (wks,data3x,data3y,resover)
-  overlay(plot(1),plot3)
-  plot4 = gsn_csm_xy (wks,data4x,data4y,resover)
-  overlay(plot(1),plot4)
-  plot5 = gsn_csm_xy (wks,data5x,data5y,resover)
-  overlay(plot(1),plot5)
-  plot6 = gsn_csm_xy (wks,data6x,data6y,resover)
-  overlay(plot(1),plot6)
+  ;plot11 = gsn_csm_xy (wks,data1x,data1y,resover)
+  ;overlay(plot(1),plot11)
+  ;plot21 = gsn_csm_xy (wks,data2x,data2y,resover)
+  ;overlay(plot(1),plot21)
+  plot31 = gsn_csm_xy (wks,data3x,data3y,resover)
+  overlay(plot(1),plot31)
+  plot41 = gsn_csm_xy (wks,data4x,data4y,resover)
+  overlay(plot(1),plot41)
+  plot51 = gsn_csm_xy (wks,data5x,data5y,resover)
+  overlay(plot(1),plot51)
+  plot61 = gsn_csm_xy (wks,data6x,data6y,resover)
+  overlay(plot(1),plot61)
   delete(resover)
 end if
 
@@ -444,20 +347,28 @@ if (plot_blackadar)
   resover=True
   resover=res
   resover@xyLineColor="red"
-  plot51 = gsn_csm_xy (wks,blackadar,Zlev,resover)
-  overlay(plot(5),plot51)
+  plot510 = gsn_csm_xy (wks,blackadar,Zlev,resover)
+  overlay(plot(5),plot510)
   delete(resover)
 end if
 
 end if
+;
+;res@tiMainString  = "Pot. Temp."
+;res@tiXAxisString = "Theta (K)"
+;res@tiYAxisString = "Height (m)"
+;res@xyYStyle          = "Log"
+;res@trXMinF           = 300.
+;res@trXMaxF           = 320.
+;plot(6) = gsn_csm_xy (wks,rad_THETA_vert(:,:),Zlev(:),res)
 
-res@tiMainString  = "Pot. Temp."
-res@tiXAxisString = "Theta (K)"
+res@tiMainString  = "DTCOND"
+res@tiXAxisString = "DTCOND (K/d)"
 res@tiYAxisString = "Height (m)"
 res@xyYStyle          = "Log"
-res@trXMinF           = 300.
-res@trXMaxF           = 320.
-plot(6) = gsn_csm_xy (wks,rad_THETA_vert(:,:),Zlev(:),res)
+res@trXMinF           = -180.
+res@trXMaxF           = 200.
+plot(6) = gsn_csm_xy (wks,rad_DTCOND_vert(:,:),Zlev(:),res)
 
 res@tiMainString  = "T"
 res@tiXAxisString = "Temp (K)"
@@ -480,6 +391,32 @@ res@trXMinF           = 0.011
 res@trXMaxF           = 0.025
 plot(8) = gsn_csm_xy (wks,rad_Q_vert(:,:),Zlev(:),res)
 
+res@tiMainString  = "CLDLIQ"
+res@tiXAxisString = "CLDLIQ (g/kg)"
+res@tiYAxisString = "Height (m)"
+res@xyYStyle          = "Log"
+res@trXMinF           = 0.
+res@trXMaxF           = 0.004
+plot(9) = gsn_csm_xy (wks,rad_CLDLIQ_vert(:,:),Zlev(:),res)
+
+
+res@tiMainString  = "MSE"
+res@tiXAxisString = "MSE (J/kg)"
+res@tiYAxisString = "Height (m)"
+res@xyYStyle          = "Log"
+res@trXMinF           = 330000.
+res@trXMaxF           = 360000.
+plot(10) = gsn_csm_xy (wks,rad_MSE_vert(:,:),Zlev(:),res)
+
+
+res@tiMainString  = "CME"
+res@tiXAxisString = "CME (g/kg/day)"
+res@tiYAxisString = "Height (m)"
+res@xyYStyle          = "Log"
+res@trXMinF           = -5.
+res@trXMaxF           = 65.
+plot(11) = gsn_csm_xy (wks,rad_CME_vert(:,:),Zlev(:),res)
+
 resP = True
 resP@txString = config
 
@@ -487,7 +424,86 @@ resP@txString = config
 ;resP@gsnPanelFigureStringsFontHeightF = 0.014
 ;resP@gsnPanelFigureStrings= (/"T12","G16","T12-G16"/)
 
-gsn_panel(wks,plot,(/3,3/),resP)
+gsn_panel(wks,plot,(/4,3/),resP)
+delete(res)
+delete(resP)
+
+wks2   = gsn_open_wks (out_type,"panel2_"+config)
+npanels=4
+plot2 = new(npanels,"graphic")
+;plot3 = new(npanels,"graphic")
+
+res= True       
+res@gsnDraw = False
+res@gsnFrame = False
+res@trYMinF           = 10.
+res@trYMaxF           = 2000.
+res@trXMinF           = 0.
+res@trXMaxF           = 400.
+
+;res@cnFillOn            = True          ; turn on color
+;res@cnFillPalette       = "gui_default" ; set color map
+
+;res@mpShapeMode = "FreeAspect"
+res@vpWidthF = 0.9
+res@vpHeightF = 0.3
+
+;res@tiMainString  = "Radial Flow"
+;res@tiXAxisString = "V_rad (m/s)"
+;res@tiYAxisString = "Height (m)"
+
+res@cnLevelSelectionMode = "ManualLevels"	; manually set the contour levels with the following 3 resources
+res@cnLineThicknessF = 1. 
+res@cnMinLevelValF  = -100.			; set the minimum contour level
+res@cnMaxLevelValF  = 100.			; set the maximum contour level
+res@cnLevelSpacingF = 1.			; set the interval between contours
+plot2(0) = gsn_csm_contour(wks2,rad_v_rad,res)       ; contour the variable
+res@cnLineThicknessF = 3.
+res@cnLevelSpacingF = 10.
+plot3 = gsn_csm_contour(wks2,rad_v_rad,res)
+overlay(plot2(0),plot3)
+delete(plot3)
+
+res@cnLineThicknessF = 1. 
+res@cnMinLevelValF  = -100.			; set the minimum contour level
+res@cnMaxLevelValF  = 100.			; set the maximum contour level
+res@cnLevelSpacingF = 2.			; set the interval between contours
+plot2(1) = gsn_csm_contour(wks2,rad_v_theta,res)       ; contour the variable
+res@cnLineThicknessF = 3.
+res@cnLevelSpacingF = 10.
+plot3 = gsn_csm_contour(wks2,rad_v_theta,res)
+overlay(plot2(1),plot3)
+delete(plot3)
+
+res@cnLineThicknessF = 1. 
+res@cnMinLevelValF  = -2.			; set the minimum contour level
+res@cnMaxLevelValF  = 2.			; set the maximum contour level
+res@cnLevelSpacingF = 0.1			; set the interval between contours
+plot2(2) = gsn_csm_contour(wks2,rad_W,res)       ; contour the variable
+res@cnLineThicknessF = 3.
+res@cnLevelSpacingF = 2.
+plot3 = gsn_csm_contour(wks2,rad_W,res)
+overlay(plot2(2),plot3)
+delete(plot3)
+
+res@cnLineThicknessF = 1. 
+res@cnMinLevelValF  = 0.			; set the minimum contour level
+res@cnMaxLevelValF  = 500.			; set the maximum contour level
+res@cnLevelSpacingF = 5.			; set the interval between contours
+plot2(3) = gsn_csm_contour(wks2,rad_KVM,res)       ; contour the variable
+res@cnLineThicknessF = 3.
+res@cnLevelSpacingF = 20.
+plot3 = gsn_csm_contour(wks2,rad_KVM,res)
+overlay(plot2(3),plot3)
+delete(plot3)
+
+
+
+
+resP = True
+resP@txString = config
+gsn_panel(wks2,plot2,(/4,1/),resP)
+
 
 end
 
