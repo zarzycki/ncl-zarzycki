@@ -1,0 +1,8 @@
+variable = "PRECT",
+scale=86400000.,
+offset=0.,
+gridname = "mp15a-120a-US",
+needs_regrid=True,
+fdir1="/glade/u/home/zarzycki/acgd0005/archive/f.asd2017.cesm20b05.FAMIPC6CLM5.mp15a-120a-US_t12.exp213/atm/hist/",
+fnampattern="*cam.h3*.nc",
+wgt_file="/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_mp15a-120a-US_to_0.125x0.125reg_patch.nc",

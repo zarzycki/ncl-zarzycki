@@ -1,0 +1,8 @@
+variable = "cmorph_precip",
+scale=24.,
+offset=0.,
+gridname = "cmorph",
+needs_regrid=False,
+fdir1="/gpfs/fs1/collections/rda/data/ds502.0/netcdf/",
+fnampattern="cmorph*.nc",
+wgt_file="",

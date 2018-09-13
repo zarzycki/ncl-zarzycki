@@ -15,17 +15,17 @@ begin
 out_format = "x11"
 
 xmin = (/0.0,0.0/)             ; x axis minimums
-xmax = (/30.,500./)           ; x axis maximums
+xmax = (/25.,600./)           ; x axis maximums
 ymin = (/1e-4,1e-7/)                ; y minimum (both panels)
 ymax = (/1e0,1e0/)                 ; y maximum (both panels)
 titles = (/" "," "/)           ; titles
 axis_labels = (/"fraction"," "/)               ; y axis labels
-colorAll = (/"red3","blue3","pink2","skyblue2"/)      ; line colors
+colorAll = (/"red3","blue3","pink2","skyblue2","black"/)      ; line colors
 
-gridlist = (/"conus_30_x8","ne30","mp15a-120a-US","mp120a"/)
+gridlist = (/"conus_30_x8","ne30","mp15a-120a-US","mp120a","cmorph"/)
 physpkg = "CAM6"
 nfiles = dimsizes(gridlist)
-dycore_labelsAll = (/"conus_30_x8","ne30","mp15a-120a-US","mp120a"/)
+dycore_labelsAll = (/"conus_30_x8","ne30","mp15a-120a-US","mp120a","cmorph"/)
 needs_regrid=True
 
 panels1 = new(2,graphic)
@@ -63,6 +63,13 @@ else if (file_step .eq. 3) then
   printMinMax(var3,True)
   xval3 = f1->xval_small
   xval31 = f1->xval_large
+else if (file_step .eq. 4) then
+  var4 = f1->hvar_small
+  var41 = f1->hvar_large
+  printMinMax(var4,True)
+  xval4 = f1->xval_small
+  xval41 = f1->xval_large
+end if
 end if
 end if
 end if
@@ -116,9 +123,13 @@ print("10 bin sum of "+gridlist(0)+" is: "+(sum(var01)/2))
   res@xyLineColor = color(3)
   plot3 = gsn_csm_xy(wks,xval3,var3,res)
 
+  res@xyLineColor = color(4)
+  plot4 = gsn_csm_xy(wks,xval4,var4,res)
+
   overlay(plot0,plot1)
   overlay(plot0,plot2) 
   overlay(plot0,plot3)
+  overlay(plot0,plot4)
 
   panels1(0) = plot0
 
@@ -166,9 +177,13 @@ print("10 bin sum of "+gridlist(0)+" is: "+(sum(var01)/2))
   res@xyLineColor = color(3)
   plot3 = gsn_csm_xy(wks,xval31,var31,res)
 
+  res@xyLineColor = color(4)
+  plot4 = gsn_csm_xy(wks,xval41,var41,res)
+
   overlay(plot0,plot1)
   overlay(plot0,plot2)
   overlay(plot0,plot3)
+  overlay(plot0,plot4)
 
   panels1(1) = plot0
 

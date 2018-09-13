@@ -1,0 +1,8 @@
+variable = "PRECT",
+scale=86400000.,
+offset=0.,
+gridname = "ne30",
+needs_regrid=True,
+fdir1="/glade/u/home/zarzycki/acgd0005/archive/f.asd2017.cesm20b05.FAMIPC6CLM5.ne30_g16.exp212/atm/hist/",
+fnampattern="*cam.h3*.nc",
+wgt_file="/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_ne30_to_1x1reg_patch.nc",

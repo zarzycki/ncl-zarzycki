@@ -1,0 +1,5 @@
+ncl gen-hist_precip.ncl 'nlfile="nl.precip.cmorph"'
+ncl gen-hist_precip.ncl 'nlfile="nl.precip.mp120a"'
+ncl gen-hist_precip.ncl 'nlfile="nl.precip.ne30"'
+ncl gen-hist_precip.ncl 'nlfile="nl.precip.conus_30_x8"'
+ncl gen-hist_precip.ncl 'nlfile="nl.precip.mp15a-120a-US"'
