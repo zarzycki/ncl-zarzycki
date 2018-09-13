@@ -13,11 +13,11 @@
 
 ################################################################
 
-JRABASEDIR=/glade/p/rda/data/ds628.0/
+JRABASEDIR=/gpfs/fs1/collections/rda/data/ds628.0/
 SYMDIR=/glade/u/home/zarzycki/scratch/JRAsym/
 OUTBASE=/glade/scratch/zarzycki/h1files/JRA/
 
-for YYYY in `seq 1959 2017`; do
+for YYYY in `seq 1959 1959`; do
 
   if [ ! -f ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc ]; then
 

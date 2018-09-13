@@ -9,13 +9,13 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 ;========================================================
 begin
 
-var="PRECBSN_FREQ"
+var="PRECBSN_FREQ_PRECT"
 fileDir="/glade/scratch/zarzycki/LENS-snow/"
 configArr=(/"B20TRC5CNBDRD","BRCP85C5CNBDRD","BRCP85C5CNBDRD"/)
 yearsArr=(/"1990010100Z-2005123118Z","2026010100Z-2035123118Z","2071010100Z-2080123118Z"/)
 
 out_type="x11"
-out_name="spatdiff-PRECBSN_FREQ"
+out_name="spatdiff-"+var
 
 nconfigs=dimsizes(configArr)
 
@@ -23,7 +23,7 @@ do ii = 0,nconfigs-1
   all_files = systemfunc("ls "+fileDir+"/b.e11."+configArr(ii)+".f09_g16.*.cam.h2."+var+"."+yearsArr(ii)+".nc") 
   fall = addfiles (all_files, "r")
   ListSetType (fall, "join")
-  ensallvar=fall[:]->PRECBSN_FREQ
+  ensallvar=fall[:]->$var$
   tmp=dim_avg_n_Wrap(ensallvar,0)
   if (ii .eq. 0)
     ndims=dimsizes(tmp)
@@ -81,9 +81,15 @@ res@lbLabelBarOn        = False           ; turn off individual cb's
 cmap = read_colormap_file("precip_11lev") 
 res@cnFillPalette       = cmap
 res@cnLevelSelectionMode = "ManualLevels"
-res@cnLevelSpacingF      =  10.0
-res@cnMinLevelValF       =  10.0
-res@cnMaxLevelValF       =  110.0
+if (var .eq. "PRECBSN_FREQ_PRECT")
+  res@cnLevelSpacingF      =  2.0
+  res@cnMinLevelValF       =  2.0
+  res@cnMaxLevelValF       =  24.0
+else
+  res@cnLevelSpacingF      =  10.0
+  res@cnMinLevelValF       =  10.0
+  res@cnMaxLevelValF       =  110.0
+end if
 
 ;res@cnFillMode          = "RasterFill"
 res@gsnAddCyclic = False
@@ -116,9 +122,15 @@ delete(cmap)
 delete(res@cnFillPalette)
 cmap = read_colormap_file("sunshine_9lev") 
 res@cnFillPalette       = cmap(::-1,:)
-res@cnLevelSpacingF      =  4.0
-res@cnMinLevelValF       =  -28.0
-res@cnMaxLevelValF       =  0.0
+if (var .eq. "PRECBSN_FREQ_PRECT")
+  res@cnLevelSpacingF      =  1.0
+  res@cnMinLevelValF       =  -6.0
+  res@cnMaxLevelValF       =  0.0
+else
+  res@cnLevelSpacingF      =  4.0
+  res@cnMinLevelValF       =  -28.0
+  res@cnMaxLevelValF       =  0.0
+end if
 
 ensavgdiff = ensavg(1,:,:) - ensavg(0,:,:)
 res@tiMainString="(2026-2035) - (1990-2005)"

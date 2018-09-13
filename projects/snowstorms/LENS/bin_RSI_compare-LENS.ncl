@@ -12,12 +12,31 @@ begin
 plot_log=False
 out_type="pdf"
 out_string="pdf/RSI-bin-comp-LENS"
-SNOWPRECT="SNOW"
-;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv"/)
-modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+SNOWPRECT+".conntraj.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+SNOWPRECT+".conntraj.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+SNOWPRECT+".conntraj.csv"/)
-modelstrs=(/"1990-2005","2026-2035","2071-2080"/)
+;SNOWPRECT="SNOW"
+;;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv"/)
+;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+SNOWPRECT+".conntraj.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+SNOWPRECT+".conntraj.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+SNOWPRECT+".conntraj.csv"/)
+;modelstrs=(/"1990-2005","2026-2035","2071-2080"/)
+;nyearsPerSample=(/35*16,35*10,35*10/)
 
-nyearsPerSample=(/35*16,35*10,35*10/)
+;SNOWPRECT="SNOW"
+;BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+;modelstrs=(/"10","11","12"/)
+;modelfiles=(/BASEDIR+"/5e-9_"+modelstrs+"_15/RSI.SNOW.LENS.1990.ALL.5e-9_"+modelstrs+"_15.csv."+SNOWPRECT+".tempest.csv"/)
+;nyearsPerSample=(/35*16,35*16,35*16/)
+
+;SNOWPRECT="SNOW"
+;BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+;modelstrs=(/"5","15","20"/)
+;modelfiles=(/BASEDIR+"/5e-9_12_"+modelstrs+"/RSI.SNOW.LENS.1990.ALL.5e-9_12_"+modelstrs+".csv."+SNOWPRECT+".tempest.csv"/)
+;nyearsPerSample=(/35*16,35*16,35*16/)
+
+SNOWPRECT="SNOW"
+BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+modelstrs=(/"10","11","12"/)
+modelfiles=(/BASEDIR+"/5e-9_"+modelstrs+"_15/RSI.SNOW.LENS.1990.ALL.5e-9_"+modelstrs+"_15.csv."+SNOWPRECT+".tempest.csv"/)
+modelfiles(1)=BASEDIR+"/RSI.SNOW.JRA.csv.SNOW.tempest.csv"
+nyearsPerSample=(/35*16,60,35*16/)
+
 
 RSIcatArray=(/1,2,3,4,5/)
 nCases=3
@@ -30,8 +49,10 @@ MMnumArray=new((/nCases,dimsizes(MMArray)/),"integer")
 do z = 0,2
 
 filename = modelfiles(z)
+print(filename+"")
 
 lines = asciiread(filename,-1,"string")
+print(dimsizes(lines)+" lines")
 delim = ","
 member  =           str_get_field(lines,1,delim)
 ;stormID  =           tointeger(str_get_field(lines,2,delim))

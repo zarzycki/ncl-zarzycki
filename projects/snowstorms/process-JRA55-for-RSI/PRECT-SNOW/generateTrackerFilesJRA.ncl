@@ -69,6 +69,10 @@ PRECSN_SUM!0="time"
 PRECSN_SUM!1="lat"
 PRECSN_SUM!2="lon"
 
+time=PRECSN_SUM&time
+time@calendar="standard"
+printVarSummary(time)
+PRECSN_SUM&time=time
 printVarSummary(PRECSN_SUM)
 
 print("Writing file...")
