@@ -85,7 +85,7 @@ begin
        value = False                ; default value; NCL logical
        do n=1,nfld
           val = str_get_field(namlst(iKEY), n+1, delim)
-          if (val.eq.".true." .or. val.eq.".TRUE." .or. \
+          if (val .eq. "True" .or. val.eq.".true." .or. val.eq.".TRUE." .or. \
               val.eq.".T." .or. val.eq.".t." .or. val.eq."T") then
               value(n-1) = True     ; NCL logical
           end if   
