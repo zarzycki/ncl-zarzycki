@@ -41,7 +41,7 @@ ilev = fC->ilev
 
 nlev=dimsizes(lev)
 
-fH = addfile("/glade/u/home/zarzycki/work/grids/latlon/uniform_15_template.nc","r")
+fH = addfile("/glade/u/home/zarzycki/work/grids/latlon/ne0np4tcfplane.ne15x8_template.nc","r")
 
 selat = fH->lat
 selon = fH->lon
@@ -70,7 +70,7 @@ gamma_      = 0.007    ; lapse rate
 Ts0        = 302.0   ; Surface temperature (SST)
 p00        = 101500.  ; global mean surface pressure
 p0         = 100000.  ; p for model level calculation
-cen_lat    = 10.0      ; Center latitude of initial vortex
+cen_lat    = 0.0      ; Center latitude of initial vortex
 cen_lon    = 0.0     ; Center longitufe of initial vortex
 zq1        = 3000.    ; Height 1 for q calculation
 zq2        = 8000.    ; Height 2 for q calculation
@@ -95,7 +95,7 @@ do ii=0,ncol-1
       lon=selon(ii)
 
       
-      f  = 2.*omega*sin(lat/convert)           ; Coriolis parameter
+      f  = 2.*omega*sin(cen_lat/convert)           ; Coriolis parameter
       gr = a*acos(sin(cen_lat/convert)*sin(lat/convert) + \  ; Great circle radius
            (cos(cen_lat/convert)*cos(lat/convert)*cos(lon/convert-cen_lon/convert)))
     
@@ -105,7 +105,7 @@ do ii=0,ncol-1
       p = hya(k)*P0 + hyb(k)*ps
       
       height = (T0/gamma_)*(1.-(p/ps)^exponent)
-      print(height+"")
+      ;print(height+"")
       
       if (gr .lt. rfpi ) then
         ;print("We need to correct")
@@ -136,7 +136,7 @@ do ii=0,ncol-1
           
           height = zn
           
-          ;print("Corrected: "+zherebefore+" to: "+height)
+          print("Corrected: "+zherebefore+" to: "+height)
           
       end if
 
@@ -144,38 +144,44 @@ do ii=0,ncol-1
       ;-----------------------------------------------------------------------
       ;    initialize U and V (wind components)
       ;-----------------------------------------------------------------------
-      
-      d1 = sin(cen_lat/convert)*cos(lat/convert) - \
-           cos(cen_lat/convert)*sin(lat/convert)*cos(lon/convert-cen_lon/convert)
-      d2 = cos(cen_lat/convert)*sin(lon/convert-cen_lon/convert)
+      d1 = sin(cen_lat/convert)*cos(lat/convert) - cos(cen_lat/convert)*sin(lat/convert)*cos((lon-cen_lon)/convert)
+      d2 = cos(cen_lat/convert)*sin((lon-cen_lon)/convert)
       d  = max( (/ epsilon, sqrt(d1^2. + d2^2.) /) )
       ufac = d1/d
       vfac = d2/d
+      if (d .gt. 1.0) then
+        print(lat+"   "+lon+"    "+d)
+      end if
       if (height .gt. ztrop) then
           u = todouble(0.)
           v = todouble(0.)
       else
-;          v = vfac*(-f*gr/2.+sqrt((f*gr/2.)^(2.) \
-;              - exppr*(gr/rp)^exppr*Rd*(T0-gamma_*height) \
-;              /(exppz*height*Rd*(T0-gamma_*height)/(g*zp^exppz) \
-;              +(1.-p00/dp*exp((gr/rp)^exppr)*exp((height/zp)^exppz)))))
-;          u = ufac*(-f*gr/2.+sqrt((f*gr/2.)^(2.) \
-;              - exppr*(gr/rp)^exppr*Rd*(T0-gamma_*height) \
-;              /(exppz*height*Rd*(T0-gamma_*height)/(g*zp^exppz) \
-;              +(1.-p00/dp*exp((gr/rp)^exppr)*exp((height/zp)^exppz)))))
+          v = vfac*(-f*gr/2.+sqrt((f*gr/2.)^(2.) \
+              - exppr*(gr/rp)^exppr*Rd*(T0-gamma_*height) \
+              /(exppz*height*Rd*(T0-gamma_*height)/(g*zp^exppz) \
+              +(1.-p00/dp*exp((gr/rp)^exppr)*exp((height/zp)^exppz)))))
+          u = ufac*(-f*gr/2.+sqrt((f*gr/2.)^(2.) \
+              - exppr*(gr/rp)^exppr*Rd*(T0-gamma_*height) \
+              /(exppz*height*Rd*(T0-gamma_*height)/(g*zp^exppz) \
+              +(1.-p00/dp*exp((gr/rp)^exppr)*exp((height/zp)^exppz)))))
 
-        v = vfac*(-f*gr/2.+sqrt((f*gr/2)^(2) &
-            - exppr*(gr/rp)**exppr*Rd*(T0-gamma*height) &
-            /(exppz*height*Rd*(T0-gamma*height)/(g*zp**exppz) &
-            +(1-p00/dp*exp((gr/rp)**exppr)*exp((height/zp)**exppz)))))
-
-        u = ufac*(-f*gr/2+sqrt((f*gr/2)**(2) &
-            - exppr*(gr/rp)**exppr*Rd*(T0-gamma*height) &
-            /(exppz*height*Rd*(T0-gamma*height)/(g*zp**exppz) &
-            +(1-p00/dp*exp((gr/rp)**exppr)*exp((height/zp)**exppz)))))
-
-
+          ;TERMA = -f*gr/2.
+          ;TERMB = f^2*gr^2/4.
+          ;TERMC = exppr*(gr/rp)^exppr * Rd * (T0-gamma_*height)
+          ;TERMD = exppz*height*Rd*(T0-gamma_*height)/(g*zp^exppz)
+          ;TERME = p00/dp*exp((gr/rp)^exppr + (height/zp)^exppz)
+          ;TERMF = sqrt(TERMB - ( TERMC / (1 + TERMD - TERME) ) )
+          ;vt = TERMA + sqrt(TERMB - ( TERMC / (1 + TERMD - TERME) ) )
+          ;v = vfac*vt
+          ;u = ufac*vt
       end if
+
+      ;if (lat .lt. -80.) then
+      ;  print(TERMA+" "+TERMB+" "+TERMC+" "+TERMD+" "+TERME+" "+TERMF)
+      ;  print(p00+" "+dp+" "+gr+" "+rp+" "+exppr+" "+height+" "+exppz+" "+zp)
+      ;  print(lat+"   "+lon+"    "+d+" "+d1+" "+d2+"   "+u+"    "+v+"    "+vt)
+      ;  print("     ")
+      ;end if
       
       ;-----------------------------------------------------------------------
       ;    set the vertical velocity to zero (only required for non-hydrostatic models)
@@ -251,7 +257,7 @@ selon!0 = "ncol"
 
 print("Writing output file")
 
-se_inic="./INIC.nc"
+se_inic="/glade/scratch/zarzycki/TCINIC.nc"
 system("/bin/rm -f "+se_inic)   ; remove any pre-existing file
 in2 = addfile(se_inic,"c")  ; open output netCDF file
 

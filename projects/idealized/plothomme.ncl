@@ -11,7 +11,7 @@ f2=addfile("INIC.nc","r")
 
 lat1d = ndtooned(f2->lat)          ; Pull off lat/lon variable and
 lon1d = ndtooned(f2->lon)          ; convert both to 1D.
-var  = ndtooned(f2->Q(0,29,:))      ; Read some data; convert to 1D.
+var  = ndtooned(f2->U(0,28,:))      ; Read some data; convert to 1D.
 
 print("max var: "+max(var))
 print("min var: "+min(var))
