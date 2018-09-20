@@ -10,7 +10,7 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="x11"
+output_type="pdf"
 
 configArr=(/"B20TRC5CNBDRD","BRCP85C5CNBDRD","BRCP85C5CNBDRD"/)
 yearsArr=(/"1990010100Z-2005123118Z","2026010100Z-2035123118Z","2071010100Z-2080123118Z"/)
@@ -96,7 +96,7 @@ SNOW2026DIFF=ensavg(1,:,:)
 SNOW2026DIFF=ensavg(1,:,:)/ensavg(0,:,:)
 
 
-wks = gsn_open_wks(output_type,"./pdf/pl_seasonal_mean_LENS")               ; open workstation
+wks = gsn_open_wks(output_type,"./pdf/ogorman14_repro")               ; open workstation
 nplots=2
 map = new(nplots,"graphic")
 
@@ -133,10 +133,7 @@ res@mpOutlineOn                 = True
 res@mpUSStateLineThicknessF     = 2.5  ; 2-1/2 times as thick.
 res@mpGeophysicalLineThicknessF = 2.5
 
-res@mpOutlineBoundarySets       = "GeophysicalAndUSStates"
-res@mpOutlineSpecifiers         = (/"Land","Conterminous US:states"/)
-
-res@gsnStringFontHeightF=0.027
+res@gsnStringFontHeightF=0.012
 
 resdiff=res
 
@@ -152,9 +149,9 @@ resdiff@cnMaxLevelValF       =  1.5
 
 resdiff@gsnRightString="in. snow/yr"
 
-resdiff@gsnLeftString="Snowfall change in 2026-2035"
+resdiff@gsnLeftString="Ratio of mean snowfall: 2026-2035"
 map(0) = gsn_csm_contour_map_ce(wks,SNOW2026DIFF,resdiff)
-resdiff@gsnLeftString="Snowfall change in 2071-2080"
+resdiff@gsnLeftString="Ratio of mean snowfall: 2071-2080"
 map(1) = gsn_csm_contour_map_ce(wks,SNOW2071DIFF,resdiff)
 
 
@@ -181,54 +178,25 @@ end if
 ; create panel
 ;************************************************
   pres                  = True
-  pres@gsnMaximize      = True
-  pres@gsnFrame         = False
   pres@gsnPanelLabelBar = True
   pres@pmLabelBarWidthF = 0.8
-pres@lbLabelStride = 2
-;
-; Panel the first set of plots without drawing them, so we
-; can retrieve the bounding boxes and calculate the height.
-;
-  pres@gsnDraw = False
+  pres@lbLabelStride = 1
 
 ;---figure string resources
   pres@gsnPanelFigureStringsPerimOn     = True
-  pres@gsnPanelFigureStringsFontHeightF = 0.015
+  pres@gsnPanelFigureStringsFontHeightF = 0.018
   pres@amJust                           = "TopLeft"
 
 ;---Main title, only on first set of plots
   ;pres@txString = "LENS ensemble mean annual snowfall"
 
-  fig_strs = (/"a","b","c","d","e","f"/) + "."
+  fig_strs = (/"a","b"/) + "."
 
-; UNCOMMENT THIS IF PLOTTING DIFF
-;
-;  pplots = gsn_panel_return(wks,map(0:2),(/1,3/),pres)
-;
-;  bb     = NhlGetBB(pplots)
-;  height = max(bb(:,0)) - min(bb(:,1))
+  pres@lbLabelFontHeightF = 0.012
 
-;---Using height value, now we can panel all sets of plots.
-;  pres@gsnDraw                          = True
-;  pres@gsnPanelTop                      = 0.9   ; leave room for title
-;  pres@gsnPanelBottom                   = pres@gsnPanelTop - height
-
-;  do n=0,nplots-1,3
-;    pres@gsnPanelFigureStrings = fig_strs(n:n+2)
-;    gsn_panel(wks,map(n:n+2),(/1,3/),pres)
-;
-;    pres@txString = ""
-;    pres@gsnPanelTop    = pres@gsnPanelBottom
-;    pres@gsnPanelBottom = pres@gsnPanelTop-height
-;  end do
-
-; UNCOMMENT THIS IF ONLY PLOTTING 3x1 MEANS
   pres@gsnDraw                          = True
   pres@gsnPanelFigureStrings = fig_strs
   gsn_panel(wks,map,(/2,1/),pres)
-
-  frame(wks)
 
 end
 
