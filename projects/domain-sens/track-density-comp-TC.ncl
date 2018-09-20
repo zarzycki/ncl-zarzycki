@@ -23,7 +23,7 @@ prescut = 1000.0   ; only storms with pres LOWER than this are included. set to 
 ms_to_kts = 1.94384449
 
 ;=================== Get traj data ================================
-thefile="/global/homes/c/czarzyck/tempest-scripts/hyperion/trajectories.txt.CHEY.VR28.NATL.WAT.CAM5.4CLM5.0.dtime900.ALL"  ; trajectory file full path
+thefile="/global/homes/c/czarzyck/tempest-scripts/hyperion/trajectories.txt.VR28.NATL.WAT.CAM5.4CLM5.0.dtime900.ALL"  ; trajectory file full path
 ncols = 10 ; number of columns in non-header rows of trajectory file
 maxLines = -1  ; set to -1 for auto-detection
 traj_data = getTrajectories(thefile,ncols,maxLines)
@@ -50,13 +50,13 @@ clat = where(cpres.lt.prescut,clat,clat@_FillValue)
 clon = where(cpres.lt.prescut,clon,clon@_FillValue)
 
 count1 = track_density(gridsize,0.0,clat,clon,False)
-nyrs=60.
+nyrs=90.
 count1=count1/nyrs
 
 delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind,nyrs,traj_data,maxLines,ncols,thefile/])
 
 ;=================== Get traj data ================================
-thefile="/global/homes/c/czarzyck/tempest-scripts/hyperion/trajectories.txt.CHEY.VR28.NATL.REF.CAM5.4CLM5.0.dtime900.ALL"  ; trajectory file full path
+thefile="/global/homes/c/czarzyck/tempest-scripts/hyperion/trajectories.txt.VR28.NATL.REF.CAM5.4CLM5.0.dtime900.ALL"  ; trajectory file full path
 ncols = 10 ; number of columns in non-header rows of trajectory file
 maxLines = -1  ; set to -1 for auto-detection
 traj_data = getTrajectories(thefile,ncols,maxLines)
@@ -83,13 +83,13 @@ clat = where(cpres.lt.prescut,clat,clat@_FillValue)
 clon = where(cpres.lt.prescut,clon,clon@_FillValue)
 
 count2 = track_density(gridsize,0.0,clat,clon,False)
-nyrs=60.
+nyrs=90.
 count2=count2/nyrs
 
 delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind,nyrs,traj_data,maxLines,ncols,thefile/])
 
 ;=================== Get traj data ================================
-thefile="/global/homes/c/czarzyck/tempest-scripts/hyperion/trajectories.txt.CHEY.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900.ALL"  ; trajectory file full path
+thefile="/global/homes/c/czarzyck/tempest-scripts/hyperion/trajectories.txt.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900.ALL"  ; trajectory file full path
 ncols = 10 ; number of columns in non-header rows of trajectory file
 maxLines = -1  ; set to -1 for auto-detection
 traj_data = getTrajectories(thefile,ncols,maxLines)
@@ -116,7 +116,7 @@ clat = where(cpres.lt.prescut,clat,clat@_FillValue)
 clon = where(cpres.lt.prescut,clon,clon@_FillValue)
 
 count3 = track_density(gridsize,0.0,clat,clon,False)
-nyrs=60.
+nyrs=90.
 count3=count3/nyrs
 
 delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind,nyrs,traj_data,maxLines,ncols,thefile/])
@@ -275,9 +275,9 @@ plot(10) = gsn_csm_contour_map_ce(wks,count3(:,:),res)
 ; plot differences
 res@cnLevelSelectionMode  = "ManualLevels"
 ; -40-40
-res@cnMinLevelValF        = -8.
+res@cnMinLevelValF        = -4.
 res@cnMaxLevelValF        = -res@cnMinLevelValF
-res@cnLevelSpacingF       = res@cnMaxLevelValF/20.
+res@cnLevelSpacingF       = res@cnMaxLevelValF/10.
 res@cnFillPalette=colorMap2
 
 ; with 1e-6
