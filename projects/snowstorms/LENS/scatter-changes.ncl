@@ -29,10 +29,26 @@ out_type="pdf"
 ;REFTIME="1990"
 ;TESTTIME="2071"
 
-OUTSTR="scatter-"+MINCAT+"_"+MAXCAT+"_"+SNOWPRECT
+; number of years in each member sample size
+; 16 for 1990-2015
+; 10 for 2026-2035 and 2071-2080
 
-RSIlist1=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS."+REFTIME+".0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
-RSIlist2=systemfunc("ls /glade/scratch/zarzycki/LES-snow/stats/RSI.SNOW.LENS."+TESTTIME+".0*.5e-9_12.csv."+SNOWPRECT+".tempest.csv")
+OUTSTR="scatter-"+MINCAT+"_"+MAXCAT+"_"+SNOWPRECT
+BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+
+;RSIlist1=systemfunc("ls "+BASEDIR+"/5e-9_12_15/RSI.SNOW.LENS."+REFTIME+".0*.5e-9_12_15.csv."+SNOWPRECT+".tempest.csv")
+;RSIlist2=systemfunc("ls "+BASEDIR+"/5e-9_12_15/RSI.SNOW.LENS."+TESTTIME+".0*.5e-9_12_15.csv."+SNOWPRECT+".tempest.csv")
+;RSIlist1=systemfunc("ls "+BASEDIR+"/5e-9_11_15/RSI.SNOW.LENS."+REFTIME+".0*.5e-9_11_15.csv."+SNOWPRECT+".tempest.csv")
+;RSIlist2=systemfunc("ls "+BASEDIR+"/5e-9_11_15/RSI.SNOW.LENS."+TESTTIME+".0*.5e-9_11_15.csv."+SNOWPRECT+".tempest.csv")
+RSIlist1=systemfunc("ls "+BASEDIR+"/5e-9_10_15/RSI.SNOW.LENS."+REFTIME+".0*.5e-9_10_15.csv."+SNOWPRECT+".tempest.csv")
+RSIlist2=systemfunc("ls "+BASEDIR+"/5e-9_10_15/RSI.SNOW.LENS."+TESTTIME+".0*.5e-9_10_15.csv."+SNOWPRECT+".tempest.csv")
+yrspmem1=16
+yrspmem2=10
+
+;RSIlist1=systemfunc("ls "+BASEDIR+"/1e-9_12_15/RSI.SNOW.LENS."+REFTIME+".0*.1e-9_12_15.csv."+SNOWPRECT+".tempest.csv")
+;RSIlist2=systemfunc("ls "+BASEDIR+"/1e-9_12_15/RSI.SNOW.LENS."+TESTTIME+".0*.1e-9_12_15.csv."+SNOWPRECT+".tempest.csv")
+;yrspmem1=10
+;yrspmem2=10
 
 if (dimsizes(RSIlist1) .ne. dimsizes(RSIlist2)) then
   print("Sizes of RSI arrays not equal, exiting...")
@@ -46,12 +62,6 @@ nmembers2=dimsizes(RSIlist2)
 
 x1=new(nmembers1,"float")
 x2=new(nmembers2,"float")
-
-; number of years in each member sample size
-; 16 for 1990-2015
-; 10 for 2026-2035 and 2071-2080
-yrspmem1=16
-yrspmem2=10
 
 do ii = 0,nmembers1-1
   
@@ -88,7 +98,7 @@ maxmax = max((/max(x1),max(x2)/))
 print(maxmax)
 
 ; resampling
-nsamples=25000
+nsamples=10000
 x1r=new(nsamples,"float")
 x2r=new(nsamples,"float")
 x1rr=new(nsamples,"float")

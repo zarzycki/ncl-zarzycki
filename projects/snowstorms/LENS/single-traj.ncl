@@ -10,7 +10,7 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="pdf"
+output_type="x11"
 smooth_traj=True    ; do a running average on lat/lon to produce smoother PSL trajs
 underlayPop=True
 
@@ -28,12 +28,14 @@ underlayPop=True
 ensmem="035"
 stormID=346
 year=1990
+SLR="12"
+DEG="12"
 
 print("ensmem: "+ensmem+"   stormID: "+stormID+"   year: "+year)
 
 trajfile="/glade/u/home/zarzycki/snow-tracking/tracking/traj/tempest.LENS."+year+"."+ensmem
-stormfile="/glade/scratch/zarzycki/LES-snow/storm-files//ind-storms.LENS."+year+"."+ensmem+".5e-9_12.nc.tempest.nc"
-RSIfile="/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS."+year+"."+ensmem+".5e-9_12.csv.SNOW.tempest.csv"
+stormfile="/glade/scratch/zarzycki/LES-snow/storm-files/5e-9_"+SLR+"_"+DEG+"/ind-storms.LENS."+year+"."+ensmem+".5e-9_"+SLR+"_"+DEG+".nc.tempest.nc"
+RSIfile="/glade/u/home/zarzycki/scratch/LES-snow/stats/5e-9_"+SLR+"_"+DEG+"/RSI.SNOW.LENS."+year+".ALL.5e-9_"+SLR+"_"+DEG+".csv.SNOW.tempest.csv"
 ;imgDir="/glade/scratch/zarzycki/LES-snow/images/"+year+"_"+ensmem+"/"
 imgDir="./"
 

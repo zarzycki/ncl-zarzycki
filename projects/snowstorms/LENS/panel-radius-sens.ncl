@@ -16,7 +16,7 @@ wcStrt     = systemfunc("date")
 fileDir="/glade/scratch/zarzycki/LES-snow/storm-files/"
 config="tempest"
 LWE="12"
-yearsArr=(/"5","10","12","15","20"/)
+yearsArr=(/"5","10","12","15","20","30"/)
 ncases=dimsizes(yearsArr)
 slice=2071
 
@@ -74,6 +74,115 @@ do jj = 0,ncases-1
 end do
 ensavg=ENSAVG_MASK
 doubleavg=DOUBLEAVG_MASK
+
+; note, we have to halve doubleavg since half of the error isn't really an error!
+doubleavg = doubleavg/2.
+
+; PLOT FRAC
+nplots=ncases
+
+wks = gsn_open_wks("pdf","pl_rad_sens")               ; open workstation
+map = new(nplots,"graphic")
+
+res                     = True         ; plot modifications desired
+res@gsnDraw=False
+res@gsnFrame=False
+
+res@cnFillOn            = True         ; Turn on contour fill
+res@cnLinesOn           = False        ; Turn off contour lines
+res@cnLineLabelsOn      = False        ; Turn off contour line labels
+res@lbLabelAutoStride   = True         ; Clean up labelbar labels.
+
+;res@mpOceanFillColor = "White"
+;res@cnFillDrawOrder             = "PreDraw"
+;res@cnLineDrawOrder             = "PreDraw"
+;res@mpFillAreaSpecifiers        = (/"Land"/)
+;res@mpSpecifiedFillColors       = (/"transparent"/)
+;res@mpOutlineDrawOrder = "Draw"
+
+res@cnFillPalette        = "BkBlAqGrYeOrReViWh200"              ; choose colormap
+res@cnSpanFillPalette=True
+
+;res@cnFillMode          = "RasterFill"
+res@gsnAddCyclic = False
+
+res@mpMinLatF             = 38.
+res@mpMaxLatF             = 48.
+res@mpMinLonF             = 279.
+res@mpMaxLonF             = 293.
+res@mpCenterLonF = 286.
+
+res@lbLabelBarOn        = False 
+
+res@mpOutlineOn                 = True
+
+res@mpUSStateLineThicknessF     = 1.0  ; 2-1/2 times as thick.
+res@mpGeophysicalLineThicknessF = 1.0
+res@mpOutlineBoundarySets       = "GeophysicalAndUSStates"
+res@mpOutlineSpecifiers         = (/"Land","Conterminous US:states"/)
+
+res@gsnStringFontHeightF=0.027
+
+res@cnLevelSelectionMode = "ManualLevels"	; manually set the contour levels with the following 3 resources
+res@cnMinLevelValF  = 20.			; set the minimum contour level
+res@cnMaxLevelValF  = 100.			; set the maximum contour level
+res@cnLevelSpacingF = 5.0			; set the interval between contours
+
+res@lbLabelStride = 2
+
+resdouble=res
+resdouble@cnFillPalette        = "WhiteBlueGreenYellowRed"              ; choose colormap
+resdouble@cnLevelSelectionMode = "ManualLevels"	; manually set the contour levels with the following 3 resources
+resdouble@cnMinLevelValF  = 1			; set the minimum contour level
+resdouble@cnMaxLevelValF  = 12.			; set the maximum contour level
+resdouble@cnLevelSpacingF = 1.0			; set the interval between contours
+
+resdouble@gsnRightString="%"
+resdouble@gsnLeftString="Percent error"
+do zz = 0,ncases-1
+  resdouble@gsnCenterString="r~B~P~N~="+yearsArr(zz)+"~S~o~N~"
+  map(zz) = gsn_csm_contour_map_ce(wks,doubleavg(zz,:,:),resdouble)
+end do
+
+res_outline=True
+res_outline@gsnDraw=False
+res_outline@gsnFrame=False
+res_outline@cnLevelSelectionMode = "ExplicitLevels"     ; set manual contour levels
+res_outline@cnLevels    = (/ 0.95 /)      ; set levels
+res_outline@cnLineLabelsOn       = False
+res_outline@cnInfoLabelOn = False
+res_outline@cnLineColor="black"
+res_outline@cnLineThicknessF = 5.             ; doubles thickness of zero contour
+plotzeroline = new(nplots,graphic)
+
+do zz = 0,nplots-1
+  plotzeroline(zz) = gsn_csm_contour(wks,RSIOUT,res_outline)
+  overlay(map(zz),plotzeroline(zz))
+end do
+
+;************************************************
+; create panel
+;************************************************
+pres                  = True
+pres@gsnPanelLabelBar = True
+pres@pmLabelBarWidthF = 0.6
+
+;---figure string resources
+pres@gsnPanelFigureStringsPerimOn     = False
+pres@gsnPanelFigureStringsFontHeightF = 0.01
+pres@amJust                           = "TopLeft"
+
+pres@gsnPanelMainString = "Percent annual snowfall flagged with >1 ETC"
+
+fig_strs = (/"a","b","c","d","e","f"/) + ")"
+pres@gsnPanelFigureStrings=fig_strs
+gsn_panel(wks,map,(/2,3/),pres)
+
+
+
+
+
+exit
 
 ; PLOT FRAC
 nplots=ncases*2

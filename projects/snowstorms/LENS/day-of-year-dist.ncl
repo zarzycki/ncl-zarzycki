@@ -10,13 +10,15 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 begin
 
 plot_log=False
-out_type="pdf"
-RSIthresh=3
-PRECTSNOW="PRECT"
+out_type="x11"
+RSIthresh=1
+PRECTSNOW="SNOW"
 
-PATHTORSI="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
-;PATHTORSI="/loan/hires/zarzycki/tarfolder/stats/"
-modelfiles=(/PATHTORSI+"/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv",PATHTORSI+"/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv",PATHTORSI+"/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+PRECTSNOW+".tempest.csv"/)
+DEG="12"
+SLR="12"
+BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+modelstrs=(/"1990","2026","2071"/)
+modelfiles=(/BASEDIR+"/5e-9_"+SLR+"_"+DEG+"/RSI.SNOW.LENS."+modelstrs+".ALL.5e-9_"+SLR+"_"+DEG+".csv."+PRECTSNOW+".tempest.csv"/)
 modelcolors=(/"blue2","green2","red2"/)
 labelsArr=(/"  1990-2005","  2026-2035","  2071-2080"/)
 nyearsPerSample=(/35*16,35*10,35*10/)

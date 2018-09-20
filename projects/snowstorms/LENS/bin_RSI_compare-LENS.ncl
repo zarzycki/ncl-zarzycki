@@ -12,30 +12,51 @@ begin
 plot_log=False
 out_type="pdf"
 out_string="pdf/RSI-bin-comp-LENS"
-;SNOWPRECT="SNOW"
-;;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+SNOWPRECT+".tempest.csv"/)
-;modelfiles=(/"/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.1990.ALL.5e-9_12.csv."+SNOWPRECT+".conntraj.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2026.ALL.5e-9_12.csv."+SNOWPRECT+".conntraj.csv","/glade/u/home/zarzycki/scratch/LES-snow/stats/RSI.SNOW.LENS.2071.ALL.5e-9_12.csv."+SNOWPRECT+".conntraj.csv"/)
-;modelstrs=(/"1990-2005","2026-2035","2071-2080"/)
+
+; control
+;SNOWPRECT="PRECT"
+;BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+;modelstrs=(/"1990","2026","2071"/)
+;modelfiles=(/BASEDIR+"/5e-9_12_15/RSI.SNOW.LENS."+modelstrs+".ALL.5e-9_12_15.csv."+SNOWPRECT+".tempest.csv"/)
 ;nyearsPerSample=(/35*16,35*10,35*10/)
 
+; general sens
+DEG="15"
+SLR="10"
+SNOWPRECT="PRECT"
+BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+modelstrs=(/"1990","2026","2071"/)
+modelfiles=(/BASEDIR+"/5e-9_"+SLR+"_"+DEG+"/RSI.SNOW.LENS."+modelstrs+".ALL.5e-9_"+SLR+"_"+DEG+".csv."+SNOWPRECT+".tempest.csv"/)
+nyearsPerSample=(/35*16,35*10,35*10/)
+
+; test sensitivity to SLR
 ;SNOWPRECT="SNOW"
 ;BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
 ;modelstrs=(/"10","11","12"/)
 ;modelfiles=(/BASEDIR+"/5e-9_"+modelstrs+"_15/RSI.SNOW.LENS.1990.ALL.5e-9_"+modelstrs+"_15.csv."+SNOWPRECT+".tempest.csv"/)
 ;nyearsPerSample=(/35*16,35*16,35*16/)
 
+; test sensitivity to deltaLat (for accumulating precip)
 ;SNOWPRECT="SNOW"
 ;BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
 ;modelstrs=(/"5","15","20"/)
 ;modelfiles=(/BASEDIR+"/5e-9_12_"+modelstrs+"/RSI.SNOW.LENS.1990.ALL.5e-9_12_"+modelstrs+".csv."+SNOWPRECT+".tempest.csv"/)
 ;nyearsPerSample=(/35*16,35*16,35*16/)
 
-SNOWPRECT="SNOW"
-BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
-modelstrs=(/"10","11","12"/)
-modelfiles=(/BASEDIR+"/5e-9_"+modelstrs+"_15/RSI.SNOW.LENS.1990.ALL.5e-9_"+modelstrs+"_15.csv."+SNOWPRECT+".tempest.csv"/)
-modelfiles(1)=BASEDIR+"/RSI.SNOW.JRA.csv.SNOW.tempest.csv"
-nyearsPerSample=(/35*16,60,35*16/)
+; test sensitivity to JRA
+;SNOWPRECT="SNOW"
+;BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+;modelstrs=(/"10","11","12"/)
+;modelfiles=(/BASEDIR+"/5e-9_"+modelstrs+"_15/RSI.SNOW.LENS.1990.ALL.5e-9_"+modelstrs+"_15.csv."+SNOWPRECT+".tempest.csv"/)
+;modelfiles(1)=BASEDIR+"/RSI.SNOW.JRA.csv.SNOW.tempest.csv"
+;nyearsPerSample=(/35*16,60,35*16/)
+
+; test sensitivity to 16 versus 10 years
+;SNOWPRECT="PRECT"
+;BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
+;modelstrs=(/"1990","2026","2071"/)
+;modelfiles=(/BASEDIR+"/1e-9_12_15/RSI.SNOW.LENS."+modelstrs+".ALL.1e-9_12_15.csv."+SNOWPRECT+".tempest.csv"/)
+;nyearsPerSample=(/35*10,35*10,35*10/)
 
 
 RSIcatArray=(/1,2,3,4,5/)
