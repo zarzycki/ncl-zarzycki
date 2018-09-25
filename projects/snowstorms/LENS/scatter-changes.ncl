@@ -40,8 +40,8 @@ BASEDIR="/glade/u/home/zarzycki/scratch/LES-snow/stats/"
 ;RSIlist2=systemfunc("ls "+BASEDIR+"/5e-9_12_15/RSI.SNOW.LENS."+TESTTIME+".0*.5e-9_12_15.csv."+SNOWPRECT+".tempest.csv")
 ;RSIlist1=systemfunc("ls "+BASEDIR+"/5e-9_11_15/RSI.SNOW.LENS."+REFTIME+".0*.5e-9_11_15.csv."+SNOWPRECT+".tempest.csv")
 ;RSIlist2=systemfunc("ls "+BASEDIR+"/5e-9_11_15/RSI.SNOW.LENS."+TESTTIME+".0*.5e-9_11_15.csv."+SNOWPRECT+".tempest.csv")
-RSIlist1=systemfunc("ls "+BASEDIR+"/5e-9_10_15/RSI.SNOW.LENS."+REFTIME+".0*.5e-9_10_15.csv."+SNOWPRECT+".tempest.csv")
-RSIlist2=systemfunc("ls "+BASEDIR+"/5e-9_10_15/RSI.SNOW.LENS."+TESTTIME+".0*.5e-9_10_15.csv."+SNOWPRECT+".tempest.csv")
+RSIlist1=systemfunc("ls "+BASEDIR+"/5e-9_12_12/RSI.SNOW.LENS."+REFTIME+".0*.5e-9_12_12.csv."+SNOWPRECT+".tempest.csv")
+RSIlist2=systemfunc("ls "+BASEDIR+"/5e-9_12_12/RSI.SNOW.LENS."+TESTTIME+".0*.5e-9_12_12.csv."+SNOWPRECT+".tempest.csv")
 yrspmem1=16
 yrspmem2=10
 

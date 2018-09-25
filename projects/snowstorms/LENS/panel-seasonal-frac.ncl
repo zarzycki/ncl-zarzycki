@@ -13,7 +13,7 @@ begin
 
 wcStrt     = systemfunc("date")
 
-fileDir="/glade/scratch/zarzycki/NEW-LES-snow/storm-files/"
+fileDir="/glade/u/home/zarzycki/scratch/LES-snow/storm-files/5e-9_12_12/"
 config="tempest"
 yearsArr=(/"1990","2026","2071"/)
 ncases=dimsizes(yearsArr)

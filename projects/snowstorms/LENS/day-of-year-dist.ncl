@@ -10,9 +10,9 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 begin
 
 plot_log=False
-out_type="x11"
+out_type="pdf"
 RSIthresh=1
-PRECTSNOW="SNOW"
+PRECTSNOW="PRECT"
 
 DEG="12"
 SLR="12"

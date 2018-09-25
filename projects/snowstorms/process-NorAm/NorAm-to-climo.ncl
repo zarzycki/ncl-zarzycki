@@ -10,7 +10,10 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-fils = systemfunc ("ls /glade2/collections/rda/data/ds526.0/gridded/NorAm.199*.nc") ; file paths
+fils = systemfunc ("ls /glade2/collections/rda/data/ds526.0/gridded/NorAm.199*.nc /glade2/collections/rda/data/ds526.0/gridded/NorAm.200{0..5}*.nc") ; file paths
+;fils = systemfunc ("ls /glade2/collections/rda/data/ds526.0/gridded/NorAm.199*.nc /glade2/collections/rda/data/ds526.0/gridded/NorAm.198*.nc") ; file paths
+;fils = systemfunc ("ls /glade2/collections/rda/data/ds526.0/gridded/NorAm.19*.nc") ; file paths
+
 nyrs = dimsizes(fils)
 print(nyrs)
 f1   = addfiles (fils, "r")   

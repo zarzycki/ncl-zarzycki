@@ -14,7 +14,7 @@ fileDir="/glade/scratch/zarzycki/LENS-snow/"
 configArr=(/"B20TRC5CNBDRD","BRCP85C5CNBDRD","BRCP85C5CNBDRD"/)
 yearsArr=(/"1990010100Z-2005123118Z","2026010100Z-2035123118Z","2071010100Z-2080123118Z"/)
 
-out_type="x11"
+out_type="pdf"
 out_name="spatdiff-"+var
 
 nconfigs=dimsizes(configArr)
@@ -201,8 +201,12 @@ pres@lbLabelStride = 1
   pres@gsnPanelFigureStringsFontHeightF = 0.015
   pres@amJust                           = "TopLeft"
 
-;---Main title, only on first set of plots
-  pres@txString = "LENS ensemble mean days/year supporting snow"
+  ;---Main title, only on first set of plots
+  if (var .eq. "PRECBSN_FREQ_PRECT") then
+    pres@txString = "LENS ensemble mean days/year supporting snow when PRECT > 0"
+  else
+    pres@txString = "LENS ensemble mean days/year supporting snow"
+  end if
 
   fig_strs = (/"a","b","c","X","d","e"/) + "."
   do n=0,nplots-1,3

@@ -10,7 +10,7 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="x11"
+output_type="pdf"
 
 configArr=(/"B20TRC5CNBDRD","BRCP85C5CNBDRD","BRCP85C5CNBDRD"/)
 yearsArr=(/"1990010100Z-2005123118Z","2026010100Z-2035123118Z","2071010100Z-2080123118Z"/)
@@ -45,7 +45,7 @@ do ii = 0,ncases-1
     end if
     ensavg(ii,:,:)=SNOW
   else
-    f1=addfile("NorAm.ANNMEAN.daily.SNOW.gridded.nc","r")
+    f1=addfile("../process-NorAm/NorAm.ANNMEAN.daily.SNOW.gridded.nc","r")
     SNOW=f1->SNOW(:,:)
     thislon=SNOW&lon+360.
     thislon@units="degrees_east"
@@ -110,8 +110,8 @@ SNOW2026DIFF=ensavg(1,:,:)
 SNOW2026DIFF=ensavg(1,:,:)-ensavg(0,:,:)
 
 
-wks = gsn_open_wks(output_type,"./pdf/pl_seasonal_mean_LENS")               ; open workstation
-nplots=6
+wks = gsn_open_wks(output_type,"./pdf/pl_seasonal_obs-compare")               ; open workstation
+nplots=3
 map = new(nplots,"graphic")
 
 res                     = True         ; plot modifications desired
@@ -163,10 +163,10 @@ resavg@cnLevels    = (/  3., 6., 12., 18., 24., 30., 36., 48., 60., 72., 84., 96
 
 resavg@gsnRightString="in. snow/yr"
 resavg@gsnLeftString="Annual snowfall"
-resavg@tiMainString="Present day (1990-2005)"
-map(0) = gsn_csm_contour_map_ce(wks,ensavg(0,:,:),resavg)
-resavg@tiMainString="Mid-century (2026-2035)"
-map(1) = gsn_csm_contour_map_ce(wks,ensavg(1,:,:),resavg)
+resavg@tiMainString="LENS PD avg. (this study)"
+map(1) = gsn_csm_contour_map_ce(wks,ensavg(0,:,:),resavg)
+resavg@tiMainString="Kluver (2016) PD avg."
+map(0) = gsn_csm_contour_map_ce(wks,ensavg(1,:,:),resavg)
 
 resdiff=res
 
@@ -177,14 +177,6 @@ resdiff@cnLevelSelectionMode = "ManualLevels"
 resdiff@cnLevelSpacingF      =  5.0
 resdiff@cnMinLevelValF       =  -35.0
 resdiff@cnMaxLevelValF       =  35.0
-
-
-resdiff@gsnRightString="in. snow/yr"
-
-resdiff@gsnLeftString="Snowfall change in 2026-2035"
-map(4) = gsn_csm_contour_map_ce(wks,SNOW2026DIFF,resdiff)
-
-
 
 res_outline=True
 res_outline@gsnDraw=False
@@ -250,7 +242,7 @@ pres@lbLabelStride = 2
 ; UNCOMMENT THIS IF ONLY PLOTTING 3x1 MEANS
   pres@gsnDraw                          = True
   pres@gsnPanelFigureStrings = fig_strs
-  gsn_panel(wks,map(0:2),(/1,3/),pres)
+  gsn_panel(wks,map(0:1),(/1,2/),pres)
 
   frame(wks)
 
