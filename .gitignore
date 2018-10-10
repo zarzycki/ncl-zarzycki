@@ -1,3 +1,4 @@
+commands.*txt
 projects/clubb/momentum/netcdf/*
 OUT_*.nc
 *.csv

@@ -1,0 +1,4 @@
+wgt_file="/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_ne30_to_1x1glob_patch.nc",
+outdir="/glade/scratch/zarzycki/TEST-ET/",
+fpname="/glade/p/cesmdata/cseg/inputdata/atm/cam/topo/USGS-gtopo30_ne30np4_16xdel2-PFC-consistentSGH.nc",
+basehead="f.asd2017.cesm20b05.FAMIPC6CLM5.ne30_g16.exp212.cam.h7.",

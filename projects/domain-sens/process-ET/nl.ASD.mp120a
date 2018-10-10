@@ -1,0 +1,4 @@
+wgt_file="/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_mp120a_to_1x1glob_patch.nc",
+outdir="/glade/scratch/zarzycki/TEST-ET/",
+fpname="/glade/u/home/zarzycki/work/ASD2017_files/atm/cam/topo/mp120a_topo_150430.nc",
+basehead="f.asd2017.cesm20b05.FAMIPC6CLM5.mp120a_g16.exp214.cam.h7.",

@@ -10,28 +10,30 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 
-gridName="conus_15_x16"
+gridName="ne120np4"
 InterpMethod="patch"  ;bilinear, patch, conserve, nearestdtos, neareststod
 regional=False
 atlantic=False
 tctest=False
 
 ; RLL GRID
-outres="0.25x0.25"
+;outres="0.25x0.25"
 ;outres="0.125x0.125"
 ;outres="0.5x0.5"
-;outres="1x1"
-srcGridDir="/glade/u/home/zarzycki/work/grids/scrip/"
-srcGridFile=gridName+".g_scrip.nc"
-;srcGridDir="/glade/p/work/zarzycki/ASD2017_files/grids/scrip/"
+outres="1x1"
+;srcGridDir="/glade/u/home/zarzycki/work/grids/scrip/"
+;srcGridFile=gridName+".g_scrip.nc"
+;srcGridDir="/glade/work/zarzycki/ASD2017_files/grids/scrip/"
 ;srcGridFile="mp15a-120a-US.grid.170118.nc"
 ;srcGridFile="mp120a_grid_140708.nc"
 ;srcGridFile="ne30np4_091226_pentagons.nc"
 ;srcGridFile="uniform_240.g_scrip.nc"
+srcGridDir="/glade/p/cesmdata/cseg/mapping/grids/"
+srcGridFile="ne120np4_pentagons_100310.nc"
 
 ; RLL GRID
 ;dstGridDir="."
-dstGridDir="/glade/p/work/zarzycki/grids/scrip/"
+dstGridDir="/glade/work/zarzycki/grids/scrip/"
 if (regional) then
   dstGridFile=outres+"_reg_SCRIP.nc"
   wgtFileName="map_"+gridName+"_to_"+outres+"reg_"+InterpMethod+".nc"

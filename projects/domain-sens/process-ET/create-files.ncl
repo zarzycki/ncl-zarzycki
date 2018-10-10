@@ -6,17 +6,22 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
+load "/glade/u/home/zarzycki/ncl/functions/namelist_extract.ncl"
 ;========================================================
 begin
 
-fdir="/global/homes/c/czarzyck/scratch/hyperion/CHEY.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900/atm/hist/"
+basehead = namelist_extract( nlfile, "basehead", "string")
+fpname = namelist_extract( nlfile, "fpname", "string")
+outdir = namelist_extract( nlfile, "outdir", "string")
+wgt_file = namelist_extract( nlfile, "wgt_file", "string")
+
 ;f2name=fdir+"/"+"CHEY.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900.cam.h2.1989-09-01-00000.nc"
 ;wgt_file="/global/homes/c/czarzyck/scratch/maps/hyperion/map_ne0np4natlanticext.ne30x4_to_0.25x0.25_GLOB.nc"
-outdir="/global/homes/c/czarzyck/scratch/et-hyperion/"
+;outdir="/global/homes/c/czarzyck/scratch/et-hyperion/"
 ;basename=systemfunc("basename "+f2name)
 ;basename = str_sub_str(basename,"h2","h7")
 
-fpname="/global/homes/c/czarzyck/scratch/unigridFiles/ne0np4natlanticext.ne30x4/topo/topo_ne0np4natlanticext.ne30x4_smooth.nc"
+;fpname="/global/homes/c/czarzyck/scratch/unigridFiles/ne0np4natlanticext.ne30x4/topo/topo_ne0np4natlanticext.ne30x4_smooth.nc"
 
 f2=addfile(f2name,"r")
 fp=addfile(fpname,"r")
@@ -36,7 +41,7 @@ yyyy=toint(utc_date(:,0))
 mm=toint(utc_date(:,1))
 dd=toint(utc_date(:,2))
 outdatestr=sprinti("%0.4i",yyyy)+"-"+sprinti("%0.2i",mm)+"-"+sprinti("%0.2i",dd)+"-00000"
-basename="CORI.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900.003.cam.h7."+outdatestr+".nc"
+basename=basehead+outdatestr+".nc"
 outfile=outdir+"/"+basename
 print(outdatestr)
 
@@ -86,8 +91,9 @@ delete(tmp1d)
 delete(tmp2d)
 delete(tmp3d)
 
-ilev = (/300., 350., 400., 450., 500., 550., 600., 650., 700., 750., 775., 800., 825., 850., \
-  875., 900., 925., 950., 975., 1000/)
+;ilev = (/300., 350., 400., 450., 500., 550., 600., 650., 700., 750., 775., 800., 825., 850., \
+;  875., 900., 925., 950., 975., 1000/)
+ilev = (/300., 350., 400., 450., 500., 550., 600., 650., 700., 750., 800., 850., 900./)
 ilev!0 = "lev"
 ilev&lev = ilev
 ilev@units = "hPa"
@@ -110,8 +116,8 @@ fileattdef( ncdf, fAtt )
 filedimdef(ncdf,"time",-1,True) 
 
 ncdf->Z    = Zi
-ncdf->Z300 = Zi(:,{300.},:,:)
-ncdf->Z500 = Zi(:,{500.},:,:)
+;ncdf->Z300 = Zi(:,{300.},:,:)
+;ncdf->Z500 = Zi(:,{500.},:,:)
 ncdf->VBOT = VBOT
 ncdf->UBOT = UBOT
 ncdf->V850 = V850
