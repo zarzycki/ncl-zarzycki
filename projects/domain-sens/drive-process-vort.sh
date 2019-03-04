@@ -12,12 +12,12 @@
 ################################################################
 #SBATCH -N 1                #Use 2 nodes
 #SBATCH -t 06:00:00         #Set 30 minute time limit
-#SBATCH -q regular          #Use the regular QOS
+#SBATCH -q premium          #Use the regular QOS
 #SBATCH -L SCRATCH          #Job requires $SCRATCH file system
 #SBATCH -C knl,quad,cache   #Use KNL nodes in quad cache format (default, recommended)
 ################################################################
 
-GRID=WAT
+GRID=REF
 CONFIG=dtime900.003
 
 starttime=$(date -u +"%s")

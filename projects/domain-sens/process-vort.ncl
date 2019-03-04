@@ -25,7 +25,7 @@ print("... done loading data.")
 
 print("Begin vertical interpolation... ")
 linlog = -1   ; linear interpolation and extrapolation
-po =(/ 600. /)                ; extrapolation
+po =(/ 850. /)                ; extrapolation
 UP = int2p_n_Wrap (P,U,po,linlog,1)
 VP = int2p_n_Wrap (P,V,po,linlog,1)
 print("... done with vertical interpolation.")
@@ -74,7 +74,7 @@ print("... done flipping SH vort sign.")
 
 
 outfilename=str_sub_str(infile,"h2","h9")
-outfilename=str_sub_str(outfilename,".nc",".VORT600.2p00.nc")
+outfilename=str_sub_str(outfilename,".nc",".VORT850.2p00.nc")
 print(outfilename)
 
 ;===================================================================
@@ -85,7 +85,7 @@ fAtt@creation_date = systemfunc ("date")
 fileattdef( ncdf, fAtt )            ; copy file attributes
 filedimdef(ncdf,"time",-1,True) 
 
-ncdf->VORT600 = VORTXXX
+ncdf->VORT850 = VORTXXX
 ;===================================================================
 
 end
