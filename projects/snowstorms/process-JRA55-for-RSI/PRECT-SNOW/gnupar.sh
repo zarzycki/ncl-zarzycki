@@ -2,7 +2,7 @@
 
 ##=======================================================================
 #PBS -N JRA-snow-PSL
-#PBS -A P54048000 
+#PBS -A P93300642 
 #PBS -l walltime=01:59:00
 #PBS -q regular
 #PBS -k oe
@@ -18,7 +18,7 @@ TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 rm ${COMMANDFILE}
 
-for YYYY in `seq 1958 2017`; do
+for YYYY in `seq 1985 2015`; do
   LINECOMMAND="./singleyear.sh ${YYYY}   "
   echo ${LINECOMMAND} >> ${COMMANDFILE}
 done

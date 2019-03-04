@@ -12,8 +12,8 @@ begin
 
 
 
-ibstyr=1980
-ibenyr=2012
+ibstyr=2005
+ibenyr=2005
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
@@ -28,7 +28,7 @@ wcStrt     = systemfunc("date")
 print("Plotting iBtracks data from: "+ibstyr+" to "+ibenyr)
 print("Loading data, this may take awhile.")
 ibdir = "/glade/u/home/zarzycki/work/ibtracs/"
-ibfilename="Allstorms.ibtracs_wmo.v03r08.nc"
+ibfilename="Allstorms.ibtracs_wmo.v03r10.nc"
 
 ibfile = addfile(ibdir+ibfilename,"r")
 
@@ -154,7 +154,7 @@ do ii = 0,ibstormcount-1
           end if
 
           thisdate=cd_calendar(ibtime(ii,jj),0)
-          STORMSTR=delim+"-99999"+delim+iblon(ii,jj)+delim+iblat(ii,jj)+delim+ibpres(ii,jj)+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+          STORMSTR=delim+"-99999"+delim+"-99999"+delim+iblon(ii,jj)+delim+iblat(ii,jj)+delim+ibpres(ii,jj)+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
           print(STORMSTR+"")
           system("echo "+quote+      STORMSTR       +quote+" >> "+filename)
         end if

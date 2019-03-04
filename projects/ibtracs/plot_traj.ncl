@@ -24,22 +24,23 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 thefile="ibtracs-1979-2012-GLOB.txt"
+thefile="ibtracs-2016-2016-GLOB.txt"
 ;thefile="trajectories.txt.MP15A-120A-US"
-ncols = 10                    ; assign number of columns
+ncols = 11                    ; assign number of columns
 maxLines = -1
 headerDelimStr = "start"
 delimStr="tab"
 isHeader=False
 traj_data = getTrajectories(thefile,ncols,maxLines,headerDelimStr,delimStr,isHeader)
 
-lon = traj_data(:,1,:)
-lat = traj_data(:,2,:)
-wind = traj_data(:,4,:)*factor
-pres = traj_data(:,3,:)/100.
-yyyy=  traj_data(:,6,:)
-mm= traj_data(:,7,:)
-dd= traj_data(:,8,:)
-hh= traj_data(:,9,:)
+lon = traj_data(:,2,:)
+lat = traj_data(:,3,:)
+wind = traj_data(:,5,:)*factor
+pres = traj_data(:,4,:)/100.
+yyyy=  traj_data(:,7,:)
+mm= traj_data(:,8,:)
+dd= traj_data(:,9,:)
+hh= traj_data(:,10,:)
 
 print("mean lat: "+avg(lat))
 

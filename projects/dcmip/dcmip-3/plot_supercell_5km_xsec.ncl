@@ -30,8 +30,8 @@ begin
 ;     lat:   arbitrary
 ;----------------------------------------------------------------------------
 
-;model="FVM"
-;resol="r50"
+model="ICON"
+resol="r400"
 out_type="pdf"
 cnFillOpt="smooth"  ; raster or smooth
 cnLineOn=True  ; raster or smooth
@@ -54,8 +54,8 @@ if (model .eq. "FV3") then
 end if
 
 if (model .eq. "TEMPEST") then
-  w_data_file = "/glade/p/vetssg/data/DCMIP_2016/tempest/publish/tempest.163."+resol+".L40.interp_latlon.nonhydro.W.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/tempest/publish/tempest.163."+resol+".L40.interp_latlon.nonhydro.Qr.nc"
+  w_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/tempest/publish/tempest.163."+resol+".L40.interp_latlon.nonhydro.W.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/tempest/publish/tempest.163."+resol+".L40.interp_latlon.nonhydro.Qr.nc"
   correctLon=False
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -65,8 +65,8 @@ if (model .eq. "TEMPEST") then
 end if
 
 if (model .eq. "FVM") then
-  w_data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
-  qr_data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
+  w_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
   correctLon=True
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -78,8 +78,8 @@ if (model .eq. "FVM") then
 end if
 
 if (model .eq. "FVM_OLD") then
-  w_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
+  w_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.W.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon.QR.nc"
   correctLon=True
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -91,8 +91,8 @@ if (model .eq. "FVM_OLD") then
 end if
 
 if (model .eq. "MPAS") then
-  w_data_file  = "/glade/p/vetssg/data/DCMIP_2016/mpas/publish/mpas.163."+resol+".L40.latlon.nonhydro.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/mpas/publish/mpas.163."+resol+".L40.latlon.nonhydro.nc"
+  w_data_file  = "/glade/u/home/zarzycki/scratch/DCMIP_2016/mpas/publish/mpas.163."+resol+".L40.latlon.nonhydro.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/mpas/publish/mpas.163."+resol+".L40.latlon.nonhydro.nc"
   correctLon=False
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -106,8 +106,8 @@ if (model .eq. "MPAS") then
 end if
 
 if (model .eq. "CSU_CP") then
-  w_data_file  = "/glade/p/vetssg/data/DCMIP_2016/csu/publish/csu_CP/csu.163."+resol+".L40.interp_latlon.nonhydro.CP_default.W5.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/csu/publish/csu_CP/csu.163."+resol+".L40.interp_latlon.nonhydro.CP_default.QR5.nc"
+  w_data_file  = "/glade/u/home/zarzycki/scratch/DCMIP_2016/csu/publish/csu_CP/csu.163."+resol+".L40.interp_latlon.nonhydro.CP_default.W5.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/csu/publish/csu_CP/csu.163."+resol+".L40.interp_latlon.nonhydro.CP_default.QR5.nc"
   correctLon=False
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -119,8 +119,8 @@ if (model .eq. "CSU_CP") then
 end if
 
 if (model .eq. "CSU_LZ") then
-  w_data_file  = "/glade/p/vetssg/data/DCMIP_2016/csu/publish/csu_LZ/csu.163."+resol+".L40.interp_latlon.nonhydro.LZ_default.W5.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/csu/publish/csu_LZ/csu.163."+resol+".L40.interp_latlon.nonhydro.LZ_default.QR5.nc"
+  w_data_file  = "/glade/u/home/zarzycki/scratch/DCMIP_2016/csu/publish/csu_LZ/csu.163."+resol+".L40.interp_latlon.nonhydro.LZ_default.W5.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/csu/publish/csu_LZ/csu.163."+resol+".L40.interp_latlon.nonhydro.LZ_default.QR5.nc"
   correctLon=False
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -132,9 +132,9 @@ if (model .eq. "CSU_LZ") then
 end if
 
 if (model .eq. "ACME") then
-  w_data_file  = "/glade/p/vetssg/data/DCMIP_2016/acme-a/publish/acme.163."+resol+".L40.interp_latlon.nonhydro.W.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/acme-a/publish/acme.163."+resol+".L40.interp_latlon.nonhydro.Qr.nc"
-  z_data_file =  "/glade/p/vetssg/data/DCMIP_2016/acme-a/publish/acme.163."+resol+".L40.interp_latlon.nonhydro.Geopotential.nc"
+  w_data_file  = "/glade/u/home/zarzycki/scratch/DCMIP_2016/acme-a/publish/acme.163."+resol+".L40.interp_latlon.nonhydro.W.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/acme-a/publish/acme.163."+resol+".L40.interp_latlon.nonhydro.Qr.nc"
+  z_data_file =  "/glade/u/home/zarzycki/scratch/DCMIP_2016/acme-a/publish/acme.163."+resol+".L40.interp_latlon.nonhydro.Geopotential.nc"
 
   correctLon=False
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
@@ -156,8 +156,8 @@ if (model .eq. "ACME") then
 end if
 
 if (model .eq. "GEM") then
-  w_data_file = "/glade/p/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.w.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.qr.nc"
+  w_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.w.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.qr.nc"
   correctLon=True
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -167,9 +167,9 @@ if (model .eq. "GEM") then
   w_pres = w_data->W((/6,12,18,24/),:,:,:)
   qr_pres = qr_data->Qr((/6,12,18,24/),:,:,:)
 
-  q_data_file = "/glade/p/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.q.nc"
-  t_data_file = "/glade/p/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.t.nc"
-  ps_data_file = "/glade/p/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.ps.nc" 
+  q_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.q.nc"
+  t_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.t.nc"
+  ps_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.ps.nc" 
   ps_data = addfile(ps_data_file,"r")
   q_data = addfile(q_data_file,"r")
   t_data = addfile(t_data_file,"r")
@@ -232,8 +232,8 @@ if (model .eq. "OLAM") then
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   time_str_arr=(/"005000","010000","015000","020000"/)
   do kk=0,3
-    w_data_file  = "/glade/p/vetssg/data/DCMIP_2016/olam/publish/case131_"+resol+"/dcmip131_"+resol+"-DLL-2000-01-01-"+time_str_arr(kk)+".h5"
-    qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/olam/publish/case131_"+resol+"/dcmip131_"+resol+"-DLL-2000-01-01-"+time_str_arr(kk)+".h5"
+    w_data_file  = "/glade/u/home/zarzycki/scratch/DCMIP_2016/olam/publish/case131_"+resol+"/dcmip131_"+resol+"-DLL-2000-01-01-"+time_str_arr(kk)+".h5"
+    qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/olam/publish/case131_"+resol+"/dcmip131_"+resol+"-DLL-2000-01-01-"+time_str_arr(kk)+".h5"
     z_data = addfile(w_data_file,"r")
     w_data = addfile(w_data_file,"r")
     qr_data = addfile(qr_data_file,"r")
@@ -292,8 +292,8 @@ if (model .eq. "FV3") then
   end if
   end if
   end if
-  w_data_file = "/glade/p/vetssg/data/DCMIP_2016/fv3/publish/release_v1.2_DCMIP/SUPERCELL."+resolkm+".64bit.cstdz.lvl40."+resolkm+"/rundir/fv3.163."+resol+".L24.cubed.nonhydro.cstdz.lvl40."+resolkm+".w5km.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/fv3/publish/release_v1.2_DCMIP/SUPERCELL."+resolkm+".64bit.cstdz.lvl40."+resolkm+"/rundir/fv3.163."+resol+".L24.cubed.nonhydro.cstdz.lvl40."+resolkm+".rain5km.nc"
+  w_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/fv3/publish/release_v1.2_DCMIP/SUPERCELL."+resolkm+".64bit.cstdz.lvl40."+resolkm+"/rundir/fv3.163."+resol+".L24.cubed.nonhydro.cstdz.lvl40."+resolkm+".w5km.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/fv3/publish/release_v1.2_DCMIP/SUPERCELL."+resolkm+".64bit.cstdz.lvl40."+resolkm+"/rundir/fv3.163."+resol+".L24.cubed.nonhydro.cstdz.lvl40."+resolkm+".rain5km.nc"
   correctLon=True
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -303,8 +303,8 @@ if (model .eq. "FV3") then
 end if
 
 if (model .eq. "NICAM") then
-  w_data_file = "/glade/p/vetssg/data/DCMIP_2016/nicam/publish/test3/nicam.163."+resol+".L40.interp_latlon.nonhydro.W.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/nicam/publish/test3/nicam.163."+resol+".L40.interp_latlon.nonhydro.Qr.nc"
+  w_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/nicam/publish/test3/nicam.163."+resol+".L40.interp_latlon.nonhydro.W.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/nicam/publish/test3/nicam.163."+resol+".L40.interp_latlon.nonhydro.Qr.nc"
   correctLon=False
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -361,30 +361,31 @@ if (model .eq. "ICON") then
   end if
   end if
   end if
-  w_data_file = "/glade/p/vetssg/data/DCMIP_2016/icon/publish/icon.163."+resol+".L60.interp_latlon.nonhydro.dt"+timestep+"_default_diffusion.W.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/icon/publish/icon.163."+resol+".L60.interp_latlon.nonhydro.dt"+timestep+"_default_diffusion.Qr.nc"
+  w_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/icon/publish/icon.163."+resol+".L60.interp_latlon.nonhydro.dt"+timestep+"_default_diffusion.W.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/icon/publish/icon.163."+resol+".L60.interp_latlon.nonhydro.dt"+timestep+"_default_diffusion.Qr.nc"
   correctLon=False
-  conv_qr_units=False ; do we need to conv from kg/kg to g/kg?
+  conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
   qr_data = addfile(qr_data_file,"r")
   w = w_data->W((/6,12,18,24/),:,:,:)
   qr = qr_data->Qr((/6,12,18,24/),:,:,:)
-  z_data_file = "/glade/p/vetssg/data/DCMIP_2016/icon/publish/icon.163."+resol+".L60.interp_latlon.nonhydro.dt"+timestep+"_default_diffusion.Z.nc"
+  z_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/icon/publish/icon.163."+resol+".L60.interp_latlon.nonhydro.dt"+timestep+"_default_diffusion.Z.nc"
   z_data = addfile(z_data_file,"r")
   zmid = z_data->Z(:,0,0)
   zint = new(dimsizes(zmid)+1,"float")
   zint(1:dimsizes(zmid))=zmid-250.
   zint(0) = 30000.0
   w&ilev=zint
+  qr&lev=zmid
   w_5km = w(:,{5000.0},:,:)
-  qr_5km = w(:,{5000.0},:,:)
+  qr_5km = qr(:,{5000.0},:,:)
   w_5km = lonFlip(w_5km)
   qr_5km = lonFlip(qr_5km)
 end if
 
 if (model .eq. "DYNAMICO") then
-  w_data_file = "/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.W.nc"
-  qr_data_file = "/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.Qr.nc"
+  w_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.W.nc"
+  qr_data_file = "/glade/u/home/zarzycki/scratch/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.Qr.nc"
   correctLon=True
   conv_qr_units=True ; do we need to conv from kg/kg to g/kg?
   w_data = addfile(w_data_file,"r")
@@ -393,7 +394,7 @@ if (model .eq. "DYNAMICO") then
   qr_pres = qr_data->Qr((/5,11,17,23/),:,:,:)
 
   ; get pressure levels
-  ps_data_file="/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.PS.nc"
+  ps_data_file="/glade/u/home/zarzycki/scratch/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.PS.nc"
   ps_data=addfile(ps_data_file,"r")
   ps = ps_data->PS((/5,11,17,23/),:,:)
   lat = ps_data->lat
@@ -401,10 +402,10 @@ if (model .eq. "DYNAMICO") then
   nlat = dimsizes(lat)
   nlon = dimsizes(lon)
   ntimes = 4
-  hyai_data_file="/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.hyai.nc"
-  hybi_data_file="/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.hybi.nc"
-  hyam_data_file="/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.hyam.nc"
-  hybm_data_file="/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.hybm.nc"
+  hyai_data_file="/glade/u/home/zarzycki/scratch/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.hyai.nc"
+  hybi_data_file="/glade/u/home/zarzycki/scratch/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.hybi.nc"
+  hyam_data_file="/glade/u/home/zarzycki/scratch/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.hyam.nc"
+  hybm_data_file="/glade/u/home/zarzycki/scratch/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.hybm.nc"
   hyai_data=addfile(hyai_data_file,"r")
   hybi_data=addfile(hybi_data_file,"r")
   hyam_data=addfile(hyam_data_file,"r")
@@ -417,8 +418,8 @@ if (model .eq. "DYNAMICO") then
   print(hyam)
   print(hybm)
 
-  t_data_file="/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.T.nc"
-  q_data_file="/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.Q.nc"
+  t_data_file="/glade/u/home/zarzycki/scratch/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.T.nc"
+  q_data_file="/glade/u/home/zarzycki/scratch/DCMIP_2016/dynamico/publish/dynamico.163.100km.L40.hex.hydro.supercell/dynamico.163.100km.L40.hex_interp_latlon.hydro.supercell.Q.nc"
   t_data = addfile(t_data_file,"r")
   q_data = addfile(q_data_file,"r")
   t_pres = t_data->T((/5,11,17,23/),:,:,:)

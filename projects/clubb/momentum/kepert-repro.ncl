@@ -12,7 +12,7 @@ begin
 
 out_type="pdf"
 
-;config="RCE.QPC5.ne0np4tcfplane.ne15x8.exp001.001"
+;config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp799.004"
 ;dayofsim="09"
 k10=0.5
 cam5=False
@@ -38,7 +38,7 @@ else
   FILEDIR="/glade/u/home/zarzycki/scratch/TC_PBL/"+config+"/run/"
   filename = FILEDIR+"/"+config+".cam.h1.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   f2= FILEDIR+"/"+config+".cam.h3.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
-  kvmvar="KVM_CLUBB"
+  kvmvar="KVH_CLUBB"
 ;  kvmvar="DTCOND"
   tkevar="TKE_CLUBB"
 ;  tkevar="DTCOND"
@@ -53,10 +53,10 @@ tf2 = addfile(f2,"r")
 
 
 stride = 1
-topLev = 750.
+topLev = 500.
 botLev = 1050.
-maxLat=-20.
-minLat=20.
+maxLat=-25.
+minLat=25.
 timeStep=0
 
 pi=3.14159

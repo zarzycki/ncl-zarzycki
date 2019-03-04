@@ -10,7 +10,7 @@ load "../../../functions/getTrajectories.ncl"
 ;========================================================
 begin
 
-output_type="pdf"
+output_type="x11"
 
 configArr=(/"B20TRC5CNBDRD","BRCP85C5CNBDRD","BRCP85C5CNBDRD"/)
 yearsArr=(/"1990010100Z-2005123118Z","2026010100Z-2035123118Z","2071010100Z-2080123118Z"/)
@@ -20,7 +20,8 @@ yearsArr=(/"1990010100Z-2005123118Z","2026010100Z-2035123118Z","2071010100Z-2080
 
 SWE=12.
 do_mask=False
-
+do_percent=True   ; do percent decrease instead of ratio aka O'Gorman
+plot_regional=True ; plot NEUS, if false plot NH aka O'gorman
 fileDir="/glade/u/home/zarzycki/scratch/LENS-snow/climo/"
 snowVarName="PRECT_SNOW"
 
@@ -90,11 +91,17 @@ end if
 
 ensavg(0,:,:)=where(ensavg(0,:,:).le.2.0,ensavg@_FillValue,ensavg(0,:,:))
 
-SNOW2071DIFF=ensavg(2,:,:)
-SNOW2071DIFF=ensavg(2,:,:)/ensavg(0,:,:)
-SNOW2026DIFF=ensavg(1,:,:)
-SNOW2026DIFF=ensavg(1,:,:)/ensavg(0,:,:)
-
+if (do_percent) then
+  SNOW2071DIFF=ensavg(2,:,:)
+  SNOW2071DIFF=100.*(ensavg(0,:,:) - ensavg(2,:,:)) / ensavg(0,:,:)
+  SNOW2026DIFF=ensavg(1,:,:)
+  SNOW2026DIFF=100.*(ensavg(0,:,:) - ensavg(1,:,:)) / ensavg(0,:,:)
+else
+  SNOW2071DIFF=ensavg(2,:,:)
+  SNOW2071DIFF=ensavg(2,:,:)/ensavg(0,:,:)
+  SNOW2026DIFF=ensavg(1,:,:)
+  SNOW2026DIFF=ensavg(1,:,:)/ensavg(0,:,:)
+end if
 
 wks = gsn_open_wks(output_type,"./pdf/ogorman14_repro")               ; open workstation
 nplots=2
@@ -119,10 +126,17 @@ res@lbLabelAutoStride   = True         ; Clean up labelbar labels.
 ;res@cnFillMode          = "RasterFill"
 res@gsnAddCyclic = False
 
+if (plot_regional) then
+res@mpMinLatF             = 30.
+res@mpMaxLatF             = 50.
+res@mpMinLonF             = 280.
+res@mpMaxLonF             = 300.
+else
 res@mpMinLatF             = 10.
 res@mpMaxLatF             = 90.
 res@mpMinLonF             = 0.
 res@mpMaxLonF             = 360.
+end if
 ;res@mpCenterLonF = 286.
 
 res@lbLabelBarOn        = False           ; turn off individual cb's
@@ -142,10 +156,15 @@ resdiff@cnFillPalette = cmap
 resdiff@cnSpanFillPalette = True
 delete(cmap)
 resdiff@cnLevelSelectionMode = "ManualLevels"
+if (do_percent) then
+resdiff@cnLevelSpacingF      =  10.
+resdiff@cnMinLevelValF       =  0.
+resdiff@cnMaxLevelValF       =  100.
+else
 resdiff@cnLevelSpacingF      =  0.2
 resdiff@cnMinLevelValF       =  0.3
 resdiff@cnMaxLevelValF       =  1.5
-
+end if
 
 resdiff@gsnRightString="in. snow/yr"
 

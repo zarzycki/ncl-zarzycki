@@ -1,4 +1,4 @@
-function getTrajectories(tfile,ncol,maxLines,headerDelimStr,tab_space,isHeader)
+function getTrajectoriesGeneric(tfile,ncol,maxLines,headerDelimStr,tab_space,isUnstruc,isHeader)
 
 ; tfile (string) -- name of trajectory output from Tempest/RECAP
 
@@ -10,6 +10,8 @@ function getTrajectories(tfile,ncol,maxLines,headerDelimStr,tab_space,isHeader)
 ; headerDelimStr -- substring of separate trajectory headers (ex: start, Path), used to parse trajectories
 
 ; tab_space (string) -- delimiter of fields for each traj point. "tab" will convert to tab-delimited
+
+; isUnstruc (boolean) -- is the data unstructured? if yes, add dummy column such that lat/lon = 2,3 indices
 
 ; isHeader (boolean) -- does the trajectory file have a header? If yes, ditch first row of file.
 
@@ -67,7 +69,12 @@ print("GETTRAJECTORIES: Allocating... "+maxLines+" max lines per storm")
 
 ; create new array that will hold all data except rows containing start information
 ; add column to contain storm number
-tdata = new((/nstorms_tot,ncol,maxLines/),float)
+if (isUnstruc) then
+  print("GETTRAJECTORIES: Doing unstructured mesh, adding extra dummy column as column 0")
+  tdata = new((/nstorms_tot,ncol+1,maxLines/),float)
+else
+  tdata = new((/nstorms_tot,ncol,maxLines/),float)
+end if
 
 ; loop over lines of trajectory data, convert string to float
 nstorm = -1   ; assign storm number
@@ -90,14 +97,21 @@ do n1 = startloopix,nrows-1  ; loop over all data with header lines
     do z = 0,ncol-1
       ;print(nstorm+" "+n2+" "+z+"   "+splitStr(z))
       ;print(" "+tdata_tmp(n1))
-      tdata(nstorm,z,n2) = stringtofloat(splitStr(z))
+      if (isUnstruc) then
+        if (z .eq. 0) then
+          tdata(nstorm,z,n2) = 1.
+        end if
+        tdata(nstorm,z+1,n2) = stringtofloat(splitStr(z))
+      else
+        tdata(nstorm,z,n2) = stringtofloat(splitStr(z))
+      end if
     end do
     n2 = n2 + 1
-      delete(splitStr)
+    delete(splitStr)
   end if
 end do
 
-print("Done!")
+print("GETTRAJECTORIES: Done!")
 
 delete([/tdata_tmp,n1,n2,nstorms_tot,nstorm,nrows/])
 

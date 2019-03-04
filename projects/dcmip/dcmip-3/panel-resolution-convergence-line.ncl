@@ -12,11 +12,12 @@ load "/glade/u/home/zarzycki/ncl/functions/calc_area.ncl"
 
 begin
 
-out_type="pdf"
+out_type="x11"
 
-thisVar="PRECL"  ; W or PRECL
+thisVar="W"  ; W or PRECL
 
-modellist=(/"ACME","CSU_LZ","FV3","FVM","GEM","ICON","MPAS","NICAM","OLAM","TEMPEST"/)
+;modellist=(/"ACME","CSU_LZ","FV3","FVM","GEM","ICON","MPAS","NICAM","OLAM","TEMPEST"/)
+modellist=(/"GEM"/)
 
 ;modellist=(/"CSU_CP","CSU_LZ"/)
 reslist=(/"r50","r100","r200","r400"/)
@@ -79,64 +80,68 @@ do jj = 0,nres-1
   print("analyzing: "+model)
   if (model .eq. "GEM") then
     if (whatVar .eq. "W") then
-      data_file = "/glade/p/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.w.nc"
+      data_file = "/glade/p_old/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.w.nc"
+    else if (whatVar .eq. "KE") then
+      data_file = "/glade/p_old/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.u.nc"
+      data_fil2 = "/glade/p_old/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.v.nc"
     else
-      data_file = "/glade/p/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.prect.nc"
+      data_file = "/glade/p_old/vetssg/data/DCMIP_2016/gem/publish/Test163_"+resol+"/gem.163."+resol+".L40.interp_latlon.nonhydro.del2.prect.nc"
+    end if
     end if
     time_units = "s"
     time_var_name="time"
     prec_units="ms"
   end if
   if (model .eq. "NICAM") then
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/nicam/publish/test3/nicam.163."+resol+".L40.interp_latlon.nonhydro."+whatVar+".nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/nicam/publish/test3/nicam.163."+resol+".L40.interp_latlon.nonhydro."+whatVar+".nc"
     time_units = "m"
     time_var_name="time"
     prec_units="ms"
   end if
   if (model .eq. "ICON") then
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/icon/publish/icon.163."+resol+".L60.interp_latlon.nonhydro.dt"+timestep+"_default_diffusion."+whatVar+".nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/icon/publish/icon.163."+resol+".L60.interp_latlon.nonhydro.dt"+timestep+"_default_diffusion."+whatVar+".nc"
     time_units = "d"
     time_var_name="time"
     prec_units="ms"
   end if
   if (model .eq. "ACME") then
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/acme-a/publish/acme.163."+resol+".L40.interp_latlon.nonhydro."+whatVar+".nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/acme-a/publish/acme.163."+resol+".L40.interp_latlon.nonhydro."+whatVar+".nc"
     time_units = "d"
     time_var_name="time"
     prec_units="ms"
   end if
   if (model .eq. "FV3") then
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/fv3/publish/release_v1.2_DCMIP/SUPERCELL."+resolkm+".64bit.cstdz.lvl40."+resolkm+"/rundir/fv3.163."+resol+".L24.cubed.nonhydro.cstdz.lvl40."+resolkm+"."+whatVar+".nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/fv3/publish/release_v1.2_DCMIP/SUPERCELL."+resolkm+".64bit.cstdz.lvl40."+resolkm+"/rundir/fv3.163."+resol+".L24.cubed.nonhydro.cstdz.lvl40."+resolkm+"."+whatVar+".nc"
     time_units = "d"
     time_var_name="time"
     prec_units="mmd"
   end if
   if (model .eq. "DYNAMICO") then
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163."+fullreskm+".L40.hex.hydro.supercell/dynamico.163."+fullreskm+".L40.hex_interp_latlon.hydro.supercell."+whatVar+".nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/dynamico/publish/dynamico.163."+fullreskm+".L40.hex.hydro.supercell/dynamico.163."+fullreskm+".L40.hex_interp_latlon.hydro.supercell."+whatVar+".nc"
     time_units = "s"
     time_var_name="time_counter"
     prec_units="ms"
   end if
   if (model .eq. "FVM") then
-    data_file = "/glade/scratch/zarzycki/FVM_DCMIP_163_DATA/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
+    data_file = "/glade/scratch/zarzycki/DCMIP-TMP/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
     time_units = "d"
     time_var_name="time"
     prec_units="ms"
   end if
   if (model .eq. "FVM_OLD") then
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/fvm/publish/fvm.163."+resol+".L41.nonhydro.interp_latlon."+whatVar+".nc"
     time_units = "d"
     time_var_name="time"
     prec_units="ms"
   end if
   if (model .eq. "MPAS") then
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/mpas/publish/mpas.163."+resol+".L40.latlon.nonhydro.nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/mpas/publish/mpas.163."+resol+".L40.latlon.nonhydro.nc"
     time_units = "d"
     time_var_name="time"
     prec_units="mms"
   end if
   if (model .eq. "TEMPEST") then
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/tempest/publish/tempest.163."+resol+".L40.interp_latlon.nonhydro."+whatVar+".nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/tempest/publish/tempest.163."+resol+".L40.interp_latlon.nonhydro."+whatVar+".nc"
     time_units = "d"
     time_var_name="time"
     prec_units="ms"
@@ -145,7 +150,7 @@ do jj = 0,nres-1
     if (resol .eq. "r50") then
       resol="r050"
     end if
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/csu/publish/csu_CP/csu.163."+resol+".L40.interp_latlon.nonhydro.CP_default."+whatVar+".nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/csu/publish/csu_CP/csu.163."+resol+".L40.interp_latlon.nonhydro.CP_default."+whatVar+".nc"
     time_units = "csu"
     time_var_name="time"
     prec_units="ms"
@@ -154,7 +159,7 @@ do jj = 0,nres-1
     if (resol .eq. "r50") then
       resol="r050"
     end if
-    data_file = "/glade/p/vetssg/data/DCMIP_2016/csu/publish/csu_LZ/csu.163."+resol+".L40.interp_latlon.nonhydro.LZ_default."+whatVar+".nc"
+    data_file = "/glade/p_old/vetssg/data/DCMIP_2016/csu/publish/csu_LZ/csu.163."+resol+".L40.interp_latlon.nonhydro.LZ_default."+whatVar+".nc"
     time_units = "h"
     time_var_name="time"
     prec_units="ms"
@@ -169,13 +174,30 @@ do jj = 0,nres-1
   print(""+data_file)
 
   f=addfile(data_file,"r")
-  w=f->$whatVar$
   lat=f->lat
   lon=f->lon
   area=calc_area(lat,lon)
   if(whatVar .eq. "W" .or. whatVar .eq. "w") then
+    w=f->$whatVar$
     model_w = dim_max_n(w,(/1,2,3/))
+  else if(whatVar .eq. "KE") then
+    w=f->U
+    f2=addfile(data_fil2,"r")
+    v=f2->V
+    w=sqrt(w*w+v*v)
+    countdims = dimsizes(w)
+    ntimes = countdims(0)
+    model_w = new(ntimes,"double")
+    area3D = conform (w(0,:,:,:),area,(/1,2/)) 
+    do kk = 0,ntimes-1
+      model_w(kk)=sum(w(kk,:,:,:)*area3D)/sum(area3D)
+    end do
+    print(model_w)
+    delete(f2)
+    delete(area3D)
+    delete(v)
   else
+    w=f->$whatVar$
     if (prec_units .eq. "mms")
       w = w / 1000.
     end if
@@ -191,6 +213,8 @@ do jj = 0,nres-1
     rho_h2o = 1000.
     model_w = model_w * rho_h2o * 4 * 3.14159 * (6371000./120.)^2 / 10^5
   end if
+  end if
+  
   if (model .ne. "OLAM")
     model_time = f->$time_var_name$
   end if 

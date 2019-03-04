@@ -14,8 +14,9 @@ begin
 ;  "3.0-LscaleBlackadar-1500m","0.3-Lscalex3.0","0.3-L120"/)
 ;grid=(/"x4","x4","x8","x8","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4"/)
 
-configs=(/"exp998","exp998","exp998","exp999","exp999","exp999"/)
-grid=(/"001","002","003","001","002","003"/)
+configs=(/"exp997","exp997","exp997","exp998","exp998","exp998","exp999","exp999","exp999"/)
+grid=(/"001","002","003","001","002","003","001","002","003"/)
+pointcolors=(/"red","red","red","green","green","green","blue","blue","blue"/)
 
 printVarSummary(configs)
 printVarSummary(grid)
@@ -143,13 +144,14 @@ res@trYMaxF           = 95.
 
 res@xyMarkLineMode = "Markers"
 
-res@xyMarkerColors = "red"
+res@xyMarkerColors = pointcolors
 ;res@xyMarker      = markerTypes(1)
 res@xyMarkerSizeF = 0.004
 plot = gsn_csm_xy(wks,data(2,:),data(1,:),res)
 
 if (plot_obs) then
-  res@xyMarkerColors = "blue"
+  delete(res@xyMarkerColors)
+  res@xyMarkerColors = "black"
   res@xyMarkerSizeF = 0.005
   plot2 = gsn_csm_xy(wks,onedpres,onedwind,res)
   overlay(plot,plot2)

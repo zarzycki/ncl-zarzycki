@@ -13,13 +13,14 @@ if [ ! -f ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc ]; then
 
   ### Symlink JRA files
   mkdir -p ${SYMDIR}/${YYYY}
-#    rm ${SYMDIR}/${YYYY}/*.grb2
 
-  declare -a prect_arr=("srweq" "tprat")
+  declare -a prect_arr=("rof" "srweq" "tprat" "snwe")
   for i in "${prect_arr[@]}"
   do
-    if [ "${i}" == "prmsl" ]; then
-      FILES=${JRABASEDIR}/fcst_surf/${YYYY}/*_${i}.reg_tl319.*
+    if [ "${i}" == "snwe" ]; then
+      FILES=${JRABASEDIR}/fcst_land/${YYYY}/*_${i}.reg_tl319.*
+    elif [ "${i}" == "rof" ]; then
+      FILES=${JRABASEDIR}/fcst_phyland/${YYYY}/*_${i}.reg_tl319.*
     else
       FILES=${JRABASEDIR}/fcst_phy2m/${YYYY}/*_${i}.reg_tl319.*
     fi
@@ -34,5 +35,7 @@ if [ ! -f ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc ]; then
 
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="srweq"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="tprat"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
+  ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="rof"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
+  ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="snwe"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
 
 fi

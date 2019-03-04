@@ -10,26 +10,27 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 
-gridName="ne120np4"
+gridName="ne0np4natlanticref.ne30x4"
 InterpMethod="patch"  ;bilinear, patch, conserve, nearestdtos, neareststod
-regional=False
-atlantic=False
-tctest=False
+regional=True
+regdomain="florida"  ; asd, atlantic, tctest, florida
 
 ; RLL GRID
 ;outres="0.25x0.25"
+outres="0.2x0.2"
 ;outres="0.125x0.125"
+;outres="0.0625x0.0625"
 ;outres="0.5x0.5"
-outres="1x1"
-;srcGridDir="/glade/u/home/zarzycki/work/grids/scrip/"
-;srcGridFile=gridName+".g_scrip.nc"
+;outres="1x1"
+srcGridDir="/glade/u/home/zarzycki/work/grids/scrip/"
+srcGridFile=gridName+".g_scrip.nc"
 ;srcGridDir="/glade/work/zarzycki/ASD2017_files/grids/scrip/"
 ;srcGridFile="mp15a-120a-US.grid.170118.nc"
 ;srcGridFile="mp120a_grid_140708.nc"
 ;srcGridFile="ne30np4_091226_pentagons.nc"
 ;srcGridFile="uniform_240.g_scrip.nc"
-srcGridDir="/glade/p/cesmdata/cseg/mapping/grids/"
-srcGridFile="ne120np4_pentagons_100310.nc"
+;srcGridDir="/glade/p/cesmdata/cseg/mapping/grids/"
+;srcGridFile="ne120np4_pentagons_100310.nc"
 
 ; RLL GRID
 ;dstGridDir="."
@@ -66,17 +67,21 @@ Opt@PrintTimings   = True
 Opt@Debug = True
 
 ; ASD regional
-;if (regional) then
-;  Opt@LLCorner      = (/10.0d, 230.0d /) 
-;  Opt@URCorner      = (/55.0d, 299.0d /)
-;end if
-;if (atlantic) then
-;  Opt@LLCorner      = (/5.0d, 250.0d /)
-;  Opt@URCorner      = (/55.0d,355.0d /)
-;end if
-if (tctest) then
-  Opt@LLCorner      = (/10.0d, 65.0d /) 
-  Opt@URCorner      = (/45.0d, 115.0d /)
+if (regional) then
+  if (regdomain .eq. "asd") then
+    Opt@LLCorner      = (/10.0d, 230.0d /) 
+    Opt@URCorner      = (/55.0d, 299.0d /)
+  elseif (regdomain .eq. "atlantic") then
+    Opt@LLCorner      = (/5.0d, 250.0d /)
+    Opt@URCorner      = (/55.0d,355.0d /)
+  elseif (regdomain .eq. "tctest") then
+    Opt@LLCorner      = (/5.0d, 250.0d /)
+    Opt@URCorner      = (/55.0d,355.0d /)
+  elseif (regdomain .eq. "florida") then
+    Opt@LLCorner      = (/24.0d,271.0d /)
+    Opt@URCorner      = (/32.0d,281.0d /)
+  else
+  end if
 end if
 
 if (fileexists(dstGridName)) then
