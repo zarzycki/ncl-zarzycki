@@ -11,6 +11,7 @@ load "/glade/u/home/zarzycki/ncl/functions/plot_outline_fcn.ncl"
 begin
 
 
+gridfile="/glade/u/home/zarzycki/scratch/j1files/GPCP/2005/precip.2005_interp.nc"
 
 ibstyr=2005
 ibenyr=2005
@@ -128,7 +129,7 @@ filename="./test.txt"
 
 do ii = 0,ibstormcount-1
   ;print(ibname(ii,0)+" "+toint(ibbasin(ii,0)))
-  if (toint(ibbasin(ii,0)) .eq. 0 .or. toint(ibbasin(ii,0)) .eq. 12 .or. toint(ibbasin(ii,0)) .eq. 13) then
+  ;if (toint(ibbasin(ii,0)) .eq. 0 .or. toint(ibbasin(ii,0)) .eq. 12 .or. toint(ibbasin(ii,0)) .eq. 13) then
   ;if (toint(ibbasin(ii,0)) .eq. 0 ) then
     if (.not.ismissing(ibname(ii,0))) then
 
@@ -145,6 +146,20 @@ do ii = 0,ibstormcount-1
 
       do jj = 0,ibntimes-1
         if (.not.ismissing(iblat(ii,jj))) then
+
+          ; if gridfile not empty string, find nearest coordinate
+          if (gridfile .ne. "") then
+            if (.not. isdefined("gridlat")) then
+              gridf=addfile(gridfile,"r")
+              gridlat=gridf->latitude
+              gridlon=gridf->longitude
+            end if
+            thisLat=minind(abs(gridlat-iblat(ii,jj)))
+            thisLon=minind(abs(gridlon-iblon(ii,jj)))
+          else
+            thisLat=-99999
+            thisLon=-99999
+          end if
           
           ;print(iblat(ii,jj)+" "+iblon(ii,jj))
           if (iblon(ii,jj) .le. max(PHIS&lon) .and. iblon(ii,jj) .ge. min(PHIS&lon)) then
@@ -154,13 +169,15 @@ do ii = 0,ibstormcount-1
           end if
 
           thisdate=cd_calendar(ibtime(ii,jj),0)
-          STORMSTR=delim+"-99999"+delim+"-99999"+delim+iblon(ii,jj)+delim+iblat(ii,jj)+delim+ibpres(ii,jj)+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+          STORMSTR=delim+thisLon+delim+thisLat+delim+iblon(ii,jj)+delim+iblat(ii,jj)+delim+ibpres(ii,jj)+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+;          STORMSTR=delim+thisLon+delim+thisLat+delim+gridlon(thisLon)+delim+gridlat(thisLat)+delim+tofloat(ibpres(ii,jj))+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+
           print(STORMSTR+"")
           system("echo "+quote+      STORMSTR       +quote+" >> "+filename)
         end if
       end do
     end if
-  end if
+  ;end if
 end do
 end
   

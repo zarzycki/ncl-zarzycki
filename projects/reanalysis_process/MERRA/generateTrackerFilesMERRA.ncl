@@ -25,8 +25,8 @@ print("Processing: "+yyyy+" "+mm+" "+dd)
 
 presLevDir = "/glade/u/home/zarzycki/scratch/MERRA/"
 modlLevDir = "/glade/u/home/zarzycki/scratch/MERRA/"
-presLevFlName = "MERRA200.prod.assim.inst6_3d_ana_Np."+yyyy+mm+dd+".hdf"
-modlLevFlName = "MERRA200.prod.assim.inst6_3d_ana_Nv."+yyyy+mm+dd+".hdf"
+presLevFlName = "MERRA"+streamString+".prod.assim.inst6_3d_ana_Np."+yyyy+mm+dd+".hdf"
+modlLevFlName = "MERRA"+streamString+".prod.assim.inst6_3d_ana_Nv."+yyyy+mm+dd+".hdf"
 print("PRES LEVS:    "+presLevDir+"/"+presLevFlName)
 print("MODL LEVS:    "+modlLevDir+"/"+modlLevFlName)
 

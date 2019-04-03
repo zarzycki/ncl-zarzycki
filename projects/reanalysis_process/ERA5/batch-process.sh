@@ -16,8 +16,11 @@ NUMCORES=12
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
+for DATA_YEAR in {2009..2015}
+do
+
 # Add PSL files
-FILES=`find /glade/u/home/zarzycki/rda/ds630.0/ -name "*e5.oper.an.sfc.128_151_msl.regn320sc.20*nc"`
+FILES=`find /glade/u/home/zarzycki/rda/ds630.0/ -name "*e5.oper.an.sfc.128_151_msl.regn320sc.${DATA_YEAR}*nc"`
 for f in $FILES
 do
   LINECOMMAND="ncl process-PSL.ncl 'filename=\"$f\"'"
@@ -25,11 +28,13 @@ do
 done
 
 # Add snow files
-FILES=`find /glade/u/home/zarzycki/rda/ds630.0/ -name "*e5.oper.fc.sfc.accumu.128_144_sf.regn320sc.20*nc"`
+FILES=`find /glade/u/home/zarzycki/rda/ds630.0/ -name "*e5.oper.fc.sfc.accumu.128_144_sf.regn320sc.${DATA_YEAR}*nc"`
 for f in $FILES
 do
   LINECOMMAND="ncl process-SNOW.ncl 'filename=\"$f\"'"
   echo ${LINECOMMAND} >> ${COMMANDFILE}
+done
+
 done
 
 #### Use this for Cheyenne batch jobs

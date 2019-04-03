@@ -1,9 +1,9 @@
 #!/bin/bash
 
 YYYY=1989
-CONFIG=CFSR
+CONFIG=JRA
 
-OUTFILEDIR=/glade/scratch/zarzycki/h1files/CFSR/${YYYY}/
+OUTFILEDIR=/glade/scratch/zarzycki/h1files/JRA/${YYYY}/
 
 ### Generate time array file
 arrayFileName=test_timesArray_${YYYY}.txt

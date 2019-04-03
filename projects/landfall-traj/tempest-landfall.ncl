@@ -5,8 +5,8 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "/glade/u/home/zarzycki/ncl/functions/getTrajectoriesGeneric.ncl"
-load "strip_missing.ncl"
-load "find_landfalls.ncl"
+load "/glade/u/home/zarzycki/ncl/functions/strip_missing.ncl"
+load "/glade/u/home/zarzycki/ncl/functions/find_landfalls.ncl"
 
 ;========================================================
 begin
@@ -34,16 +34,16 @@ hrsinterp=0.25
 
 ;===========================================================================================
 
-traj_data = getTrajectories(thedir+"/"+thefile,ncols,maxLines,headerDelimStr,delimStr,isHeader)
+traj_data = getTrajectoriesGeneric(thedir+"/"+thefile,ncols,maxLines,headerDelimStr,delimStr,True,isHeader)
 
-lon = traj_data(:,1,:)
-lat = traj_data(:,2,:)
-wind = traj_data(:,4,:)*.85
-pres = traj_data(:,3,:)/100.
-yyyy=  traj_data(:,6,:)
-mm= traj_data(:,7,:)
-dd= traj_data(:,8,:)
-hh= traj_data(:,9,:)
+lon = traj_data(:,2,:)
+lat = traj_data(:,3,:)
+wind = traj_data(:,5,:)*.85
+pres = traj_data(:,4,:)/100.
+yyyy=  traj_data(:,7,:)
+mm= traj_data(:,8,:)
+dd= traj_data(:,9,:)
+hh= traj_data(:,10,:)
 
 print("mean lat: "+avg(lat))
 
@@ -89,7 +89,7 @@ interp_pres=linint1_n_Wrap(xi,pres,False,xo,0,1)
 
 ;stormtest=49
 
-debug=False
+debug=3
 
 
 STIX=0

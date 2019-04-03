@@ -8,24 +8,25 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 ;========================================================
 begin
 
-whatData="ERAI"
+whatData="JRA"
 write_output=True
 isglobal=False
 isStoN=False
 keepStoN=False
 
-if (whatData .eq. "MERRA" .or. whatData .eq. "MERRA2") then
-  doLonShift=True
-else
-  doLonShift=False ; True for MERRA, False for CFSR
-end if
+;if (whatData .eq. "MERRA" .or. whatData .eq. "JRA") then
+;  doLonShift=True
+;else
+  doLonShift=False ; True for MERRA, False for JRA
+;end if
 topoFileName="/glade/work/zarzycki/cam_tools/hires-topo/2deg_cesm_topo_latlon.nc"
 outDir="/glade/work/zarzycki/reanalysis-detection/topo/"
 outFileName = whatData+".topo.nc"
 
 ;trackerFileName="/glade/scratch/zarzycki/h1files/"+whatData+"/2000/"+whatData+".h1.20000901.nc"
 ;trackerFileName="~/scratch/nhemi_30_x4_slab/run/1001/nhemi_30_x4_slab.cam.h4.1001-05-01-00000.nc_regrid.nc"
-trackerFileName="/glade/u/home/zarzycki/scratch/ERAI-ETC/2017/ERAI.h1.2017111700.nc"
+;trackerFileName="/glade/u/home/zarzycki/scratch/ERAI-ETC/2017/ERAI.h1.2017111700.nc"
+trackerFileName="/glade/u/home/zarzycki/scratch/h1files/JRA/1989/JRA.h1.19890101.nc"
 ;trackerFileName="/glade/u/home/zarzycki/scratch/ERA5/CAT.ERA5.U850.201701.nc"
 
 topoFile=addfile(topoFileName,"r")

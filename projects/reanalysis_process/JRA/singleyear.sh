@@ -13,10 +13,10 @@
 
 ################################################################
 
-JRABASEDIR=/glade/p/rda/data/ds628.0/
+JRABASEDIR=~/rda/ds628.0/
 SYMDIR=/glade/u/home/zarzycki/scratch/JRAsym/
 OUTBASE=/glade/scratch/zarzycki/h1files/JRA/
-YYYY=1993
+YYYY=${1}
 
 ### Symlink JRA files
 mkdir -p ${SYMDIR}/${YYYY}
@@ -74,7 +74,35 @@ done
 mkdir -p ${OUTBASE}/${YYYY}
 
 ### Do NCL script
-ncl generateTrackerFilesJRA.ncl 'YEAR="'${YYYY}'"' 'timeArrFile="'${arrayFileName}'"'
+ncl generateTrackerFilesJRA-lite.ncl 'YEAR="'${YYYY}'"' 'timeArrFile="'${arrayFileName}'"'
+
+rm ${arrayFileName}
 
 
 
+
+
+CONFIG=JRA
+OUTFILEDIR=/glade/scratch/zarzycki/h1files/JRA/${YYYY}/
+### Generate time array file
+arrayFileName=test_timesArray_${YYYY}.txt
+rm ${arrayFileName}
+start=$(date -u --date '1 jan '${YYYY}' 0:00' +%s)
+stop=$(date -u --date '31 dec '${YYYY}' 0:00' +%s)
+
+for t in $(seq ${start} 86400 ${stop})
+do
+  thisDate=`date -u --date @${t} +'%Y%m%d'`
+  echo $thisDate >> ${arrayFileName}
+done
+
+mkdir ${OUTFILEDIR}/TMP
+mv ${OUTFILEDIR}/*.nc ${OUTFILEDIR}/TMP
+
+while read p; do
+  echo $p
+  ncrcat ${OUTFILEDIR}/TMP/${CONFIG}.h1.${p}*.nc ${OUTFILEDIR}/${CONFIG}.h1.${p}.nc
+done < ${arrayFileName}
+
+rm ${arrayFileName}
+rm -rf ${OUTFILEDIR}/TMP/

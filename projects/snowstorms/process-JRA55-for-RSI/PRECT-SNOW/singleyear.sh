@@ -2,7 +2,7 @@
 
 JRABASEDIR=/gpfs/fs1/collections/rda/data/ds628.0/
 SYMDIR=/glade/u/home/zarzycki/scratch/JRAsym/
-OUTBASE=/glade/scratch/zarzycki/h1files/JRA/
+OUTBASE=/glade/scratch/zarzycki/j1files/JRA/
 
 YYYY=$1
 echo $YYYY

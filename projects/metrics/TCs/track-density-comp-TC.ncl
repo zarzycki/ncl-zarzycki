@@ -7,9 +7,9 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
-load "../../functions/getTrajectoriesGeneric.ncl"
-load "../../functions/trackDensity.ncl"
-load "../../functions/mask_tc.ncl"
+load "../../../functions/getTrajectoriesGeneric.ncl"
+load "../../../functions/trackDensity.ncl"
+load "../../../functions/mask_tc.ncl"
 
 begin
 
@@ -29,7 +29,7 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
-thefile="ibtracs-1998-2008-GLOB.txt"  ; trajectory file full path
+thefile="ibtracs-2003-2015-GLOB.txt"  ; trajectory file full path
 ncols = 11 ; number of columns in non-header rows of trajectory file
 maxLines = -1  ; set to -1 for auto-detection
 traj_data = getTrajectoriesGeneric(thefile,ncols,maxLines,"start","tab",False,False)
@@ -68,6 +68,9 @@ xlat=where(xpres.lt.850.,xlat@_FillValue,xlat)
 xpres=where(xpres.lt.850.,xpres@_FillValue,xpres)
 xwind=where(xpres.lt.850.,xwind@_FillValue,xwind)
 
+nfiltstorms=tofloat(num(.not.ismissing(dim_max_n_Wrap(xlat,1))))
+print(nfiltstorms)
+
 if (do_genesis) then
   xlon  := xlon(:,0)
   xlat  := xlat(:,0)
@@ -89,23 +92,27 @@ clon = where(cpres.lt.prescut,clon,clon@_FillValue)
 cwind = where(cpres.lt.prescut,cwind,cwind@_FillValue)
 cpres = where(cpres.lt.prescut,cpres,cpres@_FillValue)
 
-trackdens1 = track_density(gridsize,0.0,clat,clon,False)
+trackdens1 = track_density(gridsize,0.0,clat,clon,True)
 minpres1 = track_minmax(gridsize,0.0,clat,clon,cpres,"min",20)
 maxwind1 = track_minmax(gridsize,0.0,clat,clon,cwind,"max",20)
 
-nyrs=11.
+nyrs=13.
 trackdens1=trackdens1/nyrs
 
+printVarSummary(nfiltstorms)
+
+nfiltstorms=nfiltstorms/nyrs
 tcdays=tofloat(num(cwind .gt. 17.5))/nyrs
 ACE=(1.0e-4*sum((cwind*ms_to_kts)^2.))/nyrs
 
+print("nstorms "+nfiltstorms)
 print("TCDays: "+tcdays)
 print("ACE: "+ACE)
 
-delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind,nyrs,traj_data,maxLines,ncols,thefile/])
+delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind,nyrs,traj_data,maxLines,ncols,thefile,nfiltstorms/])
 
 ;=================== Get traj data ================================
-thefile="trajectories.txt.CFSR"  ; trajectory file full path
+thefile="trajectories.txt.ERAI"  ; trajectory file full path
 ncols = 11 ; number of columns in non-header rows of trajectory file
 maxLines = -1  ; set to -1 for auto-detection
 traj_data = getTrajectoriesGeneric(thefile,ncols,maxLines,"start","tab",False,False)
@@ -138,6 +145,8 @@ do ii = 0,nstorms-1
   end if
 end do
 
+nfiltstorms=tofloat(num(.not.ismissing(dim_max_n_Wrap(xlat,1))))
+
 if (do_genesis) then
   xlon  := xlon(:,0)
   xlat  := xlat(:,0)
@@ -155,26 +164,34 @@ clon = where(cpres.lt.prescut,clon,clon@_FillValue)
 cwind = where(cpres.lt.prescut,cwind,cwind@_FillValue)
 cpres = where(cpres.lt.prescut,cpres,cpres@_FillValue)
 
-trackdens2 = track_density(gridsize,0.0,clat,clon,False)
+trackdens2 = track_density(gridsize,0.0,clat,clon,True)
 minpres2 = track_minmax(gridsize,0.0,clat,clon,cpres,"min",20)
 maxwind2 = track_minmax(gridsize,0.0,clat,clon,cwind,"max",20)
 
-nyrs=11.
+nyrs=13.
 trackdens2=trackdens2/nyrs
 
+nfiltstorms=tofloat(nfiltstorms)/nyrs
 tcdays=tofloat(num(cwind .gt. 17.5))/nyrs
 ACE=(1.0e-4*sum((cwind*ms_to_kts)^2.))/nyrs
 
+print("nstorms "+nfiltstorms)
 print("TCDays: "+tcdays)
 print("ACE: "+ACE)
 
-delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind,nyrs,traj_data,maxLines,ncols,thefile/])
+delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind,nyrs,traj_data,maxLines,ncols,thefile,nfiltstorms/])
 
 
 minpres_diff = minpres1   ; just a trick to copy metadata
 minpres_diff = minpres1-minpres2
 
-patterncorr = pattern_cor(trackdens1,trackdens2,1.,1)
+trackdens2= where(ismissing(trackdens2) .and. .not.ismissing(trackdens1),0.,trackdens2)
+trackdens2= where(ismissing(trackdens2) .and. .not.ismissing(trackdens1),0.,trackdens2)
+
+print(num(trackdens2))
+print(num(trackdens1))
+
+patterncorr = pattern_cor(trackdens1,trackdens2,1.,0)
 print(patterncorr)
 
 ;************************************************

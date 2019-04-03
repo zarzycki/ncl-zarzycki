@@ -52,7 +52,7 @@ do ii = 0,ntim-1
   if (VARIN .eq. "Z") then
     var = var / 9.80665
   end if
-  accumvar(ii,:,:)  =(/var/)
+  accumvar(ii,:,:)  = (/var/)
   if (ii .eq. 0) then
     ; copy attributes from var on ERA5 file to post-processed file for posterity
     copy_VarAtts(var,accumvar)
