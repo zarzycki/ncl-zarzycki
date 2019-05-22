@@ -2,7 +2,7 @@ function getTrajectoriesGeneric(tfile,ncol,maxLines,headerDelimStr,tab_space,isU
 
 ; tfile (string) -- name of trajectory output from Tempest/RECAP
 
-; ncol (int) -- number of columns for each trajectory point
+; ncol (int) -- number of columns for each trajectory point, set to -1 to try and figure out
 
 ; maxLines (int) -- max # of lines allocated, but if set to negative integer, will try and
 ; determine internally. Only use hardcoded (e.g., 150) if you segfault or other OB errors
@@ -17,18 +17,6 @@ function getTrajectoriesGeneric(tfile,ncol,maxLines,headerDelimStr,tab_space,isU
 
 begin
 
-; read in trajectory data from ascii file
-; get number of storms by counting number of lines with 'start'
-nstorms_tot = stringtoint(systemfunc("grep '"+headerDelimStr+"' "+tfile+" | wc -l"))
-print("GETTRAJECTORIES: Getting trajectories from: "+tfile)
-print("GETTRAJECTORIES: Total number of storms = "+nstorms_tot)
-
-tdata_tmp = asciiread(tfile,-1,"string")  ; read in trajectory data as strings
-dims = dimsizes(tdata_tmp)    ; get dimensions
-nrows = dims(0)               ; get number of rows
-
-delete([/dims/])
-
 ; ====DO NOT TOUCH THIS==============
 if (tab_space .eq. "tab") then
   tab_space="	 "
@@ -41,6 +29,25 @@ else
 end if
 
 ; ===================================
+
+; read in trajectory data from ascii file
+; get number of storms by counting number of lines with 'start'
+nstorms_tot = stringtoint(systemfunc("grep '"+headerDelimStr+"' "+tfile+" | wc -l"))
+print("GETTRAJECTORIES: Getting trajectories from: "+tfile)
+print("GETTRAJECTORIES: Total number of storms = "+nstorms_tot)
+
+tdata_tmp = asciiread(tfile,-1,"string")  ; read in trajectory data as strings
+dims = dimsizes(tdata_tmp)    ; get dimensions
+nrows = dims(0)               ; get number of rows
+delete([/dims/])
+
+if (ncol .le. 0) then
+  ncol     = dimsizes(str_split(tdata_tmp(startloopix+1),tab_space))
+  print("GETTRAJECTORIES: Number of columns of first non-header entry AUTO: "+ncol)
+else
+  print("GETTRAJECTORIES: Number of columns of first non-header entry MANUAL: "+ncol)
+end if
+
 
 
 ; =============== FIGURE OUT MAX NUMBERS OF STORM TIMES ========
