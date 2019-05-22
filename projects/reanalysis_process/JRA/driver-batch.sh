@@ -1,24 +1,23 @@
-#!/bin/bash
+#!/bin/bash -l
 
-##=======================================================================
-#PBS -N JRA-snow-PSL
-#PBS -A P05010048 
-#PBS -l walltime=01:59:00
-#PBS -q regular
-#PBS -k oe
-#PBS -m a 
-#PBS -M zarzycki@ucar.edu
-#PBS -l select=1:ncpus=36:mem=109GB
-################################################################
+#SBATCH --job-name=JRA_mpi
+#SBATCH --account=P05010048
+#SBATCH --ntasks=4
+#SBATCH --ntasks-per-node=4
+#SBATCH --time=18:00:00
+#SBATCH --partition=dav
+#SBATCH --output=JRA_mpi.out.%j
 
 module load parallel
+module load ncl
+module load nco
 
-NUMCORES=2
+NUMCORES=4
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 rm ${COMMANDFILE}
 
-for YYYY in `seq 2007 2015`; do
+for YYYY in `seq 1980 1989`; do
   LINECOMMAND="./singleyear.sh ${YYYY}   "
   echo ${LINECOMMAND} >> ${COMMANDFILE}
 done

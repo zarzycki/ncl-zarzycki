@@ -21,7 +21,7 @@ prescut = 99999.0   ; only storms with pres LOWER than this are included. set to
 ms_to_kts = 1.94384449
 
 styr=2003
-enyr=2015
+enyr=2012
 nyears=enyr-styr+1
 yearArr=ispan(styr,enyr,1)
 
@@ -44,14 +44,17 @@ files=(/"ibtracs-2003-2015-GLOB.txt", \
 "trajectories.txt.MERRA2", \
 "trajectories.txt.ERA5", \
 "trajectories.txt.ERAI", \
+"trajectories.txt.MP15A-120A-US-EXP213", \
+"trajectories.txt.NE0CONUS30X8-EXP211", \
 "trajectories.txt.VR28.NATL.WAT.CAM5.4CLM5.0.dtime900.ALL", \
 "trajectories.txt.VR28.NATL.REF.CAM5.4CLM5.0.dtime900.ALL", \
 "trajectories.txt.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.VR28.NATL.ALL.CAM5.4CLM5.0.dtime900.ALL"/)
+"trajectories.txt.VR28.NATL.ALL.CAM5.4CLM5.0.dtime900.ALL", \
+"trajectories.txt.CHEY.111.GLOB.CAM5.4CLM5.0.dtime1800.ALL"/)
 
-strs=(/"IBTrACS","CFSR","JRA","MERRA","MERRA2","ERA5","ERAI","CAMWAT","CAMREF","CAMEXT","CAMALL"/)
-isUnstruct=(/False,False,False,False,False,False,False,True,True,True,True/)
-ensmembers=(/1,1,1,1,1,1,1,3,3,3,9/)
+strs=(/"IBTrACS","CFSR","JRA","MERRA","MERRA2","ERA5","ERAI","MPAS","SE","CAMWAT","CAMREF","CAMEXT","CAMALL","CAMLR"/)
+isUnstruct=(/False,False,False,False,False,False,False,True,True,True,True,True,True,True/)
+ensmembers=(/1,1,1,1,1,1,1,1,1,3,3,3,9,3/)
 
 nfiles=dimsizes(files)
 
@@ -234,9 +237,10 @@ res@xyLineThicknessF = 5.0
 
 res@trYMinF=0.0
 
-res@xyLineColors      = (/"black","red","blue","green","darkgreen","orange","purple","yellow","yellow","yellow","gold"/)          ; change line color
+res@xyLineColors      = (/"black","red","blue","green","darkgreen","orange","purple","red1","red2","yellow","yellow","yellow","gold","gold2"/)          ; change line color
 
-plot  = gsn_csm_xy (wks,yearArr,aceByYear,res) ; create plot
+;plot  = gsn_csm_xy (wks,yearArr,aceByYear,res) ; create plot
+plot  = gsn_csm_xy (wks,monArr,aceByMonth,res) ; create plot
 
 textres=True
 lineres=True

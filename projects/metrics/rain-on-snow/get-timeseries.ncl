@@ -11,8 +11,8 @@ testLat=42.
 testLon=285.
 threshold=10.
 
-thefile="tmp.trajectories.txt.JRA"  ; trajectory file full path
-ncols = 9 ; number of columns in non-header rows of trajectory file
+thefile="tempest.LENS.1990.002"  ; trajectory file full path
+ncols = -1 ; number of columns in non-header rows of trajectory file
 maxLines = -1  ; set to -1 for auto-detection
 traj_data = getTrajectoriesGeneric(thefile,ncols,maxLines,"start","tab",False,False)
 
@@ -28,9 +28,9 @@ xhh = traj_data(:,8,:)
 xzero=xmm
 xzero=0.
 
-units="days since 1900-01-01 00:00"
+units="days since 1920-01-01 00:00:00"
 opt=0
-opt@calendar="standard"
+opt@calendar="noleap"
 
 xtime = cd_inv_calendar(xyyyy,xmm,xdd,xzero,xzero,xzero,units,opt)
 
@@ -49,12 +49,13 @@ lat := lat(iz)
 time = ndtooned(xtime)
 time := time(iz)
 
-sttime=cd_inv_calendar(1985,1,1,0,0,0,units,opt)
-entime=cd_inv_calendar(2016,1,1,0,0,0,units,opt)
+sttime=cd_inv_calendar(1990,1,1,0,0,0,units,opt)
+entime=cd_inv_calendar(2006,1,1,0,0,0,units,opt)
 print(sttime+" "+entime)
 
 seqtimes=fspan(sttime,entime,toint(entime-sttime+1))
 seqtimes@units=units
+seqtimes@calendar=opt@calendar
 
 isStorm=new(dimsizes(seqtimes),"logical")
 isStorm=False

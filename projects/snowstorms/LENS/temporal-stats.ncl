@@ -11,8 +11,7 @@ begin
 
 plot_log=False
 out_type="pdf"
-RSIthresh=2
-PRECTSNOW="PRECT"
+RSIthresh=1
 
 DEG="12"
 SLR="12"
@@ -36,7 +35,6 @@ filename = modelfiles(z)
 lines = asciiread(filename,-1,"string")
 delim = ","
 member  =           str_get_field(lines,1,delim)
-stormID  =           tointeger(str_get_field(lines,2,delim))
 RSIval = tofloat(str_get_field(lines,3,delim))
 RSIcat  =   tointeger(str_get_field(lines,7,delim))
 YYYYMMDDHH = str_get_field(lines,4,delim)
@@ -68,8 +66,9 @@ do ii = 1,dimsizes(time)-1
   difftimes(ii) = tofloat(time(ii) - time(ii-1))
 end do
 difftimes(0)=difftimes@_FillValue
+print(difftimes)
 
-longthresh=150.
+longthresh=999999.
 difftimes=where(abs(difftimes).le.longthresh,difftimes,difftimes@_FillValue)
 
 ; now get rid of filtered diffs
@@ -81,7 +80,6 @@ timeArray(z,0:(dimsizes(difftimes)-1)) = tofloat(difftimes)
 
 delete(lines)
 delete(member)
-delete(stormID)
 delete(RSIcat)
 delete(RSIval)
 
@@ -101,8 +99,8 @@ end do
 ; calc historgrams
 binSettings=True
 binSettings@bin_min=0.0
-binSettings@bin_max=28.0
-nbins=4
+binSettings@bin_max=35.0
+nbins=5
 
 ap  = pdfx(timeArray(0,:), nbins, binSettings)
 if (nCases .gt. 1) then
@@ -126,13 +124,15 @@ end if
 
 print(nyearsPerSample)
 
+print(ap)
+
 print(num(timeArray(0,:)))
 print(num(timeArray(1,:)))
 print(num(timeArray(2,:)))
 
-print(sum(ap*num(timeArray(0,:))/100.))
-print(sum(bp*num(timeArray(1,:))/100.))
-print(sum(cp*num(timeArray(2,:))/100.))
+print(sum(ap*num(timeArray(0,:))/100./nyearsPerSample(0)))
+print(sum(bp*num(timeArray(1,:))/100./nyearsPerSample(1)))
+print(sum(cp*num(timeArray(2,:))/100./nyearsPerSample(2)))
 
 
 yy      = new ( (/nVar, nBin/), typeof(ap))
@@ -145,10 +145,10 @@ if (nCases .gt. 1) then
 end if
 
 
+print(xx+" "+yy)
 
 
-
-wks = gsn_open_wks("x11","test")
+wks = gsn_open_wks(out_type,"stormreturn")
 
 res  = True
 
@@ -160,16 +160,18 @@ res@xyLineThicknesses        = (/liThickness,liThickness,liThickness/)
 res@xyLineColors             = modelcolors
 res@xyMonoDashPattern        = False              ; all solid
 res@xyDashPatterns = (/0,0,0/)
-res@tiYAxisString            = "Annual storms per biweekly period"
-res@tiXAxisString            = "Day of Year"
-if (PRECTSNOW .eq. "SNOW")
-  res@tiMainString         = "Storm frequency (RSI ~F34~3~F21~ "+RSIthresh+")"
-else
-  res@tiMainString         = "Storm frequency (RPI ~F34~3~F21~ "+RSIthresh+")"
-end if
+res@tiYAxisString            = "Return between events (per year)"
+
+res@tiMainString         = "Storm returns (RSI ~F34~3~F21~ "+RSIthresh+")"
+
 
 res@trXMinF           = 0.
-res@trXMaxF           = 28.
+res@trXMaxF           = 35.
+res@trYMinF           = 0.
+
+res@tmXBMode        = "Explicit"	
+res@tmXBValues      = (/3.5,10.5,17.5,24.5,30.5/)
+res@tmXBLabels      = (/"Week 1","Week 2","Week 3","Week 4","Week 5"/)
 
 plot_wo_grid = gsn_csm_xy (wks, xx, yy, res)
 
@@ -195,25 +197,25 @@ amres@amParallelPosF   = 0.49             ; move legend to the right
 amres@amOrthogonalPosF = -0.49             ; move the legend down
 annoid1 = gsn_add_annotation(plot_wo_grid,lbid,amres)   ; add legend to plot
 
-; add panel label
-if (RSIthresh .eq. 1) then
-  panelStr="a."
-else if (RSIthresh .eq. 3) then
-  panelStr="b."
-else
-  panelStr="x."
-end if
-end if
-paneltxres                       = True
-paneltxres@txPerimOn             = True
-paneltxres@txFontHeightF         = 0.05
-amres_tr                  = True
-amres_tr@amParallelPosF   = -0.48    ; This is the left edge of the plot.
-amres_tr@amOrthogonalPosF = -0.48    ; This is the top edge of the plot.
-amres_tr@amJust           = "TopLeft"
-paneltxres@txBackgroundFillColor = "White"
-txid = gsn_create_text(wks, panelStr, paneltxres)
-amid = gsn_add_annotation(plot_wo_grid, txid, amres_tr)
+;; add panel label
+;if (RSIthresh .eq. 1) then
+;  panelStr="a."
+;else if (RSIthresh .eq. 3) then
+;  panelStr="b."
+;else
+;  panelStr="x."
+;end if
+;end if
+;paneltxres                       = True
+;paneltxres@txPerimOn             = True
+;paneltxres@txFontHeightF         = 0.05
+;amres_tr                  = True
+;amres_tr@amParallelPosF   = -0.48    ; This is the left edge of the plot.
+;amres_tr@amOrthogonalPosF = -0.48    ; This is the top edge of the plot.
+;amres_tr@amJust           = "TopLeft"
+;paneltxres@txBackgroundFillColor = "White"
+;txid = gsn_create_text(wks, panelStr, paneltxres)
+;amid = gsn_add_annotation(plot_wo_grid, txid, amres_tr)
 
 draw(plot_wo_grid)
 frame(wks)

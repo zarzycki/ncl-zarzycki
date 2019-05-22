@@ -40,6 +40,7 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
+
 files=(/"ibtracs-2003-2015-GLOB.txt", \
 "trajectories.txt.CFSR", \
 "trajectories.txt.JRA", \
@@ -47,28 +48,25 @@ files=(/"ibtracs-2003-2015-GLOB.txt", \
 "trajectories.txt.MERRA2", \
 "trajectories.txt.ERA5", \
 "trajectories.txt.ERAI", \
+"trajectories.txt.MP15A-120A-US-EXP213", \
+"trajectories.txt.NE0CONUS30X8-EXP211", \
 "trajectories.txt.VR28.NATL.WAT.CAM5.4CLM5.0.dtime900.ALL", \
 "trajectories.txt.VR28.NATL.REF.CAM5.4CLM5.0.dtime900.ALL", \
 "trajectories.txt.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.VR28.NATL.ALL.CAM5.4CLM5.0.dtime900.ALL"/)
+"trajectories.txt.VR28.NATL.ALL.CAM5.4CLM5.0.dtime900.ALL", \
+"trajectories.txt.CHEY.111.GLOB.CAM5.4CLM5.0.dtime1800.ALL"/)
 
-strs=(/"IBTrACS","CFSR","JRA","MERRA","MERRA2","ERA5","ERAI","CAMWAT","CAMREF","CAMEXT","CAMALL"/)
-isUnstruct=(/False,False,False,False,False,False,False,True,True,True,True/)
-ensmembers=(/1,1,1,1,1,1,1,3,3,3,9/)
+strs=(/"IBTrACS","CFSR","JRA","MERRA","MERRA2","ERA5","ERAI","MPAS","SE","CAMWAT","CAMREF","CAMEXT","CAMALL","CAMLR"/)
+isUnstruct=(/False,False,False,False,False,False,False,True,True,True,True,True,True,True/)
+ensmembers=(/1,1,1,1,1,1,1,1,1,3,3,3,9,3/)
+yearspermember=(/13,13,13,13,13,13,13,34,34,30,30,30,30,30/)
 
 nfiles=dimsizes(files)
 
 nmonths=12
 
-stormsByYear=new((/nfiles,nyears/),"float")
-aceByYear=new((/nfiles,nyears/),"float")
-tcdByYear=new((/nfiles,nyears/),"float")
-
-stormsByMonth=new((/nfiles,12/),"float")
-aceByMonth=new((/nfiles,12/),"float")
-tcdByMonth=new((/nfiles,12/),"float")
-
 do zz = 0,nfiles-1
+  nyears=ensmembers(zz)*yearspermember(zz)
 
   thefile=files(zz)
   ncols = 11 ; number of columns in non-header rows of trajectory file
@@ -135,7 +133,7 @@ end if
   cwind = where(cpres.lt.prescut,cwind,cwind@_FillValue)
   cpres = where(cpres.lt.prescut,cpres,cpres@_FillValue)
 
-  trackdens = track_density(gridsize,0.0,clat,clon,True)
+  trackdens = track_density(gridsize,0.0,clat,clon,False)
   trackdens = trackdens/nyears/ensmembers(zz)
   minpres = track_minmax(gridsize,0.0,clat,clon,cpres,"min",20)
   maxwind = track_minmax(gridsize,0.0,clat,clon,cwind,"max",20)
@@ -172,7 +170,7 @@ end if
     clon := ndtooned(xlon(:,0))
     cpres := ndtooned(dim_min_n(xpres,1))
     cwind := ndtooned(dim_max_n(xwind,1))
-    trackdens = track_density(gridsize,0.0,clat,clon,True)
+    trackdens = track_density(gridsize,0.0,clat,clon,False)
     trackdens = trackdens/nyears/ensmembers(zz)
     fullgen(zz,:,:)=trackdens(:,:)
   end if
@@ -184,13 +182,36 @@ end if
 end do
 
 delim=","
-OPT=0
-print("MEAN CLIMO")
+OPT=1
+print("PATTERN")
 do mm = 1,nfiles-1
-  print(strs(mm)+delim+pattern_cor(fulldens(0,:,:),fulldens(mm,:,:),1.,OPT)+delim+ \
+  tmprefr=fulldens(0,:,:)
+  tmptest=fulldens(mm,:,:)
+  tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
+  tmptest=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmptest@_FillValue,tmptest)
+  tm2refr=fullgen(0,:,:)
+  tm2test=fullgen(mm,:,:)
+  tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
+  tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
+  print(strs(mm)+delim+pattern_cor(tmprefr,tmptest,1.,OPT)+delim+ \
     pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),1.,OPT)+delim+ \
     pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),1.,OPT)+delim+ \
-    pattern_cor(fullgen(0,:,:),fullgen(mm,:,:),1.,OPT) )
+    pattern_cor(tm2refr,tm2test,1.,OPT) )
+end do
+print("RMSE")
+do mm = 1,nfiles-1
+  tmprefr=fulldens(0,:,:)
+  tmptest=fulldens(mm,:,:)
+  tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
+  tmptest=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmptest@_FillValue,tmptest)
+  tm2refr=fullgen(0,:,:)
+  tm2test=fullgen(mm,:,:)
+  tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
+  tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
+  print(strs(mm)+delim+dim_rmsd_n(tmprefr,tmptest,(/0,1/))+delim+ \
+    dim_rmsd_n(fullpres(0,:,:),fullpres(mm,:,:),(/0,1/))+delim+ \
+    dim_rmsd_n(fullwind(0,:,:),fullwind(mm,:,:),(/0,1/))+delim+ \
+    dim_rmsd_n(tm2refr,tm2test,(/0,1/)) )
 end do
 
 
@@ -233,9 +254,9 @@ res@cnMinLevelValF        = 0.
 res@cnMaxLevelValF        = 1.0
 res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 15.
 res@cnFillPalette=colorMap1
-plot(0) = gsn_csm_contour_map_ce(wks,fullgen(7,:,:),res)
-plot(1) = gsn_csm_contour_map_ce(wks,fullgen(8,:,:),res)
-plot(2) = gsn_csm_contour_map_ce(wks,fullgen(9,:,:),res)
+plot(0) = gsn_csm_contour_map_ce(wks,fullgen(0,:,:),res)
+plot(1) = gsn_csm_contour_map_ce(wks,fullgen(1,:,:),res)
+plot(2) = gsn_csm_contour_map_ce(wks,fullgen(2,:,:),res)
 
 resP=True
 resP@txString           = "Annual TC track density, all storms"

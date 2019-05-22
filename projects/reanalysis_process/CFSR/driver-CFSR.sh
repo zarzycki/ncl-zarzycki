@@ -23,11 +23,11 @@ cd $CFSRRAWDIR
 # done
 # rm *.tar
 
-for f in ~/rda/ds094.0/${YEAR}/ipvhnl.gdas.${YEAR}*.tar
+for f in ~/rda/ds093.0/${YEAR}/ipvhnl.gdas.${YEAR}*.tar
 do
   tar -xvf "$f"
 done
-for f in ~/rda/ds094.0/${YEAR}/pgbhnl.gdas.${YEAR}*.tar .
+for f in ~/rda/ds093.0/${YEAR}/pgbhnl.gdas.${YEAR}*.tar .
 do
   tar -xvf "$f"
 done
@@ -73,7 +73,7 @@ while read p; do
 done < ${arrayFileName}
 
 rm ${arrayFileName}
-rm ${OUTFILEDIR}/TMP/
+rm -rf ${OUTFILEDIR}/TMP/
 
 date
 

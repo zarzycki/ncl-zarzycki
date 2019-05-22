@@ -16,7 +16,7 @@ NUMCORES=32
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
-for DATA_YEAR in {2003..2013}
+for DATA_YEAR in {2002..2002}
 do
 
   # Add T files
