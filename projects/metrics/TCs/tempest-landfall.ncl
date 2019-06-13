@@ -14,10 +14,27 @@ load "../../../functions/mask_tc.ncl"
 ;========================================================
 begin
 
-;===========================================================================================
+;=================== Get traj data ================================
+filename = "tracker_configs.csv"
+lines = asciiread(filename,-1,"string")
+delim = ","
+files  =           str_get_field(lines,1,delim)
+strs = str_get_field(lines,2,delim)
+isUnstructStr   = str_get_field(lines,3,delim)
+ensmembers= toint(str_get_field(lines,4,delim))
+yearspermember= toint(str_get_field(lines,5,delim))
+windcorrs = tofloat(str_get_field(lines,6,delim))
 
-thedir="./"
-thefile="trajectories.txt.VR28.NATL.ALL.CAM5.4CLM5.0.dtime900.ALL"
+isUnstruct = where(isUnstructStr.eq."True",True,False)
+;==========================================================
+
+nfiles = dimsizes(files)
+
+
+do yy = 0,nfiles-1
+
+;===========================================================================================
+thefile=files(yy)
 
 ncols = -1 ; number of columns in non-header rows of trajectory file
 maxLines = -1  ; set to -1 for auto-detection
@@ -37,15 +54,18 @@ npossLF=3
 hrsbase=6
 hrsinterp=0.25
 
-windThresh=17.5
+windThresh=15.0
 
 ;===========================================================================================
 
-traj_data = getTrajectoriesGeneric(thedir+"/"+thefile,ncols,maxLines,headerDelimStr,delimStr,True,isHeader)
+traj_data = getTrajectoriesGeneric(thefile,ncols,maxLines,headerDelimStr,delimStr,isUnstruct(yy),isHeader)
 
+wind_factor = windcorrs(yy)
+print("corr wind: "+wind_factor)
+  
 lon = traj_data(:,2,:)
 lat = traj_data(:,3,:)
-wind = traj_data(:,5,:)
+wind = traj_data(:,5,:)*wind_factor
 pres = traj_data(:,4,:)/100.
 yyyy=  traj_data(:,7,:)
 mm= traj_data(:,8,:)
@@ -223,11 +243,32 @@ res@tmXBOn = False
 res@tmXTOn = False
 res@tmYLOn = False
 res@tmYROn = False
- 
+
+res@mpDataSetName = "Earth..4"
+res@mpDataBaseVersion = "MediumRes"
+;res@mpDataBaseVersion = "HighRes"
+res@mpOutlineOn = True
+res@mpOutlineBoundarySets = "National"
+res@mpOutlineBoundarySets = "GeophysicalAndUSStates" ; add state boundaries
+res@mpGeophysicalLineThicknessF = 1.5          ; thickness of outlines
+res@mpOutlineDrawOrder="Draw"
+;res@tfPolyDrawOrder="PostDraw"
+
+color_SE="Pink"
+color_NE="PaleGreen"
+color_CE="LightBlue"
+res@mpFillAreaSpecifiers = (/"Texas","Oklahoma","Kansas", \
+  "Florida","Alabama","Louisiana","Mississippi","Georgia","South Carolina","North Carolina","Virginia","Georgia","Tennessee","Arkansas","Kentucky", \
+  "New York","New Jersey","Connecticut","Massachusetts","Maine","New Hampshire","Rhode Island","Vermont","Pennsylvania","Maryland","Delaware","West Virginia"/) 
+res@mpSpecifiedFillColors = (/color_CE,color_CE,color_CE, \
+  color_SE,color_SE,color_SE,color_SE,color_SE,color_SE,color_SE,color_SE,color_SE,color_SE,color_SE,color_SE, \
+  color_NE,color_NE,color_NE,color_NE,color_NE,color_NE,color_NE,color_NE,color_NE,color_NE,color_NE,color_NE/)
+res@mpFillAreaSpecifiers = "Conterminous US:"+res@mpFillAreaSpecifiers
 map = gsn_csm_map_ce(wks,res)
 
 gsn_define_colormap(wks,"rainbow+white+gray")
   polyres               = True          ; poly marker mods desired 
+  polyres@tfPolyDrawOrder = "PostDraw"
   polyres@gsMarkerIndex = 1            ; choose circle as polymarker
   lineres = True
   
@@ -291,7 +332,7 @@ if (.not.ismissing(thisWind) .and. thisWind .gt. windThresh)
 ;  end if
 ;  end if
 
-  polyres@gsMarkerSizeF = 0.03
+  polyres@gsMarkerSizeF = 0.05
   if (landfall_region(i,j) .eq. 1)
     polyres@gsMarkerColor = (/"blue"/)
     lineres@gsLineColor = (/"blue"/)
@@ -312,7 +353,7 @@ if (.not.ismissing(thisWind) .and. thisWind .gt. windThresh)
   txres@txFontHeightF = 0.01             ; Set the font height
  
   polyresback=polyres
-  polyresback@gsMarkerSizeF=0.04
+  polyresback@gsMarkerSizeF=0.07
   polyresback@gsMarkerColor="black" 
 
   ;if (landfall_region(i,j) .eq. 3) then
@@ -342,17 +383,17 @@ end do
   
 print("Drawing plot")
 
-resP = True
-if (plot_gen)
-  resP@gsnPanelMainString = "CAM landfall genesis ()"     ; set main title
-else
-  resP@gsnPanelMainString = "CAM landfalls ()"     ; set main title
-end if
-resP@amJust           = "TopRight"
-resP@gsnPanelFigureStringsFontHeightF = 0.027
-gsn_panel(wks,map,(/1,1/),resP)             ; now draw as one plot
+draw(map)
+frame(wks)
+
+delete(map)
+delete(wks)
+delete(traj_data)
+delete([/dum,dum1,dum2,dum3,text/])
+delete([/lon,lat,IX,landfall_lon,landfall_lat,yyyy,mm,dd,hh,landfall_region,pres,interp_pres,wind,interp_wind,interp_lon,interp_lat,landfall_wind,landfall_pres,lonjump/])
+list_vars()
+
+end do
 
 end
-
-
 exit

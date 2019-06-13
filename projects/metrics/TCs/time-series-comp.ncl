@@ -15,13 +15,12 @@ begin
 
 ;=================== User Settings ================================
 out_type = "pdf"
-wind_factor = 0.85
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
-styr=2003
-enyr=2012
+styr=1980
+enyr=2016
 nyears=enyr-styr+1
 yearArr=ispan(styr,enyr,1)
 
@@ -37,24 +36,20 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
-files=(/"ibtracs-2003-2015-GLOB.txt", \
-"trajectories.txt.CFSR", \
-"trajectories.txt.JRA", \
-"trajectories.txt.MERRA", \
-"trajectories.txt.MERRA2", \
-"trajectories.txt.ERA5", \
-"trajectories.txt.ERAI", \
-"trajectories.txt.MP15A-120A-US-EXP213", \
-"trajectories.txt.NE0CONUS30X8-EXP211", \
-"trajectories.txt.VR28.NATL.WAT.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.VR28.NATL.REF.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.VR28.NATL.ALL.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.CHEY.111.GLOB.CAM5.4CLM5.0.dtime1800.ALL"/)
+filename = "tracker_configs.csv"
+lines = asciiread(filename,-1,"string")
+delim = ","
+files  =           str_get_field(lines,1,delim)
+strs = str_get_field(lines,2,delim)
+isUnstructStr   = str_get_field(lines,3,delim)
+ensmembers= toint(str_get_field(lines,4,delim))
+yearspermember= toint(str_get_field(lines,5,delim))
+windcorrs = tofloat(str_get_field(lines,6,delim))
+linecolors = str_get_field(lines,7,delim)
 
-strs=(/"IBTrACS","CFSR","JRA","MERRA","MERRA2","ERA5","ERAI","MPAS","SE","CAMWAT","CAMREF","CAMEXT","CAMALL","CAMLR"/)
-isUnstruct=(/False,False,False,False,False,False,False,True,True,True,True,True,True,True/)
-ensmembers=(/1,1,1,1,1,1,1,1,1,3,3,3,9,3/)
+isUnstruct = where(isUnstructStr.eq."True",True,False)
+
+;=================== Get traj data ================================
 
 nfiles=dimsizes(files)
 
@@ -62,10 +57,12 @@ nmonths=12
 
 stormsByYear=new((/nfiles,nyears/),"float")
 aceByYear=new((/nfiles,nyears/),"float")
+paceByYear=new((/nfiles,nyears/),"float")
 tcdByYear=new((/nfiles,nyears/),"float")
 
 stormsByMonth=new((/nfiles,12/),"float")
 aceByMonth=new((/nfiles,12/),"float")
+paceByMonth=new((/nfiles,12/),"float")
 tcdByMonth=new((/nfiles,12/),"float")
 
 do zz = 0,nfiles-1
@@ -78,11 +75,8 @@ do zz = 0,nfiles-1
   end if
   traj_data = getTrajectoriesGeneric(thefile,ncols,maxLines,"start","tab",isUnstruct(zz),False)
 
-  if (zz .ne. 0) then
-    wind_factor = 0.85
-  else
-    wind_factor = 1.0
-  end if
+  wind_factor = windcorrs(zz)
+  print("corr wind: "+wind_factor)
 
   ; load in trajectory data (need to be modified if using different tempest output
   xlon  = traj_data(:,2,:)
@@ -139,6 +133,11 @@ end if
   xlon  := xlon(:,0)
   xlat  := xlat(:,0)
   xace  := 1e-4*dim_sum_n((ms_to_kts*xwind)^2.,1)
+  print("min: "+min(xpres)+"   max: "+max(xpres))
+  xprestmp = where(xpres.lt.1016,xpres,1016.)
+  xpace := 1e-4*dim_sum_n( (ms_to_kts*3.92*(1016.-xprestmp)^0.644)^2.,1)
+  delete(xprestmp)
+  print("min: "+min(xpace)+"   max: "+max(xpace))
   xpres := dim_min_n(xpres,1)
   xwind := dim_max_n(xwind,1)
   xtcd  := dim_sum_n(xtcd,1)
@@ -153,6 +152,7 @@ end if
   cwind = ndtooned(xwind)
   ctcd = ndtooned(xtcd)
   cace = ndtooned(xace)
+  cpace = ndtooned(xpace)
   cyear = ndtooned(xyear)
   cmonth = ndtooned(xmonth)
 
@@ -164,10 +164,13 @@ end if
     tmpace=where(cyear.eq.thisYr,cace,cace@_FillValue)
     aceByYear(zz,ii)=sum(tmpace)
 
+    tmppace=where(cyear.eq.thisYr,cpace,cpace@_FillValue)
+    paceByYear(zz,ii)=sum(tmppace)
+
     tmptcd=where(cyear.eq.thisYr,ctcd,ctcd@_FillValue)
     tcdByYear(zz,ii)=sum(tmptcd)
 
-    delete([/tmpace,tmptcd/])
+    delete([/tmpace,tmppace,tmptcd/])
   end do
 
   do ii = 1,nmonths
@@ -176,13 +179,16 @@ end if
     tmpace=where(cmonth.eq.ii,cace,cace@_FillValue)
     aceByMonth(zz,ii-1)=sum(tmpace)
 
+    tmppace=where(cmonth.eq.ii,cpace,cpace@_FillValue)
+    paceByMonth(zz,ii-1)=sum(tmppace)
+
     tmptcd=where(cmonth.eq.ii,ctcd,ctcd@_FillValue)
     tcdByMonth(zz,ii-1)=sum(tmptcd)
 
-    delete([/tmpace,tmptcd/])
+    delete([/tmpace,tmppace,tmptcd/])
   end do
 
-  delete([/xlon,xlat,xpres,xwind,xace,xyear,xmonth,xtcd,clon,clat,cpres,cace,cwind,ctcd,cyear,cmonth/])
+  delete([/xlon,xlat,xpres,xwind,xace,xpace,xyear,xmonth,xtcd,clon,clat,cpres,cace,cpace,cwind,ctcd,cyear,cmonth/])
   delete([/traj_data,maxLines,ncols,thefile/])
   delete([/thisYr/])
 
@@ -194,16 +200,19 @@ stormsByYear=where(stormsByYear.eq.0,stormsByYear@_FillValue,stormsByYear)
 do mm = 0,nfiles-1
   stormsByYear(mm,:)=stormsByYear(mm,:)/ensmembers(mm)
   aceByYear(mm,:)=aceByYear(mm,:)/ensmembers(mm)
+  paceByYear(mm,:)=paceByYear(mm,:)/ensmembers(mm)
   tcdByYear(mm,:)=tcdByYear(mm,:)/ensmembers(mm)
-  stormsByMonth(mm,:)=stormsByMonth(mm,:)/ensmembers(mm)
-  aceByMonth(mm,:)=aceByMonth(mm,:)/ensmembers(mm)
-  tcdByMonth(mm,:)=tcdByMonth(mm,:)/ensmembers(mm)
+  stormsByMonth(mm,:)=stormsByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
+  aceByMonth(mm,:)=aceByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
+  paceByMonth(mm,:)=paceByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
+  tcdByMonth(mm,:)=tcdByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
+  print(monArr+" "+paceByMonth(mm,:)+" "+aceByMonth(mm,:))
 end do
 
 delim=","
 print("MEAN CLIMO")
 do mm = 0,nfiles-1
-  print(strs(mm)+delim+avg(stormsByYear(mm,:))+delim+avg(tcdByYear(mm,:))+delim+avg(aceByYear(mm,:)))
+  print(strs(mm)+delim+avg(stormsByYear(mm,:))+delim+avg(tcdByYear(mm,:))+delim+avg(aceByYear(mm,:))+delim+avg(paceByYear(mm,:)))
 end do
 
 ; Bias correct
@@ -216,20 +225,21 @@ do kk = 1,nfiles-1
 end do
 
 print("INTERANNUAL")
-do jj = 1,nfiles-1
-  print(strs(jj)+delim+escorc(stormsByYear(0,:),stormsByYear(jj,:))+delim+escorc(tcdByYear(0,:),tcdByYear(jj,:))+delim+escorc(aceByYear(0,:),aceByYear(jj,:)))
+do jj = 0,nfiles-1
+  print(strs(jj)+delim+escorc(stormsByYear(0,:),stormsByYear(jj,:))+delim+escorc(tcdByYear(0,:),tcdByYear(jj,:))+delim+escorc(aceByYear(0,:),aceByYear(jj,:))+delim+escorc(paceByYear(0,:),paceByYear(jj,:)))
 end do
 print("SEASONAL CYCLE")
-do jj = 1,nfiles-1
-  print(strs(jj)+delim+escorc(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+escorc(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+escorc(aceByMonth(0,:),aceByMonth(jj,:)))
+do jj = 0,nfiles-1
+  print(strs(jj)+delim+escorc(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+escorc(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+escorc(aceByMonth(0,:),aceByMonth(jj,:))+delim+escorc(paceByMonth(0,:),paceByMonth(jj,:)))
 end do
 
-wks   = gsn_open_wks ("x11","xy") 
+wks   = gsn_open_wks ("pdf","xy") 
 
 res                   = True                      ; plot mods desired
 res@gsnDraw=False
 res@gsnFrame=False
-res@tiMainString      = "Reanalysis vs. IBTrACS"       ; add title
+;res@tiMainString      = "TC day seasonal cycle"       ; add title
+res@tiMainString      = "ACE seasonal cycle"       ; add title
 
 res@xyMonoDashPattern=True
 res@xyMonoLineThickness=True
@@ -237,7 +247,14 @@ res@xyLineThicknessF = 5.0
 
 res@trYMinF=0.0
 
-res@xyLineColors      = (/"black","red","blue","green","darkgreen","orange","purple","red1","red2","yellow","yellow","yellow","gold","gold2"/)          ; change line color
+res@xyLineColors      = linecolors
+
+res@tiXAxisString = "Month"
+res@tiYAxisString = "ACE (10~S~4~N~ kn~S~2~N~)"
+;res@tiYAxisString = "TC Days"
+
+res@trXMinF = 1
+res@trXMaxF = 12
 
 ;plot  = gsn_csm_xy (wks,yearArr,aceByYear,res) ; create plot
 plot  = gsn_csm_xy (wks,monArr,aceByMonth,res) ; create plot

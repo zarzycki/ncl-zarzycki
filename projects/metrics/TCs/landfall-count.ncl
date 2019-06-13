@@ -5,53 +5,51 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 load "read_csv.ncl"
-load "../../../functions/trackDensity.ncl"
 
 begin
 
-files=(/"./landfall_txt/LF.ibtracs-2003-2015-GLOB.txt", \
-"./landfall_txt/LF.trajectories.txt.CFSR", \
-"./landfall_txt/LF.trajectories.txt.JRA", \
-"./landfall_txt/LF.trajectories.txt.MERRA", \
-"./landfall_txt/LF.trajectories.txt.MERRA2", \
-"./landfall_txt/LF.trajectories.txt.ERA5", \
-"./landfall_txt/LF.trajectories.txt.ERAI", \
-"./landfall_txt/LF.trajectories.txt.MP15A-120A-US-EXP213", \
-"./landfall_txt/LF.trajectories.txt.NE0CONUS30X8-EXP211", \
-"./landfall_txt/LF.trajectories.txt.VR28.NATL.WAT.CAM5.4CLM5.0.dtime900.ALL", \
-"./landfall_txt/LF.trajectories.txt.VR28.NATL.REF.CAM5.4CLM5.0.dtime900.ALL", \
-"./landfall_txt/LF.trajectories.txt.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900.ALL", \
-"./landfall_txt/LF.trajectories.txt.VR28.NATL.ALL.CAM5.4CLM5.0.dtime900.ALL", \
-"./landfall_txt/LF.trajectories.txt.CHEY.111.GLOB.CAM5.4CLM5.0.dtime1800.ALL"/)
+;=================== Get traj data ================================
+filename = "tracker_configs.csv"
+lines = asciiread(filename,-1,"string")
+delim = ","
+files  =           str_get_field(lines,1,delim)
+strs = str_get_field(lines,2,delim)
+isUnstructStr   = str_get_field(lines,3,delim)
+ensmembers= toint(str_get_field(lines,4,delim))
+yearspermember= toint(str_get_field(lines,5,delim))
+windcorrs = tofloat(str_get_field(lines,6,delim))
 
-strs=(/"IBTrACS","CFSR","JRA","MERRA","MERRA2","ERA5","ERAI","MPAS","SE","CAMWAT","CAMREF","CAMEXT","CAMALL","CAMLR"/)
+isUnstruct = where(isUnstructStr.eq."True",True,False)
+;==========================================================
 
-ensmembers=(/1,1,1,1,1,1,1,1,1,3,3,3,9,3/)
-yearspermember=(/13,13,13,13,13,13,13,34,34,30,30,30,30,30/)
+files="./landfall_txt/LF."+files
+delim=","
 
 do ii = 0,dimsizes(files)-1
 
-nyears=ensmembers(ii)*yearspermember(ii)
-file1=read_CSV_f(files(ii))
+  nyears=ensmembers(ii)*yearspermember(ii)
+  file1=read_CSV_f(files(ii))
 
-lf_reg=file1(:,5)
+  lf_reg=file1(:,5)
 
-num_ceus=num(lf_reg .eq. 1)
-num_seus=num(lf_reg .eq. 2)
-num_neus=num(lf_reg .eq. 3)
-num_nono=num(lf_reg .eq. -999)
+  num_ceus=num(lf_reg .eq. 1)
+  num_seus=num(lf_reg .eq. 2)
+  num_neus=num(lf_reg .eq. 3)
+  num_nono=num(lf_reg .eq. -999)
 
-freq_ceus = tofloat(num_ceus)/nyears*10
-freq_seus = tofloat(num_seus)/nyears*10
-freq_neus = tofloat(num_neus)/nyears*10
-freq_nono = tofloat(num_nono)/nyears*10
+  freq_ceus = tofloat(num_ceus)/nyears*10
+  freq_seus = tofloat(num_seus)/nyears*10
+  freq_neus = tofloat(num_neus)/nyears*10
+  freq_nono = tofloat(num_nono)/nyears*10
 
-print(""+files(ii))
-print(nyears+" years")
-print("CEUS: "+freq_ceus+"   SEUS: "+freq_seus+"    NEUS: "+freq_neus)
+  ;print(""+files(ii))
+  ;print(nyears+" years")
+  ;print("CEUS: "+freq_ceus+"   SEUS: "+freq_seus+"    NEUS: "+freq_neus)
 
-delete(file1)
-delete(lf_reg)
+  print(strs(ii)+delim+freq_ceus+delim+freq_seus+delim+freq_neus)
+
+  delete(file1)
+  delete(lf_reg)
 
 end do
 

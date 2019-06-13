@@ -10,6 +10,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 load "../../../functions/getTrajectoriesGeneric.ncl"
 load "../../../functions/trackDensity.ncl"
 load "../../../functions/mask_tc.ncl"
+load "./taylor_diagram.ncl"
 
 begin
 
@@ -23,16 +24,6 @@ gridsize = 8.0
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
-styr=2003
-enyr=2015
-nyears=enyr-styr+1
-yearArr=ispan(styr,enyr,1)
-
-stmon=1
-enmon=12
-nmonths=enmon-stmon+1
-monArr=ispan(stmon,enmon,1)
-
 ;======================= Masking ================================
 
 basin=1
@@ -40,26 +31,18 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
+filename = "tracker_configs.csv"
+lines = asciiread(filename,-1,"string")
+delim = ","
+files  =           str_get_field(lines,1,delim)
+strs = str_get_field(lines,2,delim)
+isUnstructStr   = str_get_field(lines,3,delim)
+ensmembers= toint(str_get_field(lines,4,delim))
+yearspermember= toint(str_get_field(lines,5,delim))
+windcorrs = tofloat(str_get_field(lines,6,delim))
 
-files=(/"ibtracs-2003-2015-GLOB.txt", \
-"trajectories.txt.CFSR", \
-"trajectories.txt.JRA", \
-"trajectories.txt.MERRA", \
-"trajectories.txt.MERRA2", \
-"trajectories.txt.ERA5", \
-"trajectories.txt.ERAI", \
-"trajectories.txt.MP15A-120A-US-EXP213", \
-"trajectories.txt.NE0CONUS30X8-EXP211", \
-"trajectories.txt.VR28.NATL.WAT.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.VR28.NATL.REF.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.VR28.NATL.EXT.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.VR28.NATL.ALL.CAM5.4CLM5.0.dtime900.ALL", \
-"trajectories.txt.CHEY.111.GLOB.CAM5.4CLM5.0.dtime1800.ALL"/)
-
-strs=(/"IBTrACS","CFSR","JRA","MERRA","MERRA2","ERA5","ERAI","MPAS","SE","CAMWAT","CAMREF","CAMEXT","CAMALL","CAMLR"/)
-isUnstruct=(/False,False,False,False,False,False,False,True,True,True,True,True,True,True/)
-ensmembers=(/1,1,1,1,1,1,1,1,1,3,3,3,9,3/)
-yearspermember=(/13,13,13,13,13,13,13,34,34,30,30,30,30,30/)
+isUnstruct = where(isUnstructStr.eq."True",True,False)
+;==========================================================
 
 nfiles=dimsizes(files)
 
@@ -68,7 +51,7 @@ nmonths=12
 do zz = 0,nfiles-1
   nyears=ensmembers(zz)*yearspermember(zz)
 
-  thefile=files(zz)
+  thefile=str_right_strip(files(zz))
   ncols = 11 ; number of columns in non-header rows of trajectory file
   maxLines = -1  ; set to -1 for auto-detection
   if (isUnstruct(zz)) then
@@ -76,11 +59,8 @@ do zz = 0,nfiles-1
   end if
   traj_data = getTrajectoriesGeneric(thefile,ncols,maxLines,"start","tab",isUnstruct(zz),False)
 
-  if (zz .ne. 0) then
-    wind_factor = 0.85
-  else
-    wind_factor = 1.0
-  end if
+  wind_factor = windcorrs(zz)
+  print("corr wind: "+wind_factor)
 
   ; load in trajectory data (need to be modified if using different tempest output
   xlon  = traj_data(:,2,:)
@@ -134,7 +114,7 @@ end if
   cpres = where(cpres.lt.prescut,cpres,cpres@_FillValue)
 
   trackdens = track_density(gridsize,0.0,clat,clon,False)
-  trackdens = trackdens/nyears/ensmembers(zz)
+  trackdens = trackdens/nyears
   minpres = track_minmax(gridsize,0.0,clat,clon,cpres,"min",20)
   maxwind = track_minmax(gridsize,0.0,clat,clon,cwind,"max",20)
   printVarSummary(trackdens)
@@ -171,7 +151,7 @@ end if
     cpres := ndtooned(dim_min_n(xpres,1))
     cwind := ndtooned(dim_max_n(xwind,1))
     trackdens = track_density(gridsize,0.0,clat,clon,False)
-    trackdens = trackdens/nyears/ensmembers(zz)
+    trackdens = trackdens/nyears
     fullgen(zz,:,:)=trackdens(:,:)
   end if
 
@@ -181,8 +161,11 @@ end if
 
 end do
 
+taylor_cco=new((/2,nfiles-1/),"float")
+taylor_rat=new((/2,nfiles-1/),"float")
+
 delim=","
-OPT=1
+OPT=0
 print("PATTERN")
 do mm = 1,nfiles-1
   tmprefr=fulldens(0,:,:)
@@ -197,6 +180,12 @@ do mm = 1,nfiles-1
     pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),1.,OPT)+delim+ \
     pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),1.,OPT)+delim+ \
     pattern_cor(tm2refr,tm2test,1.,OPT) )
+  taylorVals=taylor_stats(tmptest,tmprefr,1.,0)
+  taylor_cco(0,mm-1)=taylorVals(0)
+  taylor_rat(0,mm-1)=taylorVals(1)
+  ;taylorVals=taylor_stats(tm2test,tm2refr,1.,0)
+  ;taylor_cco(1,mm-1)=taylorVals(0)
+  ;taylor_rat(1,mm-1)=taylorVals(1)
 end do
 print("RMSE")
 do mm = 1,nfiles-1
@@ -204,6 +193,13 @@ do mm = 1,nfiles-1
   tmptest=fulldens(mm,:,:)
   tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
   tmptest=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmptest@_FillValue,tmptest)
+
+  ;rmean   = avg(tmprefr)            ; area weighted means
+  ;tmean   = avg(tmptest)
+  ;tmprefr=tmprefr-rmean
+  ;tmptest=tmptest-tmean
+  ;print(sqrt(sum(tmptest^2)/sum(tmprefr^2)))
+
   tm2refr=fullgen(0,:,:)
   tm2test=fullgen(mm,:,:)
   tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
@@ -214,13 +210,21 @@ do mm = 1,nfiles-1
     dim_rmsd_n(tm2refr,tm2test,(/0,1/)) )
 end do
 
+print(taylor_cco+" "+taylor_rat)
 
+wks   = gsn_open_wks("pdf","taylor")      ; send graphics to PNG file
+res   = True
+res@Markers = (/16,4/)
+res@txFontHeightF = 0.02
+res@markerTxYOffset = 0.02
+;res@varLabels = strs(1:nfiles-1)  ; don't include obs
+plot  = taylor_diagram(wks, taylor_rat, taylor_cco, res)
+exit
 
+plots = (/0,5,9,10/)
 
-
-
-wks = gsn_open_wks("x11","test")
-plot = new(3,"graphic")
+wks = gsn_open_wks("pdf","test")
+plot = new(4,"graphic")
 
 colorMap1="WhiteBlueGreenYellowRed"
 colorMap2="BlueWhiteOrangeRed"
@@ -251,20 +255,21 @@ res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
 res@cnLevelSelectionMode  = "ManualLevels"
 ; 0-120
 res@cnMinLevelValF        = 0.
-res@cnMaxLevelValF        = 1.0
+res@cnMaxLevelValF        = 15.0
 res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 15.
 res@cnFillPalette=colorMap1
-plot(0) = gsn_csm_contour_map_ce(wks,fullgen(0,:,:),res)
-plot(1) = gsn_csm_contour_map_ce(wks,fullgen(1,:,:),res)
-plot(2) = gsn_csm_contour_map_ce(wks,fullgen(2,:,:),res)
+plot(0) = gsn_csm_contour_map_ce(wks,fulldens(plots(0),:,:),res)
+plot(1) = gsn_csm_contour_map_ce(wks,fulldens(plots(1),:,:),res)
+plot(2) = gsn_csm_contour_map_ce(wks,fulldens(plots(2),:,:),res)
+plot(3) = gsn_csm_contour_map_ce(wks,fulldens(plots(3),:,:),res)
 
 resP=True
 resP@txString           = "Annual TC track density, all storms"
 resP@amJust           = "TopLeft"
 resP@gsnPanelFigureStringsFontHeightF = 0.014
-resP@gsnPanelFigureStrings= (/"MODEL","OBS","M-O"/)
+resP@gsnPanelFigureStrings= strs(plots)
 
-gsn_panel(wks,plot,(/3,1/),resP)
+gsn_panel(wks,plot,(/2,2/),resP)
 
 
 
