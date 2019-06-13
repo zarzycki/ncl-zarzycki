@@ -8,7 +8,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 ;========================================================
 begin
 
-whatData="JRA"
+whatData="ERA5"
 write_output=True
 isglobal=False
 isStoN=False
@@ -26,7 +26,7 @@ outFileName = whatData+".topo.nc"
 ;trackerFileName="/glade/scratch/zarzycki/h1files/"+whatData+"/2000/"+whatData+".h1.20000901.nc"
 ;trackerFileName="~/scratch/nhemi_30_x4_slab/run/1001/nhemi_30_x4_slab.cam.h4.1001-05-01-00000.nc_regrid.nc"
 ;trackerFileName="/glade/u/home/zarzycki/scratch/ERAI-ETC/2017/ERAI.h1.2017111700.nc"
-trackerFileName="/glade/u/home/zarzycki/scratch/h1files/JRA/1989/JRA.h1.19890101.nc"
+trackerFileName="/glade/u/home/zarzycki/scratch/h1files/ERA5/1980/ERA5.h1.19800101.nc"
 ;trackerFileName="/glade/u/home/zarzycki/scratch/ERA5/CAT.ERA5.U850.201701.nc"
 
 topoFile=addfile(topoFileName,"r")

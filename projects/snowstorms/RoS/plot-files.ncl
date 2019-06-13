@@ -1,9 +1,9 @@
 
 begin
 
-;STYR="1990"
-;ENSMEM="001"
-;STORMFILT="True"
+STYR="1990"
+ENSMEM="001"
+STORMFILT="False"
 
 if (STYR .eq. "1990")
   NYEARS=16.
@@ -114,7 +114,7 @@ maxstormcal=max(stormcal)
 
   res@tiXAxisString      = "+0 day dSWE (mm/day)"
   res@tiYAxisString      = "Precipitation (mm/day)"
-  res@tiMainString      = "JRA~C~SusquehannaRiverBasin"           ; add title
+  res@tiMainString      = "LENS001~C~SusquehannaRiverBasin"           ; add title
 
   plot  = gsn_csm_xy (wks,dswe,dswe,res)
 
