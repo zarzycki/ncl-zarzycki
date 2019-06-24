@@ -28,7 +28,7 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
-filename = "tracker_configs.csv"
+filename = "test_configs.csv"
 lines = asciiread(filename,-1,"string")
 delim = ","
 files  =           str_get_field(lines,1,delim)
@@ -36,6 +36,7 @@ strs = str_get_field(lines,2,delim)
 isUnstructStr   = str_get_field(lines,3,delim)
 ensmembers= toint(str_get_field(lines,4,delim))
 yearspermember= toint(str_get_field(lines,5,delim))
+windcorrs = tofloat(str_get_field(lines,6,delim))
 isUnstruct = where(isUnstructStr.eq."True",True,False)
 ;==========================================================
 
