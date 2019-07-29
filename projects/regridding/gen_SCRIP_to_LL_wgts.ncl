@@ -10,20 +10,21 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 
-gridName="ne0np4natlanticref.ne30x4"
+gridName="nativeNARR"
 InterpMethod="patch"  ;bilinear, patch, conserve, nearestdtos, neareststod
 regional=True
-regdomain="florida"  ; asd, atlantic, tctest, florida
+regdomain="narr"  ; asd, atlantic, tctest, florida
 
 ; RLL GRID
-;outres="0.25x0.25"
-outres="0.2x0.2"
+outres="0.25x0.25"
+;outres="0.2x0.2"
 ;outres="0.125x0.125"
 ;outres="0.0625x0.0625"
 ;outres="0.5x0.5"
 ;outres="1x1"
 srcGridDir="/glade/u/home/zarzycki/work/grids/scrip/"
-srcGridFile=gridName+".g_scrip.nc"
+srcGridFile="NARR_SCRIP.nc"
+;srcGridFile=gridName+".g_scrip.nc"
 ;srcGridDir="/glade/work/zarzycki/ASD2017_files/grids/scrip/"
 ;srcGridFile="mp15a-120a-US.grid.170118.nc"
 ;srcGridFile="mp120a_grid_140708.nc"
@@ -38,17 +39,9 @@ dstGridDir="/glade/work/zarzycki/grids/scrip/"
 if (regional) then
   dstGridFile=outres+"_reg_SCRIP.nc"
   wgtFileName="map_"+gridName+"_to_"+outres+"reg_"+InterpMethod+".nc"
-else if (atlantic) then
-  dstGridFile=outres+"_atl_SCRIP.nc"
-  wgtFileName="map_"+gridName+"_to_"+outres+"atl_"+InterpMethod+".nc"
-else if (tctest) then
-  dstGridFile=outres+"_tctest_SCRIP.nc"
-  wgtFileName="map_"+gridName+"_to_"+outres+"tctest_"+InterpMethod+".nc"
 else
   dstGridFile=outres+"_SCRIP.nc"
   wgtFileName="map_"+gridName+"_to_"+outres+"glob_"+InterpMethod+".nc"
-end if
-end if
 end if
 wgtFileDir="/glade/scratch/zarzycki/"
 
@@ -80,15 +73,18 @@ if (regional) then
   elseif (regdomain .eq. "florida") then
     Opt@LLCorner      = (/24.0d,271.0d /)
     Opt@URCorner      = (/32.0d,281.0d /)
+  elseif (regdomain .eq. "narr") then
+    Opt@LLCorner      = (/12.0d,215.0d /)
+    Opt@URCorner      = (/65.0d,298.0d /)
   else
   end if
 end if
 
-if (fileexists(dstGridName)) then
-  print("Latlon scrip already exists...")
-else
+;if (fileexists(dstGridName)) then
+;  print("Latlon scrip already exists...")
+;else
   latlon_to_SCRIP(dstGridName,outres,Opt)
-end if
+;end if
 
 ;---Clean up
 delete(Opt)
@@ -101,7 +97,7 @@ Opt                      = True
 Opt@InterpMethod         = InterpMethod
 Opt@ForceOverwrite       = True
 Opt@PrintTimings         = True
-
+Opt@SrcRegional=True
 ESMF_regrid_gen_weights(srcGridName,dstGridName,wgtFileDir+"/"+wgtFileName,Opt)
 
 delete(Opt)

@@ -31,7 +31,7 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
-filename = "test_configs.csv"
+filename = "tracker_configs.csv"
 lines = asciiread(filename,-1,"string")
 delim = ","
 files  =           str_get_field(lines,1,delim)
@@ -118,6 +118,11 @@ end if
   minpres = track_minmax(gridsize,0.0,clat,clon,cpres,"min",20)
   maxwind = track_minmax(gridsize,0.0,clat,clon,cwind,"max",20)
   printVarSummary(trackdens)
+  if (zz.eq.0) then
+    deg2rad = get_d2r("float")
+    denslatwgt = cos(deg2rad*trackdens&lat)
+    print(denslatwgt)
+  end if
 
   if (zz.eq.0) then
     tmpdims=dimsizes(trackdens)
@@ -164,9 +169,13 @@ end do
 taylor_cco=new((/2,nfiles-1/),"float")
 taylor_rat=new((/2,nfiles-1/),"float")
 
+print("... doing spatial correlation and Taylor")
+outputname="metrics_spatial_corr.csv"
+quote = inttochar(34)
 delim=","
 OPT=0
-print("PATTERN")
+system("rm "+outputname)
+system("echo ,Model,Track,Genesis,U10,SLP >> "+outputname)
 do mm = 1,nfiles-1
   tmprefr=fulldens(0,:,:)
   tmptest=fulldens(mm,:,:)
@@ -176,10 +185,11 @@ do mm = 1,nfiles-1
   tm2test=fullgen(mm,:,:)
   tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
   tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
-  print(strs(mm)+delim+pattern_cor(tmprefr,tmptest,1.,OPT)+delim+ \
-    pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),1.,OPT)+delim+ \
-    pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),1.,OPT)+delim+ \
-    pattern_cor(tm2refr,tm2test,1.,OPT) )
+  OUTSTR=strs(mm)+delim+pattern_cor(tmprefr,tmptest,denslatwgt,OPT)+delim+ \
+    pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),denslatwgt,OPT)+delim+ \
+    pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),denslatwgt,OPT)+delim+ \
+    pattern_cor(tm2refr,tm2test,denslatwgt,OPT)
+  system("echo "+OUTSTR+" >> "+outputname)
   taylorVals=taylor_stats(tmptest,tmprefr,1.,0)
   taylor_cco(0,mm-1)=taylorVals(0)
   taylor_rat(0,mm-1)=taylorVals(1)
@@ -187,7 +197,12 @@ do mm = 1,nfiles-1
   ;taylor_cco(1,mm-1)=taylorVals(0)
   ;taylor_rat(1,mm-1)=taylorVals(1)
 end do
-print("RMSE")
+
+dimslatlon=dimsizes(fulldens(0,:,:))
+print("... doing RMSE")
+outrmsname="metrics_spatial_rmse.csv"
+system("rm "+outrmsname)
+system("echo ,Model,Track,Genesis,U10,SLP >> "+outrmsname)
 do mm = 1,nfiles-1
   tmprefr=fulldens(0,:,:)
   tmptest=fulldens(mm,:,:)
@@ -204,12 +219,14 @@ do mm = 1,nfiles-1
   tm2test=fullgen(mm,:,:)
   tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
   tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
-  print(strs(mm)+delim+dim_rmsd_n(tmprefr,tmptest,(/0,1/))+delim+ \
-    dim_rmsd_n(fullpres(0,:,:),fullpres(mm,:,:),(/0,1/))+delim+ \
-    dim_rmsd_n(fullwind(0,:,:),fullwind(mm,:,:),(/0,1/))+delim+ \
-    dim_rmsd_n(tm2refr,tm2test,(/0,1/)) )
+  OUTSTR=strs(mm)+delim+wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
+    wgt_arearmse2(fullpres(0,:,:),fullpres(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
+    wgt_arearmse2(fullwind(0,:,:),fullwind(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
+    wgt_arearmse2(tm2refr,tm2test,conform_dims(dimslatlon,denslatwgt,0),0)
+  system("echo "+OUTSTR+" >> "+outrmsname)
 end do
 
+print("Taylor stats...")
 print(taylor_cco+" "+taylor_rat)
 
 wks   = gsn_open_wks("pdf","taylor")      ; send graphics to PNG file
