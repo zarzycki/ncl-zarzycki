@@ -16,7 +16,7 @@ begin
 
   plot_bias=True
 
-  filename = "metrics_climo_mean.csv"
+  filename = "../csv-files/metrics_climo_mean.csv"
 
   lines = asciiread(filename,-1,"string")
   delim = ","

@@ -14,6 +14,7 @@ load "../../../functions/mask_tc.ncl"
 ;========================================================
 begin
 
+trajdir="./trajs/"
 ;=================== Get traj data ================================
 filename = "tracker_configs.csv"
 lines = asciiread(filename,-1,"string")
@@ -34,7 +35,9 @@ nfiles = dimsizes(files)
 do yy = 0,nfiles-1
 
 ;===========================================================================================
-thefile=files(yy)
+filebase=files(yy)
+thefile=trajdir+"/"+filebase
+
 
 ncols = -1 ; number of columns in non-header rows of trajectory file
 maxLines = -1  ; set to -1 for auto-detection
@@ -209,10 +212,11 @@ end do
 
 ;--------------------------------------------------------
 print("Beginning plot sequence")
+system("mkdir -p ./landfall_img")
 if (plot_gen) then
-  wks  = gsn_open_wks(out_type,"./landfall_img/land_gen."+thefile)
+  wks  = gsn_open_wks(out_type,"./landfall_img/land_gen."+filebase)
 else
-  wks  = gsn_open_wks(out_type,"./landfall_img/landfall."+thefile)
+  wks  = gsn_open_wks(out_type,"./landfall_img/landfall."+filebase)
 end if
 map = new(1,graphic)
   
@@ -281,7 +285,7 @@ text = dum
 ; output file
 quote = inttochar(34)
 delim = ","
-txtfilename="./landfall_txt/LF."+thefile
+txtfilename="./landfall_txt/LF."+filebase
 system("rm "+txtfilename)
 
 do j = 0,nstorms-1

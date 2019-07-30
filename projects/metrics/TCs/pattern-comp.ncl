@@ -20,7 +20,8 @@ wind_factor = 0.85
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
 do_genesis=True
 gridsize = 8.0
-
+trajDir="./trajs/"
+csvdir="./csv-files/"
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
@@ -51,7 +52,8 @@ nmonths=12
 do zz = 0,nfiles-1
   nyears=ensmembers(zz)*yearspermember(zz)
 
-  thefile=str_right_strip(files(zz))
+  thisFile=str_right_strip(files(zz))
+  thefile=trajDir+"/"+thisFile
   ncols = 11 ; number of columns in non-header rows of trajectory file
   maxLines = -1  ; set to -1 for auto-detection
   if (isUnstruct(zz)) then
@@ -160,9 +162,55 @@ end if
     fullgen(zz,:,:)=trackdens(:,:)
   end if
 
-  delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind/])
-  delete([/traj_data,maxLines,ncols,thefile/])
-  delete([/trackdens,minpres,maxwind/])
+wks = gsn_open_wks("pdf","./pdfs/trackdens"+thisFile)
+plot = new(1,"graphic")
+
+toPlot = fulldens(zz,:,:)
+toPlot = where(toPlot.gt.0.,toPlot,toPlot@_FillValue)
+
+colorMap1="WhiteBlueGreenYellowRed"
+
+res                       = True     ; plot mods desired
+res@gsnDraw = False
+res@gsnFrame = False
+res@gsnAddCyclic          = False    
+
+res@cnFillOn              = True     ; turn on color fill
+res@cnFillMode            = "RasterFill"       ; Raster Mode
+res@cnLinesOn             = False    ; turn of contour lines
+res@cnLineLabelsOn  = False
+res@lbLabelStride = 2
+res@gsnCenterString       = ""
+
+res@mpMinLatF             = 5.
+res@mpMaxLatF             = 55.
+res@mpMinLonF             = 260.
+res@mpMaxLonF             = 350.
+;res@mpMinLatF             = -60.
+;res@mpMaxLatF             = 60.
+;res@mpMinLonF             = 0.
+;res@mpMaxLonF             = 360.
+res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
+
+; plot absolute data
+res@cnLevelSelectionMode  = "ManualLevels"
+; 0-120
+res@cnMinLevelValF        = 0.
+res@cnMaxLevelValF        = 12.0
+res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 12.
+res@cnFillPalette=colorMap1
+plot(0) = gsn_csm_contour_map_ce(wks,toPlot,res)
+
+resP=True
+resP@txString           = "Annual TC track density, all storms"
+resP@amJust           = "TopLeft"
+
+gsn_panel(wks,plot,(/1,1/),resP)
+
+delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind/])
+delete([/traj_data,maxLines,ncols,thefile/])
+delete([/trackdens,minpres,maxwind/])
+delete([/wks,res,plot/])
 
 end do
 
@@ -170,7 +218,7 @@ taylor_cco=new((/2,nfiles-1/),"float")
 taylor_rat=new((/2,nfiles-1/),"float")
 
 print("... doing spatial correlation and Taylor")
-outputname="metrics_spatial_corr.csv"
+outputname=csvdir+"/"+"metrics_spatial_corr.csv"
 quote = inttochar(34)
 delim=","
 OPT=0
@@ -200,7 +248,7 @@ end do
 
 dimslatlon=dimsizes(fulldens(0,:,:))
 print("... doing RMSE")
-outrmsname="metrics_spatial_rmse.csv"
+outrmsname=csvdir+"/"+"metrics_spatial_rmse.csv"
 system("rm "+outrmsname)
 system("echo ,Model,Track,Genesis,U10,SLP >> "+outrmsname)
 do mm = 1,nfiles-1
@@ -229,66 +277,12 @@ end do
 print("Taylor stats...")
 print(taylor_cco+" "+taylor_rat)
 
-wks   = gsn_open_wks("pdf","taylor")      ; send graphics to PNG file
+wks   = gsn_open_wks("pdf","./pdfs/taylor")      ; send graphics to PNG file
 res   = True
 res@Markers = (/16,4/)
 res@txFontHeightF = 0.02
 res@markerTxYOffset = 0.02
 ;res@varLabels = strs(1:nfiles-1)  ; don't include obs
 plot  = taylor_diagram(wks, taylor_rat, taylor_cco, res)
-exit
-
-plots = (/0,5,9,10/)
-
-wks = gsn_open_wks("pdf","test")
-plot = new(4,"graphic")
-
-colorMap1="WhiteBlueGreenYellowRed"
-colorMap2="BlueWhiteOrangeRed"
-
-res                       = True     ; plot mods desired
-res@gsnDraw = False
-res@gsnFrame = False
-res@gsnAddCyclic          = False    
-
-res@cnFillOn              = True     ; turn on color fill
-res@cnFillMode            = "RasterFill"       ; Raster Mode
-res@cnLinesOn             = False    ; turn of contour lines
-res@cnLineLabelsOn  = False
-res@lbLabelStride = 2
-res@gsnCenterString       = ""
-
-res@mpMinLatF             = 5.
-res@mpMaxLatF             = 55.
-res@mpMinLonF             = 260.
-res@mpMaxLonF             = 350.
-;res@mpMinLatF             = -60.
-;res@mpMaxLatF             = 60.
-;res@mpMinLonF             = 0.
-;res@mpMaxLonF             = 360.
-res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
-
-; plot absolute data
-res@cnLevelSelectionMode  = "ManualLevels"
-; 0-120
-res@cnMinLevelValF        = 0.
-res@cnMaxLevelValF        = 15.0
-res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 15.
-res@cnFillPalette=colorMap1
-plot(0) = gsn_csm_contour_map_ce(wks,fulldens(plots(0),:,:),res)
-plot(1) = gsn_csm_contour_map_ce(wks,fulldens(plots(1),:,:),res)
-plot(2) = gsn_csm_contour_map_ce(wks,fulldens(plots(2),:,:),res)
-plot(3) = gsn_csm_contour_map_ce(wks,fulldens(plots(3),:,:),res)
-
-resP=True
-resP@txString           = "Annual TC track density, all storms"
-resP@amJust           = "TopLeft"
-resP@gsnPanelFigureStringsFontHeightF = 0.014
-resP@gsnPanelFigureStrings= strs(plots)
-
-gsn_panel(wks,plot,(/2,2/),resP)
-
-
-
 
 end

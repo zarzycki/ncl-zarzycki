@@ -16,6 +16,8 @@ begin
 ;=================== User Settings ================================
 out_type = "pdf"
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
+trajDir="./trajs/"
+csvdir="./csv-files/"
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
@@ -67,7 +69,7 @@ tcdByMonth=new((/nfiles,12/),"float")
 
 do zz = 0,nfiles-1
 
-  thefile=files(zz)
+  thefile=trajDir+"/"+files(zz)
   ncols = 11 ; number of columns in non-header rows of trajectory file
   maxLines = -1  ; set to -1 for auto-detection
   if (isUnstruct(zz)) then
@@ -224,7 +226,7 @@ delim=","
 OPT=0
 
 print("... doing basin-mean statistics")
-outputname="metrics_climo_mean.csv"
+outputname=csvdir+"/"+"metrics_climo_mean.csv"
 system("rm "+outputname)
 system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
 do mm = 1,nfiles-1
@@ -237,7 +239,7 @@ do mm = 1,nfiles-1
 end do
 
 print("... doing spatial correlation and Taylor")
-outputname="metrics_temporal_corr.csv"
+outputname=csvdir+"/"+"metrics_temporal_corr.csv"
 system("rm "+outputname)
 system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
 print("... doing seasonal cycle.")
@@ -251,7 +253,7 @@ do jj = 0,nfiles-1
   print(strs(jj)+delim+escorc(stormsByYear(0,:),stormsByYear(jj,:))+delim+escorc(tcdByYear(0,:),tcdByYear(jj,:))+delim+escorc(aceByYear(0,:),aceByYear(jj,:))+delim+escorc(paceByYear(0,:),paceByYear(jj,:)))
 end do
 
-wks   = gsn_open_wks ("pdf","xy") 
+wks   = gsn_open_wks ("pdf","./pdfs/xy") 
 
 res                   = True                      ; plot mods desired
 res@gsnDraw=False
