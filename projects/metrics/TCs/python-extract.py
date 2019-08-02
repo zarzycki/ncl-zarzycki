@@ -1,11 +1,11 @@
 import sys
-sys.path.insert(0, '/glade/u/home/zarzycki/tempest-scripts/asd-se')
+sys.path.insert(0, '../../../pyfunc')
 
 import numpy as np
 from getTrajectories import *
 from mask_tc import *
 
-trajfile='trajectories.txt.ERA5'
+trajfile='trajs/trajectories.txt.ERA5'
 nVars=-1
 headerStr='start'
 isUnstruc=False
@@ -20,8 +20,6 @@ stormsByMonth = np.empty((nfiles, nmonths))
 aceByMonth    = np.empty((nfiles, nmonths))
 paceByMonth   = np.empty((nfiles, nmonths))
 tcdByMonth    = np.empty((nfiles, nmonths))
-
-print(stormsByMonth)
 
 # Extract trajectories from tempest file and assign to arrays
 nstorms, ntimes, traj_data = getTrajectories(trajfile,nVars,headerStr,isUnstruc)

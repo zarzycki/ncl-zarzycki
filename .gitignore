@@ -1,3 +1,4 @@
+.DS_Store
 *_pycache_*
 projects/snowstorms/RoS/data/
 CPC_gauge_precip_1985-2017.nc
