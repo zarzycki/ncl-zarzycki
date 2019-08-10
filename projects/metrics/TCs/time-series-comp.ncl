@@ -239,12 +239,21 @@ do mm = 1,nfiles-1
 end do
 
 print("... doing spatial correlation and Taylor")
-outputname=csvdir+"/"+"metrics_temporal_corr.csv"
+outputname=csvdir+"/"+"metrics_temporal_pcorr.csv"
 system("rm "+outputname)
 system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
-print("... doing seasonal cycle.")
+print("... doing Pearson seasonal cycle.")
 do jj = 0,nfiles-1
   OUTSTR=strs(jj)+delim+escorc(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+escorc(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+escorc(aceByMonth(0,:),aceByMonth(jj,:))+delim+escorc(paceByMonth(0,:),paceByMonth(jj,:))
+  system("echo "+OUTSTR+" >> "+outputname)
+end do
+
+outputname=csvdir+"/"+"metrics_temporal_scorr.csv"
+system("rm "+outputname)
+system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
+print("... doing Spearman seasonal cycle.")
+do jj = 0,nfiles-1
+  OUTSTR=strs(jj)+delim+spcorr(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+spcorr(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+spcorr(aceByMonth(0,:),aceByMonth(jj,:))+delim+spcorr(paceByMonth(0,:),paceByMonth(jj,:))
   system("echo "+OUTSTR+" >> "+outputname)
 end do
 
@@ -277,7 +286,7 @@ res@trXMinF = 1
 res@trXMaxF = 12
 
 ;plot  = gsn_csm_xy (wks,yearArr,aceByYear,res) ; create plot
-plot  = gsn_csm_xy (wks,monArr,stormsByMonth,res) ; create plot
+plot  = gsn_csm_xy (wks,monArr,aceByMonth,res) ; create plot
 
 textres=True
 lineres=True

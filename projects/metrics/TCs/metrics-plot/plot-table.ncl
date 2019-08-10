@@ -14,9 +14,10 @@
 
 begin
 
-  plot_bias=True
+  plot_bias=False
+  invert_stoplight=False
 
-  filename = "../csv-files/metrics_climo_mean.csv"
+  filename = "../csv-files/metrics_spatial_rmse.csv"
 
   lines = asciiread(filename,-1,"string")
   delim = ","
@@ -67,7 +68,11 @@ begin
   if (plot_bias) then
     cmap = read_colormap_file("hotcold_18lev")
   else
-    cmap = read_colormap_file("excel_redtogreen.rgb")
+    if (invert_stoplight) then
+      cmap = read_colormap_file("excel_greentored.rgb")
+    else
+      cmap = read_colormap_file("excel_redtogreen.rgb")
+    end if
   end if
   gsn_define_colormap(wks,cmap(:,0:2))
   tmpdims=dimsizes(cmap)
