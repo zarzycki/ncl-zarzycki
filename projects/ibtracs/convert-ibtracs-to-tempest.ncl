@@ -1,21 +1,11 @@
-;========================================================
-; This file reads in a traj file produced by the TC tracker
-; and produces a lat-lon plot of trajectories color-coded by intensity
-;========================================================
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
-load "/glade/u/home/zarzycki/ncl/functions/plot_outline_fcn.ncl"
-;========================================================
 begin
 
 
 ;gridfile="/glade/u/home/zarzycki/scratch/j1files/GPCP/2005/precip.2005_interp.nc"
 gridfile=""
 
-ibstyr=1985
-ibenyr=1994
+ibstyr=2005
+ibenyr=2005
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
@@ -29,8 +19,8 @@ wcStrt     = systemfunc("date")
 
 print("Plotting iBtracks data from: "+ibstyr+" to "+ibenyr)
 print("Loading data, this may take awhile.")
-ibdir = "/glade/u/home/zarzycki/work/ibtracs/"
-ibfilename="Allstorms.ibtracs_wmo.v03r10.nc"
+ibdir = "./"
+ibfilename="IBTrACS.ALL.v04r00.nc"
 
 ibfile = addfile(ibdir+ibfilename,"r")
 
@@ -64,17 +54,17 @@ print("Starting index: "+stix+"     end index: "+enix)
 delete(ibyear)
 ;=============================================================================
 
-iblat = ibfile->lat_wmo(stix:enix,:)*.01
-iblon = ibfile->lon_wmo(stix:enix,:)*.01
-ibtype = toint(ibfile->nature_wmo(stix:enix,:))
-ibwind_ = ibfile->wind_wmo(stix:enix,:)*.1/ms_to_kts
-ibpres = ibfile->pres_wmo(stix:enix,:)*.1*100.
-ibtime = ibfile->time_wmo(stix:enix,:)
+iblat = ibfile->lat(stix:enix,:)
+iblon = ibfile->lon(stix:enix,:)
+ibtype = tostring(ibfile->nature(stix:enix,:,:))
+ibwind_ = ibfile->wmo_wind(stix:enix,:)/ms_to_kts
+ibpres = ibfile->wmo_pres(stix:enix,:)*100.
+ibtime = ibfile->time(stix:enix,:)
 ibnamechar = ibfile->name(stix:enix,:)
 
 iblon=where(iblon.lt.0,iblon+360.,iblon)
 
-ibbasin = byte2flt(ibfile->sub_basin(stix:enix,:))
+ibbasin = tostring(ibfile->basin(stix:enix,:,:))
 
 stDateIBUnits=cd_inv_calendar(ibstyr,1,1,0,0,0,ibtime@units,0)
 enDateIBUnits=cd_inv_calendar(ibenyr,12,31,23,0,0,ibtime@units,0)
@@ -115,7 +105,7 @@ ibname = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibname@
 ; Load optional PHIS file
 ;=============================================================================
 
-phisfile=addfile("/glade/u/home/zarzycki/work/cam_tools/hires-topo/2deg_cesm_topo_latlon.nc","r")
+phisfile=addfile("/Users/cmz5202/NetCDF/MERRA.topo.nc","r")
 PHIS=phisfile->PHIS
 
 
@@ -158,8 +148,8 @@ do ii = 0,ibstormcount-1
             thisLat=minind(abs(gridlat-iblat(ii,jj)))
             thisLon=minind(abs(gridlon-iblon(ii,jj)))
           else
-            thisLat=-99999
-            thisLon=-99999
+            thisLat=-999
+            thisLon=-999
           end if
           
           ;print(iblat(ii,jj)+" "+iblon(ii,jj))
@@ -170,7 +160,9 @@ do ii = 0,ibstormcount-1
           end if
 
           thisdate=cd_calendar(ibtime(ii,jj),0)
-          STORMSTR=delim+thisLon+delim+thisLat+delim+iblon(ii,jj)+delim+iblat(ii,jj)+delim+ibpres(ii,jj)+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+          STORMSTR=delim+thisLon+delim+thisLat+delim+sprintf("%6.2f", iblon(ii,jj))+delim+sprintf("%6.2f", iblat(ii,jj))+delim+sprintf("%6.0f", ibpres(ii,jj))+delim+sprintf("%8.2f", ibwind_(ii,jj))+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+
+;          STORMSTR=delim+thisLon+delim+thisLat+delim+iblon(ii,jj)+delim+iblat(ii,jj)+delim+ibpres(ii,jj)+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
 ;          STORMSTR=delim+thisLon+delim+thisLat+delim+gridlon(thisLon)+delim+gridlat(thisLat)+delim+tofloat(ibpres(ii,jj))+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
 
           print(STORMSTR+"")
