@@ -14,8 +14,8 @@ begin
 ;gridfile="/glade/u/home/zarzycki/scratch/j1files/GPCP/2005/precip.2005_interp.nc"
 gridfile=""
 
-ibstyr=2010
-ibenyr=2016
+ibstyr=1985
+ibenyr=1994
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
