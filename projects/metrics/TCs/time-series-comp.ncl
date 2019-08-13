@@ -38,7 +38,7 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
-filename = "tracker_configs.csv"
+filename = "test_configs.csv"
 lines = asciiread(filename,-1,"string")
 delim = ","
 files  =           str_get_field(lines,1,delim)
@@ -66,6 +66,16 @@ stormsByMonth=new((/nfiles,12/),"float")
 aceByMonth=new((/nfiles,12/),"float")
 paceByMonth=new((/nfiles,12/),"float")
 tcdByMonth=new((/nfiles,12/),"float")
+
+avgStorms=new((/nfiles/),"float")
+avgLength=new((/nfiles/),"float")
+avgTcd=new((/nfiles/),"float")
+avgLMI=new((/nfiles/),"float")
+avgAce=new((/nfiles/),"float")
+avgPace=new((/nfiles/),"float")
+avgLatgen=new((/nfiles/),"float")
+
+
 
 do zz = 0,nfiles-1
 
@@ -96,22 +106,24 @@ do zz = 0,nfiles-1
 ;    xlon = where(xlon.lt.0,xlon+360.,xlon)
 ;  end if
 
-  do ii = 0,nstorms-1
-    orilat=xlat(ii,0)
-    orilon=xlon(ii,0)
-    if (orilon .gt. 360.0-maskspacing) then
-      orilon=360.0-maskspacing
-      print("    original lon: "+xlon(ii,0)+"   modified lon: "+orilon)
-    end if
-    if (tcMask({orilat},{orilon}) .ne. basin)
-      xlon(ii,:)=xlon@_FillValue
-      xlat(ii,:)=xlat@_FillValue
-      xpres(ii,:)=xpres@_FillValue
-      xwind(ii,:)=xwind@_FillValue
-      xyear(ii,:)=xyear@_FillValue
-      xmonth(ii,:)=xmonth@_FillValue
-    end if
-  end do
+  if (basin .gt. 0) then
+    do ii = 0,nstorms-1
+      orilat=xlat(ii,0)
+      orilon=xlon(ii,0)
+      if (orilon .gt. 360.0-maskspacing) then
+        orilon=360.0-maskspacing
+        print("    original lon: "+xlon(ii,0)+"   modified lon: "+orilon)
+      end if
+      if (tcMask({orilat},{orilon}) .ne. basin)
+        xlon(ii,:)=xlon@_FillValue
+        xlat(ii,:)=xlat@_FillValue
+        xpres(ii,:)=xpres@_FillValue
+        xwind(ii,:)=xwind@_FillValue
+        xyear(ii,:)=xyear@_FillValue
+        xmonth(ii,:)=xmonth@_FillValue
+      end if
+    end do
+  end if
 
 if (zz.eq.0)
   ;xlon=where(xwind.gt.35/ms_to_kts,xlon,xlon@_FillValue)
@@ -129,15 +141,40 @@ if (zz.eq.0)
   ;xmonth=where(xpres.lt.850.,xmonth@_FillValue,xmonth)
 end if
 
+  xlatmi=new(nstorms,typeof(xlat))
+  xlonmi=xlatmi
+  do kk = 0,nstorms-1
+    if(.not.all(ismissing(xpres(kk,:)))) then
+      locMI=minind(xpres(kk,:))
+      print(""+locMI)
+      xlatmi(kk)=xlat(kk,locMI)
+      xlonmi(kk)=xlon(kk,locMI)
+    end if
+  end do
+
   xtcd = xwind
   xtcd = where(.not.ismissing(xwind),0.25,xwind@_FillValue)
 
   xlon  := xlon(:,0)
   xlat  := xlat(:,0)
+
+  xnum := dim_num_n(.not.ismissing(xwind),1)
+  xnum = where(xnum.le.0,xnum@_FillValue,xnum)
+
   xace  := 1e-4*dim_sum_n((ms_to_kts*xwind)^2.,1)
+  xace = where(ismissing(xace) .and. .not.(ismissing(xlon)),0.0,xace)
+  ; if ace is missing BUT xlon is not missing (storm in this basin) set ACE to zero
+  ; if xlon is missing, will leave ace as missing since storm isn't in basin
+
+  ;do jj=0,nstorms-1
+  ;  print(xlon(jj,:)+" "+xlat(jj,:)+" "+xwind(jj,:)+" "+tostring(1e-4*(ms_to_kts*xwind(jj,:))^2.))
+  ;end do
+
   print("min: "+min(xpres)+"   max: "+max(xpres))
   xprestmp = where(xpres.lt.1010,xpres,1010.)
   xpace := 1e-4*dim_sum_n( (ms_to_kts*3.2*(1010.-xprestmp)^0.76)^2.,1)
+  xpace = where(ismissing(xpace) .and. .not.(ismissing(xlon)),0.0,xpace)
+
   delete(xprestmp)
   print("min: "+min(xpace)+"   max: "+max(xpace))
   xpres := dim_min_n(xpres,1)
@@ -146,10 +183,13 @@ end if
   xyear := xyear(:,0)
   xmonth := xmonth(:,0)
 
+
+
   ;xyear=where(xpres.lt.990.,xyear,xyear@_FillValue)
-  
   clat = ndtooned(xlat)
   clon = ndtooned(xlon)
+  clatmi = ndtooned(xlatmi)
+  clonmi = ndtooned(xlonmi)
   cpres = ndtooned(xpres)
   cwind = ndtooned(xwind)
   ctcd = ndtooned(xtcd)
@@ -157,6 +197,10 @@ end if
   cpace = ndtooned(xpace)
   cyear = ndtooned(xyear)
   cmonth = ndtooned(xmonth)
+  cnum = ndtooned(xnum)
+
+  print(cace)
+  print(" SUM "+sum(cace)+"")
 
   do ii = 0,nyears-1
     thisYr=ii+styr
@@ -190,10 +234,23 @@ end if
     delete([/tmpace,tmppace,tmptcd/])
   end do
 
-  delete([/xlon,xlat,xpres,xwind,xace,xpace,xyear,xmonth,xtcd,clon,clat,cpres,cace,cpace,cwind,ctcd,cyear,cmonth/])
+  print("total sum: "+num(.not.ismissing(cyear)))
+
+  avgStorms(zz) = tofloat(num(.not.ismissing(cyear)))/ensmembers(zz)/yearspermember(zz)
+  avgTcd(zz) = avg(ctcd)*avgStorms(zz)
+  avgPace(zz) = avg(cpace)*avgStorms(zz)
+  avgAce(zz) = avg(cace)*avgStorms(zz)
+  avgLength(zz) = avg(cnum)
+  avgLMI(zz) = avg(abs(clatmi))
+  avgLatgen(zz) = avg(abs(clat))
+  print(avg(cace)+" "+avgStorms(zz))
+
+  delete([/xlon,xlat,xpres,xwind,xace,xpace,xyear,xmonth,xtcd,xnum,xlatmi,xlonmi/])
+  delete([/clon,clat,cpres,cwind,cace,cpace,cyear,cmonth,ctcd,cnum,clatmi,clonmi/])
   delete([/traj_data,maxLines,ncols,thefile/])
   delete([/thisYr/])
 
+  print("---------------------------------------------------- DONE")
 end do
 
 stormsByYear=where(stormsByYear.eq.0,stormsByYear@_FillValue,stormsByYear)
@@ -208,8 +265,9 @@ do mm = 0,nfiles-1
   aceByMonth(mm,:)=aceByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
   paceByMonth(mm,:)=paceByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
   tcdByMonth(mm,:)=tcdByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
-  print(monArr+" "+paceByMonth(mm,:)+" "+aceByMonth(mm,:))
+  print(yearArr+" "+stormsByYear(mm,:)+" "+aceByYear(mm,:)+" "+tcdByYear(mm,:))
 end do
+
 
 print("Bias correction.")
 stormsCorrected=tofloat(stormsByYear)
@@ -225,18 +283,63 @@ quote = inttochar(34)
 delim=","
 OPT=0
 
+;; this is MATCHED basin mean statistics, i.e., only overlapping years
+;; so if ibtracs is 1980-2000 but model is only 1988-1990, n = 3 and match those years.
 print("... doing basin-mean statistics")
 outputname=csvdir+"/"+"metrics_climo_mean.csv"
 system("rm "+outputname)
 system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
-do mm = 1,nfiles-1
+do mm = 0,nfiles-1
+  if (mm .eq. 0) then
+  OUTSTR=strs(mm)+delim+ \
+    avg(stormsByYear(0,:))+delim+ \
+    avg(tcdByYear(0,:))+delim+ \
+    avg(aceByYear(0,:))+delim+ \
+    avg(paceByYear(0,:))
+  else
   OUTSTR=strs(mm)+delim+ \
     avg(stormsByYear(mm,:)-stormsByYear(0,:))+delim+ \
     avg(tcdByYear(mm,:)-tcdByYear(0,:))+delim+ \
     avg(aceByYear(mm,:)-aceByYear(0,:))+delim+ \
     avg(paceByYear(mm,:)-paceByYear(0,:))
+  end if
   system("echo "+OUTSTR+" >> "+outputname)
 end do
+
+;; this is bias as OVERALL statistics, i.e., all available data for each product
+/;
+print("... doing basin-mean statistics2")
+outputname=csvdir+"/"+"metrics_climo_mean2.csv"
+system("rm "+outputname)
+system("echo ,Model,Count,TCDays,ACE1,ACE2,Length >> "+outputname)
+do mm = 1,nfiles-1
+  OUTSTR=strs(mm)+delim+ \
+    (avgStorms(mm)-avgStorms(0))+delim+ \
+    (avgTcd(mm)-avgTcd(0))+delim+ \
+    (avgAce(mm)-avgAce(0))+delim+ \
+    (avgPace(mm)-avgPace(0))+delim+ \
+    (avgLatgen(mm)-avgLatgen(0))+delim+ \
+    (avgLMI(mm)-avgLMI(0))+delim+ \
+    (avgLength(mm)-avgLength(0))
+  system("echo "+OUTSTR+" >> "+outputname)
+end do
+;/
+print("... doing basin-mean statistics2")
+outputname=csvdir+"/"+"metrics_climo_mean2.csv"
+system("rm "+outputname)
+system("echo ,Model,Count,TCDays,ACE1,ACE2,LatGen,LMI,Length >> "+outputname)
+do mm = 0,nfiles-1
+  OUTSTR=strs(mm)+delim+ \
+    avgStorms(mm)+delim+ \
+    avgTcd(mm)+delim+ \
+    avgAce(mm)+delim+ \
+    avgPace(mm)+delim+ \
+    avgLatgen(mm)+delim+ \
+    avgLMI(mm)+delim+ \
+    avgLength(mm)
+  system("echo "+OUTSTR+" >> "+outputname)
+end do
+
 
 print("... doing spatial correlation and Taylor")
 outputname=csvdir+"/"+"metrics_temporal_pcorr.csv"

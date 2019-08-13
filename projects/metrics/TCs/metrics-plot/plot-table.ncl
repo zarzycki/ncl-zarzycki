@@ -14,10 +14,10 @@
 
 begin
 
-  plot_bias=False
+  plot_bias=True
   invert_stoplight=False
 
-  filename = "../csv-files/metrics_spatial_rmse.csv"
+  filename = "../csv-files/metrics_climo_mean.csv"
 
   lines = asciiread(filename,-1,"string")
   delim = ","
@@ -33,13 +33,22 @@ begin
     header(jj) = str_get_field(lines(0),jj+2,delim)
   end do
 
-  name_var  =           str_get_field(lines(1:),1,delim)
+  name_var  =           str_get_field(lines(2:),1,delim)
   ncases = dimsizes(name_var)
-  var = new((/nvars,ncases/),"float")
+  var    = new((/nvars,ncases/),"float")
+  varref = new((/nvars/),"float")
 
   do ii = 0,nvars-1
-    var(ii,:) = tofloat(str_get_field(lines(1:),ii+2,delim))
+    varref(ii) = tofloat(str_get_field(lines(1),ii+2,delim))
+    var(ii,:) = tofloat(str_get_field(lines(2:),ii+2,delim))
   end do
+
+  if (plot_bias) then
+    do ii = 0,nvars-1
+      var(ii,:) = var(ii,:) - varref(ii)
+    end do
+  end if
+
 
 
 ; Sub header
@@ -105,7 +114,7 @@ begin
   FillColors = new(dimsizes(text3),"string")
   FillColors = "white"
   
-  do ii = 1,4  
+  do ii = 1,nvars  
     if (plot_bias) then
       minVal=-1.*max(abs(tofloat(text3(:,ii))))
       maxVal= 1.*max(abs(tofloat(text3(:,ii))))
