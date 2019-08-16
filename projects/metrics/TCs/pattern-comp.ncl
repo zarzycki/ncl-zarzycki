@@ -233,14 +233,18 @@ do mm = 1,nfiles-1
   tm2test=fullgen(mm,:,:)
   tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
   tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
+
+  taylorVals=taylor_stats(tmptest,tmprefr,1.,1)
+  taylor_cco(0,mm-1)=taylorVals(0)
+  taylor_rat(0,mm-1)=taylorVals(7)
+
   OUTSTR=strs(mm)+delim+pattern_cor(tmprefr,tmptest,denslatwgt,OPT)+delim+ \
+    taylor_cco(0,mm-1)+delim+ \
     pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(tm2refr,tm2test,denslatwgt,OPT)
   system("echo "+OUTSTR+" >> "+outputname)
-  taylorVals=taylor_stats(tmptest,tmprefr,1.,0)
-  taylor_cco(0,mm-1)=taylorVals(0)
-  taylor_rat(0,mm-1)=taylorVals(1)
+
   ;taylorVals=taylor_stats(tm2test,tm2refr,1.,0)
   ;taylor_cco(1,mm-1)=taylorVals(0)
   ;taylor_rat(1,mm-1)=taylorVals(1)
@@ -268,6 +272,7 @@ do mm = 1,nfiles-1
   tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
   tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
   OUTSTR=strs(mm)+delim+wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
+    taylor_rat(0,mm-1)+delim+ \
     wgt_arearmse2(fullpres(0,:,:),fullpres(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
     wgt_arearmse2(fullwind(0,:,:),fullwind(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
     wgt_arearmse2(tm2refr,tm2test,conform_dims(dimslatlon,denslatwgt,0),0)

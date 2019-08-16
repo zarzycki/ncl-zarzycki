@@ -14,10 +14,17 @@
 
 begin
 
-  plot_bias=True
-  invert_stoplight=False
+  plot_bias=False
+  invert_stoplight=True
+  calc_deltas=False
+  filename = "../csv-files/metrics_spatial_rmse.csv"
 
-  filename = "../csv-files/metrics_climo_mean.csv"
+  if (plot_bias .eq. False .and. calc_deltas .eq. True) then
+    print("you can't really calc_deltas if you aren't plotting bias")
+    print("... exiting.")
+    exit
+  end if
+
 
   lines = asciiread(filename,-1,"string")
   delim = ","
@@ -25,35 +32,44 @@ begin
   ; get nvars by going to first line, finding number of entries
   ; and subtracting one because we don't want to count the model title
   nvars=dimsizes(str_split(lines(1),delim))-1
+  print("reading "+nvars+" variables")
 
   header_name    = str_get_field(lines(0),1,delim)
+
+  if (calc_deltas) then
+    stloadix=2
+  else
+    stloadix=1
+  end if
 
   header = new(nvars,"string")
   do jj = 0,nvars-1
     header(jj) = str_get_field(lines(0),jj+2,delim)
   end do
 
-  name_var  =           str_get_field(lines(2:),1,delim)
+  name_var  =           str_get_field(lines(stloadix:),1,delim)
   ncases = dimsizes(name_var)
   var    = new((/nvars,ncases/),"float")
   varref = new((/nvars/),"float")
 
   do ii = 0,nvars-1
     varref(ii) = tofloat(str_get_field(lines(1),ii+2,delim))
-    var(ii,:) = tofloat(str_get_field(lines(2:),ii+2,delim))
+    var(ii,:) = tofloat(str_get_field(lines(stloadix:),ii+2,delim))
+    ;if (ii .eq. 1) then
+    ;  var(ii,:) = abs(1-var(ii,:))
+    ;end if
   end do
 
-  if (plot_bias) then
+  if (plot_bias .and. calc_deltas) then
     do ii = 0,nvars-1
       var(ii,:) = var(ii,:) - varref(ii)
     end do
   end if
 
-
-
+  startxloc=1.0/(nvars+1)
 ; Sub header
   ncr2  = (/1,nvars/)               ; 2 rows, 2 columns
-  x2    = (/0.2,1.0/)       ; Start and end X
+  x2    = (/startxloc,1.0/)       ; Start and end X
   y2    = (/0.925,1.0/)       ; Start and end Y
   text2 = header
 

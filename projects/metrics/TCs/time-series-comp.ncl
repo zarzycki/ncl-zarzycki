@@ -33,7 +33,7 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
-filename = "test_configs.csv"
+filename = "tracker_configs.csv"
 lines = asciiread(filename,-1,"string")
 delim = ","
 files  =           str_get_field(lines,1,delim)
@@ -124,19 +124,11 @@ do zz = 0,nfiles-1
   end if
 
   if (zz.eq.0)
-    ;xlon=where(xwind.gt.35/ms_to_kts,xlon,xlon@_FillValue)
-    ;xlat=where(xwind.gt.35/ms_to_kts,xlat,xlat@_FillValue)
     xpres=where(xwind.gt.35/ms_to_kts,xpres,xpres@_FillValue)
     xwind=where(xwind.gt.35/ms_to_kts,xwind,xwind@_FillValue)
-    ;xyear=where(xwind.gt.35/ms_to_kts,xyear,xyear@_FillValue)
-    ;xmonth=where(xwind.gt.35/ms_to_kts,xmonth,xmonth@_FillValue)
 
-    ;xlon=where(xpres.lt.850.,xlon@_FillValue,xlon)
-    ;xlat=where(xpres.lt.850.,xlat@_FillValue,xlat)
     xpres=where(xpres.lt.850.,xpres@_FillValue,xpres)
     xwind=where(xpres.lt.850.,xwind@_FillValue,xwind)
-    ;xyear=where(xpres.lt.850.,xyear@_FillValue,xyear)
-    ;xmonth=where(xpres.lt.850.,xmonth@_FillValue,xmonth)
   end if
 
   ; Get location of maximum intensity
@@ -170,7 +162,7 @@ do zz = 0,nfiles-1
 
   print("min: "+min(xpres)+"   max: "+max(xpres))
   xprestmp = where(xpres.lt.1010,xpres,1010.)
-  xpace := 1e-4*dim_sum_n( (ms_to_kts*3.2*(1010.-xprestmp)^0.76)^2.,1)
+  xpace := 1e-4*dim_sum_n( (4.4*(1010.-xprestmp)^0.76)^2.,1)
   xpace = where(ismissing(xpace) .and. .not.(ismissing(xlon)),0.0,xpace)
   delete(xprestmp)
   print("min: "+min(xpace)+"   max: "+max(xpace))
@@ -231,7 +223,7 @@ do zz = 0,nfiles-1
 
   ; Calculate bulk averages per calendar year
   DENOM=ensmembers(zz)*yearspermember(zz)
-  avgStormsPY(zz) = tofloat(num(.not.ismissing(cyear)))/DENOM
+  avgStormsPY(zz) = tofloat(num(.not.ismissing(cpres)))/DENOM
   avgTcdPY(zz) = sum(ctcd)/DENOM
   avgPacePY(zz) = sum(cpace)/DENOM
   avgAcePY(zz) = sum(cace)/DENOM
