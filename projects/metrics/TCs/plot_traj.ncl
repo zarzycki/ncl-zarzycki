@@ -19,7 +19,7 @@ basinfilt = 1
 maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
-thefile="trajs/trajectories.txt.TEST.NE120.1979_2012.ALL"
+thefile="trajs/trajectories.txt.TEST.NE120.1979_2012.SUB"
 ncols = -1                    ; assign number of columns
 maxLines = -1
 headerDelimStr = "start"
@@ -115,7 +115,7 @@ gsn_define_colormap(wks,"rainbow+white+gray")
 dum = new((/nstorms,ntimes/),graphic)
 text = new((/nstorms/),graphic)
 
-nstorms=1000
+;nstorms=1000
 do i = 0,nstorms-1
 print("storm: "+i)
 do j = 0,ntimes-1
