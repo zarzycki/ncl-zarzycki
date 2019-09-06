@@ -32,7 +32,7 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
-filename = "tracker_configs.csv"
+filename = "hyp_configs.csv"
 lines = asciiread(filename,-1,"string")
 delim = ","
 files  =           str_get_field(lines,1,delim)
@@ -196,8 +196,8 @@ res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
 res@cnLevelSelectionMode  = "ManualLevels"
 ; 0-120
 res@cnMinLevelValF        = 0.
-res@cnMaxLevelValF        = 12.0
-res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 12.
+res@cnMaxLevelValF        = 16.0
+res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 16.
 res@cnFillPalette=colorMap1
 plot(0) = gsn_csm_contour_map_ce(wks,toPlot,res)
 
@@ -216,6 +216,7 @@ end do
 
 taylor_cco=new((/2,nfiles-1/),"float")
 taylor_rat=new((/2,nfiles-1/),"float")
+taylor_rms=new((/2,nfiles-1/),"float")
 
 print("... doing spatial correlation and Taylor")
 outputname=csvdir+"/"+"metrics_spatial_corr.csv"
@@ -234,12 +235,17 @@ do mm = 1,nfiles-1
   tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
   tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
 
-  taylorVals=taylor_stats(tmptest,tmprefr,1.,1)
+  taylorVals=taylor_stats(tmptest,tmprefr,denslatwgt,1)
   taylor_cco(0,mm-1)=taylorVals(0)
-  taylor_rat(0,mm-1)=taylorVals(7)
+  taylor_rat(0,mm-1)=taylorVals(1)
+  taylor_rms(0,mm-1)=taylorVals(7);/stddev(tmptest)
 
-  OUTSTR=strs(mm)+delim+pattern_cor(tmprefr,tmptest,denslatwgt,OPT)+delim+ \
-    taylor_cco(0,mm-1)+delim+ \
+  ; these are equivalent...
+  ;pattern_cor(tmprefr,tmptest,denslatwgt,OPT)
+  ;taylor_cco(0,mm-1)
+
+  OUTSTR=strs(mm)+delim+ \
+    pattern_cor(tmprefr,tmptest,denslatwgt,OPT)+delim+ \
     pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(tm2refr,tm2test,denslatwgt,OPT)
@@ -271,11 +277,21 @@ do mm = 1,nfiles-1
   tm2test=fullgen(mm,:,:)
   tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
   tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
-  OUTSTR=strs(mm)+delim+wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
-    taylor_rat(0,mm-1)+delim+ \
-    wgt_arearmse2(fullpres(0,:,:),fullpres(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
-    wgt_arearmse2(fullwind(0,:,:),fullwind(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
-    wgt_arearmse2(tm2refr,tm2test,conform_dims(dimslatlon,denslatwgt,0),0)
+;  OUTSTR=strs(mm)+delim+wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
+
+  ; these are equivalent...
+  ;wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)
+  ;taylor_rms(0,mm-1)
+
+    ;wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)/stddev(tmptest)+delim+ \
+    ;wgt_arearmse2(fullpres(0,:,:),fullpres(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)/stddev(fullpres(mm,:,:))+delim+ \
+    ;wgt_arearmse2(fullwind(0,:,:),fullwind(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)/stddev(fullwind(mm,:,:))+delim+ \
+    ;wgt_arearmse2(tm2refr,tm2test,conform_dims(dimslatlon,denslatwgt,0),0)/stddev(tm2test)
+  OUTSTR=strs(mm)+delim+ \
+    wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)/ (max(tmptest)-min(tmptest)) +delim+ \
+    wgt_arearmse2(fullpres(0,:,:),fullpres(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)/(max(fullpres(mm,:,:))-min(fullpres(mm,:,:)))+delim+ \
+    wgt_arearmse2(fullwind(0,:,:),fullwind(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)/(max(fullwind(mm,:,:))-min(fullwind(mm,:,:)))+delim+ \
+    wgt_arearmse2(tm2refr,tm2test,conform_dims(dimslatlon,denslatwgt,0),0)/(max(tm2test)-min(tm2test))
   system("echo "+OUTSTR+" >> "+outrmsname)
 end do
 

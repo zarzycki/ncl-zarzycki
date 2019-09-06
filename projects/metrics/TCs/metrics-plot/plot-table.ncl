@@ -14,10 +14,10 @@
 
 begin
 
-  plot_bias=False
+  plot_bias=True
   invert_stoplight=True
-  calc_deltas=False
-  filename = "../csv-files/metrics_spatial_rmse.csv"
+  calc_deltas=True
+  filename = "../csv-files/metrics_storm_mean.csv"
 
   if (plot_bias .eq. False .and. calc_deltas .eq. True) then
     print("you can't really calc_deltas if you aren't plotting bias")
@@ -143,7 +143,13 @@ begin
       percentage = (thisVal - minVal) / (maxVal - minVal)
       percentage = max((/0.,percentage/))
       percentage = min((/1.,percentage/))
+      ;if (ii .eq. 1) then
+      ;  FillColors(zz,ii) = floor(ncolors*(1.-percentage))+2
+      ;else
+      ;  FillColors(zz,ii) = floor(ncolors*percentage)+2
+      ;end if
       FillColors(zz,ii) = floor(ncolors*percentage)+2
+
       print(name_var(zz)+" "+percentage+"   "+floor(ncolors*percentage)+" "+FillColors(zz,ii))
     end do
   end do
