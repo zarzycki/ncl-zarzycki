@@ -79,7 +79,7 @@ hyai=thefile->hyai(toplevix+1:botlevix+1)
 hybi=thefile->hybi(toplevix+1:botlevix+1)
 ;P0=thefile->P0
 P0=100000.
-P0@units="hPa"
+P0@units="Pa"
 
 nlat = dimsizes(lat)
 nlon = dimsizes(lon)

@@ -11,8 +11,8 @@ begin
 
 out_type="pdf"
 
-config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp997"
-ncdf=addfile("./netcdf/"+config+".AVG.nc","r")
+config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp999"
+ncdf=addfile("./netcdf/"+config+".003_09.nc","r")
 rad_v_theta=ncdf->rad_v_theta
 rad_v_rad=ncdf->rad_v_rad
 rad_v_rad=ncdf->rad_v_rad
