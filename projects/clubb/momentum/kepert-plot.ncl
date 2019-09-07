@@ -1,17 +1,14 @@
 ; NOTES
 
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"  
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"  
-load "/glade/u/home/zarzycki/ncl/functions/surfaceWindCorrFactor.ncl"
-load "../../../functions/radialAvg.ncl"
+load "../../../functions/surfaceWindCorrFactor.ncl"
 
 begin
 
 out_type="pdf"
 
 config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp999"
+
+; load data
 ncdf=addfile("./netcdf/"+config+".003_09.nc","r")
 rad_v_theta=ncdf->rad_v_theta
 rad_v_rad=ncdf->rad_v_rad
@@ -47,6 +44,7 @@ rad_max = rad_sfc_v_theta&radius(inds)   ; insert the longitude index into the l
 print("Maximum value located at, "+rad_max)
 rad_max_2x = rad_max*2
 
+; allocate arrays for single radius vertical profiles
 rad_v_theta_vert=new((/2,nlev_rad/),"float")
 rad_v_theta_vert!1 = "lev"
 rad_v_theta_vert&lev = rad_v_theta&lev
@@ -64,7 +62,7 @@ rad_MSE_vert   = rad_v_theta_vert
 rad_CME_vert   = rad_v_theta_vert
 rad_DTCOND_vert   = rad_v_theta_vert
 
-
+; save single vertical profile at RMW
 rad_v_theta_vert(0,:) = tofloat(rad_v_theta(:,{rad_max}))
 rad_v_rad_vert(0,:) = tofloat(rad_v_rad(:,{rad_max}))
 rad_W_vert(0,:) = tofloat(rad_W(:,{rad_max}))
@@ -79,6 +77,7 @@ rad_MSE_vert(0,:) = tofloat(rad_MSE(:,{rad_max}))
 rad_CME_vert(0,:) = tofloat(rad_CME(:,{rad_max}))
 rad_DTCOND_vert(0,:) = tofloat(rad_DTCOND(:,{rad_max}))
 
+; save single vertical profile at 2xRMW
 rad_v_theta_vert(1,:) = tofloat(rad_v_theta(:,{rad_max_2x}))
 rad_v_rad_vert(1,:) = tofloat(rad_v_rad(:,{rad_max_2x}))
 rad_W_vert(1,:) = tofloat(rad_W(:,{rad_max_2x}))
