@@ -14,9 +14,9 @@
 
 begin
 
-  plot_bias=True
-  invert_stoplight=True
-  calc_deltas=True
+  plot_bias=False
+  invert_stoplight=False
+  calc_deltas=False
   filename = "../csv-files/metrics_storm_mean.csv"
 
   if (plot_bias .eq. False .and. calc_deltas .eq. True) then
