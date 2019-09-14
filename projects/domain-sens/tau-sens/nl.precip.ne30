@@ -1,0 +1,8 @@
+variable = "OMEGA850",
+scale=1.,
+offset=0.,
+gridname = "tau3600_MPdiff",
+needs_regrid=True,
+fdir1="/glade/scratch/zarzycki/archive/CHEY.VR28.NATL.REF.CAM5.4CLM5.0.tau3600_MPdiff/atm/hist/",
+fnampattern="*cam.h3*.nc",
+wgt_file="/glade/u/home/zarzycki/work/maps/hyperion/map_ne0np4natlanticref.ne30x4_to_0.25x0.25_NATL.nc",

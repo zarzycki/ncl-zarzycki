@@ -13,18 +13,18 @@ begin
 
 out_format = "x11"
 
-xmin = (/0.0,0.0/)             ; x axis minimums
-xmax = (/25.,600./)           ; x axis maximums
-ymin = (/1e-4,1e-7/)                ; y minimum (both panels)
-ymax = (/1e0,1e0/)                 ; y maximum (both panels)
+xmin = (/-15.0,0.0/)             ; x axis minimums
+xmax = (/5.0,600./)           ; x axis maximums
+ymin = (/1.0e-6,1e-7/)                ; y minimum (both panels)
+ymax = (/100.,1e0/)                 ; y maximum (both panels)
 titles = (/" "," "/)           ; titles
 axis_labels = (/"fraction"," "/)               ; y axis labels
 colorAll = (/"red3","blue3","pink2","skyblue2","black"/)      ; line colors
 
-gridlist = (/"conus_30_x8","ne30","mp15a-120a-US","mp120a","cmorph"/)
+gridlist = (/"tau3600_MPdiff","tau3600","dtime1800"/)
 physpkg = "CAM6"
 nfiles = dimsizes(gridlist)
-dycore_labelsAll = (/"conus_30_x8","ne30","mp15a-120a-US","mp120a","cmorph"/)
+dycore_labelsAll = gridlist
 needs_regrid=True
 
 panels1 = new(2,graphic)
@@ -41,35 +41,24 @@ f1=addfile(fname,"r")
 if (file_step .eq. 0) then
   var0 = f1->hvar_small
   var01 = f1->hvar_large
+  var0 = where(var0.le.0,var0@_FillValue,var0)
   printMinMax(var0,True)
   xval0 = f1->xval_small
   xval01 = f1->xval_large
 else if (file_step .eq. 1) then
   var1 = f1->hvar_small
+  var1 = where(var1.le.0,var1@_FillValue,var1)
   var11 = f1->hvar_large
   printMinMax(var1,True)
   xval1 = f1->xval_small
   xval11 = f1->xval_large
 else if (file_step .eq. 2) then
   var2 = f1->hvar_small
+  var2 = where(var2.le.0,var2@_FillValue,var2)
   var21 = f1->hvar_large
-  printMinMax(var2,True)
+  printMinMax(var1,True)
   xval2 = f1->xval_small
   xval21 = f1->xval_large
-else if (file_step .eq. 3) then
-  var3 = f1->hvar_small
-  var31 = f1->hvar_large
-  printMinMax(var3,True)
-  xval3 = f1->xval_small
-  xval31 = f1->xval_large
-else if (file_step .eq. 4) then
-  var4 = f1->hvar_small
-  var41 = f1->hvar_large
-  printMinMax(var4,True)
-  xval4 = f1->xval_small
-  xval41 = f1->xval_large
-end if
-end if
 end if
 end if
 end if
@@ -119,16 +108,8 @@ print("10 bin sum of "+gridlist(0)+" is: "+(sum(var01)/2))
   res@xyLineColor = color(2)
   plot2 = gsn_csm_xy(wks,xval2,var2,res)
 
-  res@xyLineColor = color(3)
-  plot3 = gsn_csm_xy(wks,xval3,var3,res)
-
-  res@xyLineColor = color(4)
-  plot4 = gsn_csm_xy(wks,xval4,var4,res)
-
   overlay(plot0,plot1)
-  overlay(plot0,plot2) 
-  overlay(plot0,plot3)
-  overlay(plot0,plot4)
+  overlay(plot0,plot2)
 
   panels1(0) = plot0
 
@@ -170,19 +151,7 @@ print("10 bin sum of "+gridlist(0)+" is: "+(sum(var01)/2))
   res@xyLineColor = color(1)
   plot1 = gsn_csm_xy(wks,xval11,var11,res)
 
-  res@xyLineColor = color(2)
-  plot2 = gsn_csm_xy(wks,xval21,var21,res)
-
-  res@xyLineColor = color(3)
-  plot3 = gsn_csm_xy(wks,xval31,var31,res)
-
-  res@xyLineColor = color(4)
-  plot4 = gsn_csm_xy(wks,xval41,var41,res)
-
   overlay(plot0,plot1)
-  overlay(plot0,plot2)
-  overlay(plot0,plot3)
-  overlay(plot0,plot4)
 
   panels1(1) = plot0
 

@@ -1,16 +1,8 @@
 ; NOTES
 
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"  
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"  
-load "/glade/u/home/zarzycki/ncl/functions/surfaceWindCorrFactor.ncl"
 load "../../../functions/radialAvg.ncl"
 
 begin
-
-
-out_type="pdf"
 
 config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp999.003"
 dayofsim="09"
@@ -35,7 +27,7 @@ if(cam5) then
   tkevar="UW_tke"
   lengthvar="UW_leng"
 else
-  FILEDIR="/glade/u/home/zarzycki/scratch/"+config+"/run/"
+  FILEDIR="/storage/home/cmz5202/scratch/"+config+"/run/"
   filename = FILEDIR+"/"+config+".cam.h1.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   f2= FILEDIR+"/"+config+".cam.h3.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   kvmvar="KVH_CLUBB"
@@ -46,40 +38,37 @@ else
 ;  lengthvar="DTCOND"
 end if
 
-
-
 thefile = addfile(filename,"r")
 tf2 = addfile(f2,"r")
 
+stride = 1        ; how many cells to skip (set to 1 for all)
+topLev = 500.     ; top level of analysis
+botLev = 1050.    ; lowest level of analysis (set to something like 1050+ for surface)
+maxLat=-25.       ; lat bound to extract
+minLat=25.        ; lat bound to extract
+timeStep=0        ; what timestep of file (set to 0 for single indexed files)
 
-stride = 1
-topLev = 500.
-botLev = 1050.
-maxLat=-25.
-minLat=25.
-timeStep=0
-
+; constants
 pi=3.14159
 
+; get data
 lat = thefile->lat({maxLat:minLat:stride})
 lon = thefile->lon(::stride)
 lev = thefile->lev({topLev:botLev})
 lev@units = "hPa"
 fulllev = thefile->lev
-print(lev)
-print(fulllev)
 toplevix = ind_nearest_coord (lev(0), fulllev, 0)
 botlevix = ind_nearest_coord (lev((dimsizes(lev)-1)), fulllev, 0)
-
-print(toplevix+" "+botlevix)
 
 hyam=thefile->hyam(toplevix:botlevix)
 hybm=thefile->hybm(toplevix:botlevix)
 hyai=thefile->hyai(toplevix+1:botlevix+1)
 hybi=thefile->hybi(toplevix+1:botlevix+1)
+
+; get P0 needed for hybrid conversion, generally set to 1000 hPa (or 100000 Pa)
 ;P0=thefile->P0
 P0=100000.
-P0@units="hPa"
+P0@units="Pa"
 
 nlat = dimsizes(lat)
 nlon = dimsizes(lon)
@@ -108,7 +97,6 @@ LSCALE_CLUBB = hyi2hyo_Wrap(P0,hyai,hybi,PS1,LSCALE_CLUBB_int,hyam,hybm,1)
 CME = tf2->CME(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
 
 DTCOND = tf2->DTCOND(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
-
 
 PRES = pres_hybrid_ccm(PS1,P0,hyam,hybm)
 
@@ -147,11 +135,11 @@ Z@units="m"
 
 ; generate Zlev
 Zlev = fspan(10.,3000.,250)
-;Zlev = (/50.,100.,150.,200.,250.,300.,350.500.,750.,1000.,2000.,3000.,4000.,5000.,10000./)
 Zlev@units = "m"
 Zlev!0     = "Zlev"
 Zlev&Zlev = Zlev
 
+; do vertical interpolation from model levels to equally spaced Z levels
 interp_type=1
 v_theta_Z  = int2p_n_Wrap(Z,v_theta,Zlev,interp_type,0)
 v_rad_Z    = int2p_n_Wrap(Z,v_rad,Zlev,interp_type,0)
@@ -169,7 +157,7 @@ DTCOND_Z      = int2p_n_Wrap(Z,DTCOND,Zlev,interp_type,0)
 ; do radial integrals
 rad_v_theta  = radialAvg3D(v_theta_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
 rad_v_rad    = radialAvg3D(v_rad_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
-rad_v_rad = -rad_v_rad  ; NEGATIVE FOR CONVENTION
+rad_v_rad    = -rad_v_rad  ; SWITCH TO NEGATIVE FOR CONVENTION
 rad_W        = radialAvg3D(W_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
 rad_KVM      = radialAvg3D(KVM_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
 rad_TKE      = radialAvg3D(TKE_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
@@ -186,101 +174,16 @@ nlev_rad=rad_dims(0)
 nrad_rad=rad_dims(1)
 
 ; Calculate derived rad quantities
-
 L_v = 2264.76*1000.    ; J/kg
 c_p = 1005.7 ; J/kg/K
 g = 9.81
 ; q is kg/kg, 
 rad_MSE = rad_T
 rad_MSE = c_p * rad_T + g * conform(rad_MSE,Zlev,0) + L_v * rad_Q
-print(max(rad_MSE))
-print(min(rad_MSE))
-
-; find RMW
-rad_sfc_v_theta=rad_v_theta({70.},:)
-inds = maxind(rad_sfc_v_theta)
-rad_max = rad_sfc_v_theta&radius(inds)   ; insert the longitude index into the lon coordinate variable
-print("Maximum value located at, "+rad_max)
-rad_max_2x = rad_max*2
-
-rad_v_theta_vert=new((/2,nlev_rad/),"float")
-rad_v_theta_vert!1 = "lev"
-rad_v_theta_vert&lev = rad_v_theta&lev
-
-rad_v_rad_vert = rad_v_theta_vert
-rad_W_vert     = rad_v_theta_vert
-rad_KVM_vert   = rad_v_theta_vert
-rad_TKE_vert   = rad_v_theta_vert
-rad_LSCALE_vert   = rad_v_theta_vert
-rad_THETA_vert   = rad_v_theta_vert
-rad_T_vert   = rad_v_theta_vert
-rad_Q_vert   = rad_v_theta_vert
-rad_CLDLIQ_vert   = rad_v_theta_vert
-rad_MSE_vert   = rad_v_theta_vert
-rad_CME_vert   = rad_v_theta_vert
-rad_DTCOND_vert   = rad_v_theta_vert
-
-
-rad_v_theta_vert(0,:) = tofloat(rad_v_theta(:,{rad_max}))
-rad_v_rad_vert(0,:) = tofloat(rad_v_rad(:,{rad_max}))
-rad_W_vert(0,:) = tofloat(rad_W(:,{rad_max}))
-rad_KVM_vert(0,:) = tofloat(rad_KVM(:,{rad_max}))
-rad_TKE_vert(0,:) = tofloat(rad_TKE(:,{rad_max}))
-rad_LSCALE_vert(0,:) = tofloat(rad_LSCALE(:,{rad_max}))
-rad_THETA_vert(0,:) = tofloat(rad_THETA(:,{rad_max}))
-rad_T_vert(0,:) = tofloat(rad_T(:,{rad_max}))
-rad_Q_vert(0,:) = tofloat(rad_Q(:,{rad_max}))
-rad_CLDLIQ_vert(0,:) = tofloat(rad_CLDLIQ(:,{rad_max}))
-rad_MSE_vert(0,:) = tofloat(rad_MSE(:,{rad_max}))
-rad_CME_vert(0,:) = tofloat(rad_CME(:,{rad_max}))
-rad_DTCOND_vert(0,:) = tofloat(rad_DTCOND(:,{rad_max}))
-
-rad_v_theta_vert(1,:) = tofloat(rad_v_theta(:,{rad_max_2x}))
-rad_v_rad_vert(1,:) = tofloat(rad_v_rad(:,{rad_max_2x}))
-rad_W_vert(1,:) = tofloat(rad_W(:,{rad_max_2x}))
-rad_KVM_vert(1,:) = tofloat(rad_KVM(:,{rad_max_2x}))
-rad_TKE_vert(1,:) = tofloat(rad_TKE(:,{rad_max_2x}))
-rad_LSCALE_vert(1,:) = tofloat(rad_LSCALE(:,{rad_max_2x}))
-rad_THETA_vert(1,:) = tofloat(rad_THETA(:,{rad_max_2x}))
-rad_T_vert(1,:) = tofloat(rad_T(:,{rad_max_2x}))
-rad_Q_vert(1,:) = tofloat(rad_Q(:,{rad_max_2x}))
-rad_CLDLIQ_vert(1,:) = tofloat(rad_CLDLIQ(:,{rad_max_2x}))
-rad_MSE_vert(1,:) = tofloat(rad_MSE(:,{rad_max_2x}))
-rad_CME_vert(1,:) = tofloat(rad_CME(:,{rad_max_2x}))
-rad_DTCOND_vert(1,:) = tofloat(rad_DTCOND(:,{rad_max_2x}))
-
-; find surface inflow angle
-do ii = 0,nlev_rad-1
-  if(.not. ismissing(rad_v_theta_vert(0,ii))) then
-    sfc_inflow_ang=atan(rad_v_rad_vert(0,ii)/rad_v_theta_vert(0,ii))*180./pi
-    sfc_radial_flow=abs(rad_v_rad_vert(1,ii))
-    break
-  else
-    print("Missing value in search for lowest model level...")
-  end if
-end do
-
-do ii = 0,nlev_rad-1
-  if(.not. ismissing(rad_v_theta_vert(1,ii))) then
-    if (abs(rad_v_rad_vert(1,ii)) .ge. 0.1*sfc_radial_flow) then
-      print("Searing for inflow depth -- at z: "+Zlev(ii)+" "+rad_v_rad_vert(1,ii)+" compared to: "+(0.1*sfc_radial_flow))
-      inflow_depth=Zlev(ii)
-    else
-      print("Breaking -- at z: "+Zlev(ii)+" "+rad_v_rad_vert(1,ii)+" compared to: "+(0.1*sfc_radial_flow))
-      break
-    end if
-  else
-    print("Missing value in search for inflow depth...")
-  end if
-end do
-
-print("-------------------------------------------------------------------")
-print("surface inflow angle: "+abs(sfc_inflow_ang))
-print("inflow depth: "+inflow_depth+" "+Zlev@units)
-print("-------------------------------------------------------------------")
 
 ;==================================================================================================
 outDir="./netcdf/"
+system("mkdir -p "+outDir)
 outFile=config+"_"+dayofsim+".nc"
 system("/bin/rm -f "+outDir+"/"+outFile)   ; remove any pre-existing file
 ncdf = addfile(outDir+"/"+outFile ,"c")  ; open output netCDF file
