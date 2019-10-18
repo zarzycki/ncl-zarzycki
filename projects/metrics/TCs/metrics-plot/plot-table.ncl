@@ -17,7 +17,7 @@ begin
   plot_bias=False
   invert_stoplight=False
   calc_deltas=False
-  filename = "../csv-files/metrics_storm_mean.csv"
+  filename = "../csv-files/metrics_climo_mean.csv"
 
   if (plot_bias .eq. False .and. calc_deltas .eq. True) then
     print("you can't really calc_deltas if you aren't plotting bias")
