@@ -15,9 +15,10 @@
 begin
 
   plot_bias=False
+  relative_performance=True
   invert_stoplight=False
   calc_deltas=False
-  filename = "../csv-files/metrics_climo_mean.csv"
+  filename = "../csv-files/metrics_spatial_corr.csv"
 
   if (plot_bias .eq. False .and. calc_deltas .eq. True) then
     print("you can't really calc_deltas if you aren't plotting bias")
@@ -66,17 +67,39 @@ begin
     end do
   end if
 
-  startxloc=1.0/(nvars+1)
+  ; NDC math...
+  forcedheight=0.07
+  forcedwidth=0.15
+  ndcgap=0.02
+  labelbarheight=0.05
+  labelbarwidthdelta=0.1
+
+  bottom_of_header=1.0-forcedheight   ; FYI, top of table
+  bottom_of_table=1.0-forcedheight*(ncases+1)
+  top_of_label_bar=bottom_of_table-ndcgap
+  bottom_of_label_bar=top_of_label_bar-labelbarheight
+  top_of_label_text=bottom_of_label_bar-ndcgap
+
+  ; calculate width
+  total_width = forcedwidth*(nvars+1)
+  if (total_width .gt. 1)
+    print("resetting width to 1.0")
+    total_width=1.0
+    forcedwidth = total_width/(nvars+1)
+  end if
+
+  startxloc=total_width/(nvars+1)
+
 ; Sub header
   ncr2  = (/1,nvars/)               ; 2 rows, 2 columns
-  x2    = (/startxloc,1.0/)       ; Start and end X
-  y2    = (/0.925,1.0/)       ; Start and end Y
+  x2    = (/startxloc,total_width/)       ; Start and end X
+  y2    = (/bottom_of_header,1.0/)       ; Start and end Y
   text2 = header
 
 ; Main table body
   ncr3  = (/ncases,nvars+1/)              ; 16 rows, 3 columns
-  x3    = (/0.0,1.0/)       ; Start and end X
-  y3    = (/0.0,0.925/)       ; Start and end Y
+  x3    = (/0.0,total_width/)       ; Start and end X
+  y3    = (/bottom_of_table,bottom_of_header/)       ; Start and end Y
 
   xreshape = reshape(name_var,(/ncases,1/))
   printVarSummary(xreshape)
@@ -88,7 +111,7 @@ begin
     end if
   end do
 
-  wks = gsn_open_wks("png","table")  ; send graphics to PNG file
+  wks = gsn_open_wks("pdf","table")  ; send graphics to PNG file
 
   if (plot_bias) then
     cmap = read_colormap_file("hotcold_18lev")
@@ -102,8 +125,8 @@ begin
   gsn_define_colormap(wks,cmap(:,0:2))
   tmpdims=dimsizes(cmap)
 
-  ncolors=tofloat(tmpdims(0))
-  ncolors=ncolors-2-1
+  ntotcolors=tofloat(tmpdims(0))
+  ncolors=ntotcolors-2-1
   print(ncolors+" ")
 
   setvalues wks            
@@ -116,6 +139,8 @@ begin
   res2               = True
   res2@txFontHeightF = 0.022
 
+  print(x2)
+  print(y2)
   gsn_table(wks,ncr2,x2,y2,text2,res2)
 
 ;
@@ -160,6 +185,52 @@ begin
   ;draw_color_palette(wks,cmap,False)  
 
   gsn_table(wks,ncr3,x3,y3,text3,res3)
+
+  nboxes = toint(ncolors)
+  labels = new((/toint(ncolors)/),string)
+  labels(:) = ""
+  lbres                    = True          ; labelbar only resources
+  lbres@lbAutoManage       = True          ; Necessary to control sizes
+  ;lbres@vpXF=0.0
+  ;lbres@vpYF=0.5
+  lbres@vpWidthF           = total_width - labelbarwidthdelta
+  lbres@vpHeightF          = labelbarheight
+  lbres@lbFillColors       = cmap(2:,:)        ; labelbar colors
+  if (invert_stoplight) then
+    lbres@lbFillColors = lbres@lbFillColors(::-1)
+  end if
+  lbres@lbMonoFillPattern  = True          ; Solid fill pattern
+  lbres@lbOrientation      = "Horizontal"
+  lbres@lbPerimOn          = False
+  lbres@lbBoxLinesOn       = True
+
+  ; all of this gets rid of white space around label bar...
+  ; per: https://www.ncl.ucar.edu/Support/talk_archives/2009/1477.html
+  lbres@lbJustification = "topleft"
+  lbres@lbLeftMarginF = 0.0
+  lbres@lbTopMarginF = 0.0 ; eliminate any margin at the top and left of
+  lbres@lbBoxMinorExtentF = 1.0 
+
+  ; x and y are UL corner
+  gsn_labelbar_ndc(wks,nboxes,labels,labelbarwidthdelta/2.,top_of_label_bar,lbres)
+
+  txres               = True
+  txres@txFontHeightF = 0.018
+
+  if (plot_bias) then
+    labelstrings=(/"Low Bias","High Bias"/)
+  else
+    if (relative_performance) then
+      labelstrings=(/"Worse Performance","Better Performance"/)
+    else
+      labelstrings=(/"Low","High"/)
+    end if
+  end if
+
+  txres@txJust="CenterLeft"
+  gsn_text_ndc(wks,labelstrings(0),labelbarwidthdelta/2.,top_of_label_text,txres)
+  txres@txJust="CenterRight"
+  gsn_text_ndc(wks,labelstrings(1),total_width-(labelbarwidthdelta/2.),top_of_label_text,txres)
 
   frame(wks)      ; Advance the frame.
 
