@@ -15,7 +15,7 @@
 begin
 
   plot_bias=False
-  relative_performance=True
+  relative_performance=False
   invert_stoplight=False
   calc_deltas=False
   filename = "../csv-files/metrics_spatial_corr.csv"
@@ -68,7 +68,7 @@ begin
   end if
 
   ; NDC math...
-  forcedheight=0.07
+  forcedheight=0.05
   forcedwidth=0.15
   ndcgap=0.02
   labelbarheight=0.05

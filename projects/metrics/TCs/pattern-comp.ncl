@@ -20,7 +20,7 @@ wind_factor = 0.85
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
 do_genesis=True
 gridsize = 8.0
-trajDir="./trajs/"
+trajDir="./TRAJ_FINAL/"
 csvdir="./csv-files/"
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
@@ -303,7 +303,7 @@ res   = True
 res@Markers = (/16,4/)
 res@txFontHeightF = 0.02
 res@markerTxYOffset = 0.02
-;res@varLabels = strs(1:nfiles-1)  ; don't include obs
+res@varLabels = strs(1:nfiles-1)  ; don't include obs
 plot  = taylor_diagram(wks, taylor_rat, taylor_cco, res)
 
 end

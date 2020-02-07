@@ -16,7 +16,7 @@ begin
 
 trajdir="./trajs/"
 ;=================== Get traj data ================================
-filename = "tracker_configs.csv"
+filename = "rean_configs.csv"
 lines = asciiread(filename,-1,"string")
 delim = ","
 files  =           str_get_field(lines,1,delim)

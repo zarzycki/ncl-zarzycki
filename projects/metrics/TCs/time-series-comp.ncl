@@ -11,7 +11,7 @@ begin
 ;=================== User Settings ================================
 out_type = "pdf"
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
-trajDir="./trajs/"
+trajDir="./TRAJ_FINAL/"
 csvdir="./csv-files/"
 ;======================= Constants ================================
 ms_to_kts = 1.94384449

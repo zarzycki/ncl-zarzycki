@@ -19,7 +19,7 @@ basinfilt = 1
 maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
-thefile="trajs/trajectories.txt.TEST.NE120.1979_2012.SUB"
+thefile="trajs.NEW/trajectories.txt.CHEY.VR28.NATL.REF.CAM5.4CLM5.0.dtime900"
 ncols = -1                    ; assign number of columns
 maxLines = -1
 headerDelimStr = "start"
