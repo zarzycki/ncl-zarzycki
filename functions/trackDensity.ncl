@@ -253,6 +253,7 @@ do n=0,npts-1
        il = 0
      end if
 
+     if (.not.ismissing(cvar(n)))
      if (ismissing(count(jl,il))) then
        count(jl,il) = tofloat(cvar(n))
      else
@@ -263,6 +264,7 @@ do n=0,npts-1
        else
        end if
        end if
+     end if
      end if
    end if
 end do

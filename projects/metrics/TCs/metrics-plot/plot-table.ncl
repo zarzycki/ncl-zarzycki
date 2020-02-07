@@ -12,13 +12,17 @@
 ; integer, and float fields.
 ;***********************************************************
 
+
+; ncl plot-table.ncl plot_bias=False relative_performance=True invert_stoplight=False calc_deltas=False 'csvfilename="metrics_spatial_corr.csv"'
 begin
 
-  plot_bias=False
-  relative_performance=False
-  invert_stoplight=False
-  calc_deltas=False
-  filename = "../csv-files/metrics_spatial_corr.csv"
+  ;plot_bias=False
+  ;relative_performance=False
+  ;invert_stoplight=False
+  ;calc_deltas=False
+  filepath = "../csv-files/"
+  ;csvfilename=
+  filename = filepath+"/"+csvfilename
 
   if (plot_bias .eq. False .and. calc_deltas .eq. True) then
     print("you can't really calc_deltas if you aren't plotting bias")
@@ -68,14 +72,15 @@ begin
   end if
 
   ; NDC math...
+  TOPOFTABLE=0.95
   forcedheight=0.05
   forcedwidth=0.15
   ndcgap=0.02
   labelbarheight=0.05
   labelbarwidthdelta=0.1
 
-  bottom_of_header=1.0-forcedheight   ; FYI, top of table
-  bottom_of_table=1.0-forcedheight*(ncases+1)
+  bottom_of_header=TOPOFTABLE-forcedheight   ; FYI, top of table
+  bottom_of_table=TOPOFTABLE-forcedheight*(ncases+1)
   top_of_label_bar=bottom_of_table-ndcgap
   bottom_of_label_bar=top_of_label_bar-labelbarheight
   top_of_label_text=bottom_of_label_bar-ndcgap
@@ -93,7 +98,7 @@ begin
 ; Sub header
   ncr2  = (/1,nvars/)               ; 2 rows, 2 columns
   x2    = (/startxloc,total_width/)       ; Start and end X
-  y2    = (/bottom_of_header,1.0/)       ; Start and end Y
+  y2    = (/bottom_of_header,TOPOFTABLE/)       ; Start and end Y
   text2 = header
 
 ; Main table body
@@ -111,7 +116,7 @@ begin
     end if
   end do
 
-  wks = gsn_open_wks("pdf","table")  ; send graphics to PNG file
+  wks = gsn_open_wks("pdf","table."+csvfilename)  ; send graphics to PNG file
 
   if (plot_bias) then
     cmap = read_colormap_file("hotcold_18lev")
@@ -138,6 +143,8 @@ begin
 ;
   res2               = True
   res2@txFontHeightF = 0.022
+
+
 
   print(x2)
   print(y2)
@@ -184,7 +191,11 @@ begin
 
   ;draw_color_palette(wks,cmap,False)  
 
+
+
   gsn_table(wks,ncr3,x3,y3,text3,res3)
+
+
 
   nboxes = toint(ncolors)
   labels = new((/toint(ncolors)/),string)
@@ -231,6 +242,14 @@ begin
   gsn_text_ndc(wks,labelstrings(0),labelbarwidthdelta/2.,top_of_label_text,txres)
   txres@txJust="CenterRight"
   gsn_text_ndc(wks,labelstrings(1),total_width-(labelbarwidthdelta/2.),top_of_label_text,txres)
+
+
+  titres=True
+  titres@txFontHeightF = 0.025
+  titlestr=plot_title
+  titres@txJust="TopCenter"
+  gsn_text_ndc(wks,titlestr,total_width/2.,1.0,titres)
+
 
   frame(wks)      ; Advance the frame.
 
