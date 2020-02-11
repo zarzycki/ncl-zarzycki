@@ -14,7 +14,7 @@ load "../../../functions/mask_tc.ncl"
 ;========================================================
 begin
 
-trajdir="./trajs/"
+trajdir="./TRAJ_FINAL/"
 ;=================== Get traj data ================================
 filename = "rean_configs.csv"
 lines = asciiread(filename,-1,"string")

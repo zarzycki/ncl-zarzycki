@@ -17,10 +17,14 @@ prescut = 99999.0   ; only storms with pres LOWER than this are included. set to
 trajDir="./TRAJ_FINAL/"
 csvdir="./csv-files/"
 gridsize = 8.0
+;basin=(/1,2,3,4/)
+basin=1
+filename = "hyp_configs.csv"
 
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
+; this is really only for correlations
 styr=1980
 enyr=2016
 nyears=enyr-styr+1
@@ -33,12 +37,19 @@ monArr=ispan(stmon,enmon,1)
 
 ;======================= Masking ================================
 
-basin=1
+if (any(basin.gt.0)) then
+  if (dimsizes(basin) .eq. 1) then
+    basinstr=getbasinmaskstr(basin)
+  else
+    basinstr="user"
+  end if
+else
+  basinstr="GLOB"
+end if
 maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
-filename = "hyp_configs.csv"
 lines = asciiread(filename,-1,"string")
 delim = ","
 files  =           str_get_field(lines,1,delim)
@@ -50,6 +61,11 @@ windcorrs = tofloat(str_get_field(lines,6,delim))
 linecolors = str_get_field(lines,7,delim)
 
 isUnstruct = where(isUnstructStr.eq."True",True,False)
+
+;=================== Internal logic ================================
+
+namesplit = get_file_suffix(filename,0)
+basecsv = namesplit@fBase
 
 ;=================== Init arrays ================================
 
@@ -82,7 +98,12 @@ avgLatgenPS=new((/nfiles/),"float")
 
 ;=================== Loop over data files ================================
 
+valid_files=new(nfiles,"integer")
+
 do zz = 0,nfiles-1
+if (str_get_cols(files(zz),0,0).ne."!") then
+
+  valid_files(zz) = zz
 
   print("    starting "+zz+" of "+(nfiles-1))
 
@@ -145,7 +166,7 @@ do zz = 0,nfiles-1
   delete([/xlontmp,xlattmp,xmonthtmp,xyeartmp/])
 
   ; if basin filtering requested, loop over all storms to filter using TC mask
-  if (basin .gt. 0) then
+  if (any(basin .gt. 0)) then
     do ii = 0,nstorms-1
       orilat=xglat(ii)
       orilon=xglon(ii)
@@ -153,7 +174,7 @@ do zz = 0,nfiles-1
         orilon=360.0-maskspacing
         print("    original lon: "+xglon(ii)+"   modified lon: "+orilon)
       end if
-      if (tcMask({orilat},{orilon}) .ne. basin)
+      if (all(basin .ne. tcMask({orilat},{orilon}))) then
         xlon(ii,:)=xlon@_FillValue
         xlat(ii,:)=xlat@_FillValue
         xpres(ii,:)=xpres@_FillValue
@@ -286,6 +307,13 @@ do zz = 0,nfiles-1
   minpres = track_minmax(gridsize,0.0,clat,clon,cpres,"min",20)
   maxwind = track_minmax(gridsize,0.0,clat,clon,cwind,"max",20)
 
+  if (sum(trackdens).eq.0) then
+    trackdens=trackdens@_FillValue
+    gendens=trackdens@_FillValue
+    minpres=trackdens@_FillValue
+    maxwind=trackdens@_FillValue
+  end if
+
   if (zz.eq.0) then
     print("Generating cosine weights...")
     deg2rad = get_d2r("float")
@@ -312,7 +340,7 @@ do zz = 0,nfiles-1
   fullgen(zz,:,:)=gendens(:,:)
 
 
-  wks = gsn_open_wks("pdf","./pdfs/trackdens."+files(zz))
+  wks = gsn_open_wks("pdf","./pdfs/trackdens."+basinstr+"_"+files(zz))
   plot = new(1,"graphic")
   toPlot = fulldens(zz,:,:)
   toPlot = where(toPlot.gt.0.,toPlot,toPlot@_FillValue)
@@ -327,14 +355,14 @@ do zz = 0,nfiles-1
   res@cnLineLabelsOn  = False
   res@lbLabelStride = 2
   res@gsnCenterString       = ""
-  res@mpMinLatF             = 5.
-  res@mpMaxLatF             = 55.
-  res@mpMinLonF             = 260.
-  res@mpMaxLonF             = 350.
-  ;res@mpMinLatF             = -60.
-  ;res@mpMaxLatF             = 60.
-  ;res@mpMinLonF             = 0.
-  ;res@mpMaxLonF             = 360.
+  ;res@mpMinLatF             = 5.
+  ;res@mpMaxLatF             = 55.
+  ;res@mpMinLonF             = 260.
+  ;res@mpMaxLonF             = 350.
+  res@mpMinLatF             = -60.
+  res@mpMaxLatF             = 60.
+  res@mpMinLonF             = 0.
+  res@mpMaxLonF             = 360.
   res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
   res@cnLevelSelectionMode  = "ManualLevels"
   res@cnMinLevelValF        = 0.
@@ -356,13 +384,22 @@ do zz = 0,nfiles-1
   delete([/trackdens,minpres,maxwind/])
 
   print("---------------------------------------------------- DONE")
+
+end if
 end do
+
+; Eliminate files that were not valid for some reason
+iz = ind(.not.ismissing(valid_files)) 
+valid_files := valid_files(iz)
+valid_strs := strs(iz)
+nfiles=dimsizes(valid_files)
 
 ; if we don't have any storms, assume we didn't have data for year...
 stormsByYear=where(stormsByYear.eq.0,stormsByYear@_FillValue,stormsByYear)
 
 print("Correcting for number of ensemble members")
-do mm = 0,nfiles-1
+do qq = 0,nfiles-1
+  mm = valid_files(qq)
   stormsByYear(mm,:)=stormsByYear(mm,:)/ensmembers(mm)
   aceByYear(mm,:)=aceByYear(mm,:)/ensmembers(mm)
   paceByYear(mm,:)=paceByYear(mm,:)/ensmembers(mm)
@@ -391,10 +428,11 @@ OPT=0
 ;; this is MATCHED basin mean statistics, i.e., only overlapping years
 ;; so if ibtracs is 1980-2000 but model is only 1988-1990, n = 3 and match those years.
 print("... doing PAIRED basin-mean statistics")
-outputname=csvdir+"/"+"metrics_climo_pairmean.csv"
+outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_climo_pairmean.csv"
 system("rm "+outputname)
 system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
-do mm = 0,nfiles-1
+do qq = 0,nfiles-1
+  mm = valid_files(qq)
   if (mm .eq. 0) then
   OUTSTR=strs(mm)+delim+ \
     avg(stormsByYear(0,:))+delim+ \
@@ -430,10 +468,11 @@ do mm = 1,nfiles-1
 end do
 ;/
 print("... doing un-paired basin-mean statistics")
-outputname=csvdir+"/"+"metrics_climo_mean.csv"
+outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_climo_mean.csv"
 system("rm "+outputname)
 system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
-do mm = 0,nfiles-1
+do qq = 0,nfiles-1
+  mm = valid_files(qq)
   OUTSTR=strs(mm)+delim+ \
     avgStormsPY(mm)+delim+ \
     avgTcdPY(mm)+delim+ \
@@ -443,10 +482,11 @@ do mm = 0,nfiles-1
 end do
 
 print("... doing un-paired storm-mean statistics")
-outputname=csvdir+"/"+"metrics_storm_mean.csv"
+outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_storm_mean.csv"
 system("rm "+outputname)
 system("echo ,Model,TCDays,ACE1,ACE2,LatGen,LMI >> "+outputname)
-do mm = 0,nfiles-1
+do qq = 0,nfiles-1
+  mm = valid_files(qq)
   OUTSTR=strs(mm)+delim+ \
     avgTcdPS(mm)+delim+ \
     avgAcePS(mm)+delim+ \
@@ -456,20 +496,22 @@ do mm = 0,nfiles-1
   system("echo "+OUTSTR+" >> "+outputname)
 end do
 
-outputname=csvdir+"/"+"metrics_temporal_pcorr.csv"
+outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_temporal_pcorr.csv"
 system("rm "+outputname)
 system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
 print("... doing Pearson seasonal cycle correlation.")
-do jj = 0,nfiles-1
+do qq = 0,nfiles-1
+  jj = valid_files(qq)
   OUTSTR=strs(jj)+delim+escorc(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+escorc(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+escorc(aceByMonth(0,:),aceByMonth(jj,:))+delim+escorc(paceByMonth(0,:),paceByMonth(jj,:))
   system("echo "+OUTSTR+" >> "+outputname)
 end do
 
-outputname=csvdir+"/"+"metrics_temporal_scorr.csv"
+outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_temporal_scorr.csv"
 system("rm "+outputname)
 system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
 print("... doing Spearman seasonal cycle correlation.")
-do jj = 0,nfiles-1
+do qq = 0,nfiles-1
+  jj = valid_files(qq)
   OUTSTR=strs(jj)+delim+spcorr(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+spcorr(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+spcorr(aceByMonth(0,:),aceByMonth(jj,:))+delim+spcorr(paceByMonth(0,:),paceByMonth(jj,:))
   system("echo "+OUTSTR+" >> "+outputname)
 end do
@@ -486,13 +528,14 @@ taylor_rat=new((/2,nfiles-1/),"float")
 taylor_rms=new((/2,nfiles-1/),"float")
 
 print("... doing spatial correlation and Taylor")
-outputname=csvdir+"/"+"metrics_spatial_corr.csv"
+outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_spatial_corr.csv"
 quote = inttochar(34)
 delim=","
 OPT=0
 system("rm "+outputname)
 system("echo ,Model,Track,Genesis,U10,SLP >> "+outputname)
-do mm = 1,nfiles-1
+do qq = 0,nfiles-1
+  mm = valid_files(qq)
   tmprefr=fulldens(0,:,:)
   tmptest=fulldens(mm,:,:)
   tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
@@ -503,9 +546,12 @@ do mm = 1,nfiles-1
   tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
 
   taylorVals=taylor_stats(tmptest,tmprefr,denslatwgt,1)
-  taylor_cco(0,mm-1)=taylorVals(0)
-  taylor_rat(0,mm-1)=taylorVals(1)
-  taylor_rms(0,mm-1)=taylorVals(7);/stddev(tmptest)
+  
+  if (mm .ne. 0) then
+    taylor_cco(0,qq-1)=taylorVals(0)
+    taylor_rat(0,qq-1)=taylorVals(1)
+    taylor_rms(0,qq-1)=taylorVals(7);/stddev(tmptest)
+  end if
 
   ; these are equivalent...
   ;pattern_cor(tmprefr,tmptest,denslatwgt,OPT)
@@ -527,10 +573,11 @@ end do
 
 dimslatlon=dimsizes(fulldens(0,:,:))
 print("... doing RMSE")
-outrmsname=csvdir+"/"+"metrics_spatial_rmse.csv"
+outrmsname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_spatial_rmse.csv"
 system("rm "+outrmsname)
 system("echo ,Model,Track,Genesis,U10,SLP >> "+outrmsname)
-do mm = 1,nfiles-1
+do qq = 0,nfiles-1
+  mm = valid_files(qq)
   tmprefr=fulldens(0,:,:)
   tmptest=fulldens(mm,:,:)
   tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
@@ -566,12 +613,12 @@ do mm = 1,nfiles-1
 end do
 
 ; plot Taylor diagram
-wks   = gsn_open_wks("pdf","./pdfs/taylor")      ; send graphics to PNG file
+wks   = gsn_open_wks("pdf","./pdfs/taylor_"+basecsv+"_"+basinstr)      ; send graphics to PNG file
 res   = True
 res@Markers = (/16,4/)
 res@txFontHeightF = 0.02
 res@markerTxYOffset = 0.02
-res@varLabels = strs(1:nfiles-1)  ; don't include obs
+res@varLabels = valid_strs(1:nfiles-1)  ; don't include obs
 plot  = taylor_diagram(wks, taylor_rat, taylor_cco, res)
 
 end
