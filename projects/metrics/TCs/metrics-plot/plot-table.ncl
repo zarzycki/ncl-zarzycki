@@ -42,7 +42,7 @@ begin
   header_name    = str_get_field(lines(0),1,delim)
 
   if (calc_deltas) then
-    stloadix=2
+    stloadix=1
   else
     stloadix=1
   end if
@@ -65,10 +65,21 @@ begin
     ;end if
   end do
 
+  print(var)
+  do ii = 0,nvars-1
+    do jj = 0,ncases-1
+      if (.not.ismissing(var(ii,jj)) .and. abs(var(ii,jj)) .gt. 1E8) then
+        print("missing!")
+        var(ii,jj) = var@_FillValue
+      end if
+    end do
+  end do
+
   if (plot_bias .and. calc_deltas) then
     do ii = 0,nvars-1
       var(ii,:) = var(ii,:) - varref(ii)
     end do
+    var(:,0) = varref(:)
   end if
 
   ; NDC math...
@@ -106,15 +117,21 @@ begin
   x3    = (/0.0,total_width/)       ; Start and end X
   y3    = (/bottom_of_table,bottom_of_header/)       ; Start and end Y
 
+  vartext = sprintf("%5.2f", var)
+  vartext = where(ismissing(var)," ",vartext)
+
+
   xreshape = reshape(name_var,(/ncases,1/))
   printVarSummary(xreshape)
   do ii = 0,nvars-1
     if (ii .eq. 0) then
-      text3 := table_attach_columns(reshape(name_var,(/ncases,1/)), reshape(sprintf("%5.2f", var(ii,:)),(/ncases,1/)), 0)
+      text3 := table_attach_columns(reshape(name_var,(/ncases,1/)), reshape(vartext(ii,:),(/ncases,1/)), 0)
     else
-      text3 := table_attach_columns(text3, reshape(sprintf("%5.2f", var(ii,:)),(/ncases,1/)), 0)
+      text3 := table_attach_columns(text3, reshape(vartext(ii,:),(/ncases,1/)), 0)
     end if
   end do
+
+  print(text3)
 
   wks = gsn_open_wks("pdf","table."+csvfilename)  ; send graphics to PNG file
 
@@ -162,26 +179,51 @@ begin
   FillColors = new(dimsizes(text3),"string")
   FillColors = "white"
   
-  do ii = 1,nvars  
-    if (plot_bias) then
-      minVal=-1.*max(abs(tofloat(text3(:,ii))))
-      maxVal= 1.*max(abs(tofloat(text3(:,ii))))
-    else
-      maxVal = max(tofloat(text3(:,ii)))
-      minVal = min(tofloat(text3(:,ii)))
-    end if
-    do zz = 0,ncases-1
-      thisVal=tofloat(text3(zz,ii))
-      percentage = (thisVal - minVal) / (maxVal - minVal)
-      percentage = max((/0.,percentage/))
-      percentage = min((/1.,percentage/))
-      ;if (ii .eq. 1) then
-      ;  FillColors(zz,ii) = floor(ncolors*(1.-percentage))+2
-      ;else
-      ;  FillColors(zz,ii) = floor(ncolors*percentage)+2
-      ;end if
-      FillColors(zz,ii) = floor(ncolors*percentage)+2
+  if (calc_deltas) then
+    STCOLORVAR=1
+  else
+    STCOLORVAR=0
+  end if
+  STCOLORVAR=1
 
+  do ii = 1,nvars
+    print("ii "+ii)
+    print("ncases "+ncases)
+    print(var)
+    ; First, insert a reference color, this will get overwritten later if STCOLOR is 0
+    FillColors(0,ii) = "grey75"
+
+    ;if (plot_bias) then
+    ;  minVal=-1.*max(abs(tofloat(var(STCOLORVAR:(ncases-1),ii))))
+    ;  maxVal= 1.*max(abs(tofloat(var(STCOLORVAR:(ncases-1),ii))))
+    ;else
+    ;  maxVal = max(tofloat(var(STCOLORVAR:(ncases-1),ii)))
+    ;  minVal = min(tofloat(var(STCOLORVAR:(ncases-1),ii)))
+    ;end if
+
+    if (plot_bias) then
+      minVal=-1.*max(abs(tofloat(var(ii-1,STCOLORVAR:(ncases-1)))))
+      maxVal= 1.*max(abs(tofloat(var(ii-1,STCOLORVAR:(ncases-1)))))
+    else
+      maxVal = max(tofloat(var(ii-1,STCOLORVAR:(ncases-1))))
+      minVal = min(tofloat(var(ii-1,STCOLORVAR:(ncases-1))))
+    end if
+
+    do zz = STCOLORVAR,ncases-1
+      thisVal=tofloat(var(ii-1,zz))
+      if (ismissing(thisVal)) then
+        FillColors(zz,ii) = "grey50"
+      else
+        percentage = (thisVal - minVal) / (maxVal - minVal)
+        percentage = max((/0.,percentage/))
+        percentage = min((/1.,percentage/))
+        ;if (ii .eq. 1) then
+        ;  FillColors(zz,ii) = floor(ncolors*(1.-percentage))+2
+        ;else
+        ;  FillColors(zz,ii) = floor(ncolors*percentage)+2
+        ;end if
+        FillColors(zz,ii) = floor(ncolors*percentage)+2
+      end if
       print(name_var(zz)+" "+percentage+"   "+floor(ncolors*percentage)+" "+FillColors(zz,ii))
     end do
   end do
