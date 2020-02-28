@@ -6,7 +6,7 @@
 load "../../../functions/getTrajectoriesGeneric.ncl"
 load "../../../functions/trackDensity.ncl"
 load "../../../functions/mask_tc.ncl"
-load "./taylor_diagram.ncl"
+load "./taylor_diagram_cam.ncl"
 
 begin
 
@@ -20,6 +20,8 @@ gridsize = 8.0
 ;basin=(/1,2,3,4/)
 basin=1
 filename = "hyp_configs.csv"
+
+defineMIbypres=False
 
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
@@ -76,18 +78,21 @@ stormsByYear=new((/nfiles,nyears/),"float")
 aceByYear=new((/nfiles,nyears/),"float")
 paceByYear=new((/nfiles,nyears/),"float")
 tcdByYear=new((/nfiles,nyears/),"float")
+lmiByYear=new((/nfiles,nyears/),"float")
 
 ; Init per month arrays
 stormsByMonth=new((/nfiles,nmonths/),"float")
 aceByMonth=new((/nfiles,nmonths/),"float")
 paceByMonth=new((/nfiles,nmonths/),"float")
 tcdByMonth=new((/nfiles,nmonths/),"float")
+lmiByMonth=new((/nfiles,nmonths/),"float")
 
 ; Init per year arrays
 avgStormsPY=new((/nfiles/),"float")
 avgTcdPY=new((/nfiles/),"float")
 avgAcePY=new((/nfiles/),"float")
 avgPacePY=new((/nfiles/),"float")
+avgLmiPY=new((/nfiles/),"float")
 
 ; Init per storm arrays
 avgTcdPS=new((/nfiles/),"float")
@@ -207,11 +212,20 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   xlonmi=xlatmi
   do kk = 0,nstorms-1
     if(.not.all(ismissing(xpres(kk,:)))) then
-      locMI=minind(xpres(kk,:))
+      if defineMIbypres then
+        locMI=minind(xpres(kk,:))
+      else
+        locMI=maxind(xwind(kk,:))
+      end if
       xlatmi(kk)=xlat(kk,locMI)
       xlonmi(kk)=xlon(kk,locMI)
     end if
   end do
+
+  abs_LMI=True
+  if abs_LMI then
+    xlatmi=abs(xlatmi)
+  end if
 
   ; Count the number of TC days per storm (i.e., trajectory length)
   xtcdpp = xwind
@@ -224,12 +238,25 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   xace = where(ismissing(xace) .and. .not.(ismissing(xglon)),0.0,xace)
 
   ; Calculate PACE for each storm
-  ;print("min: "+min(xpres)+"   max: "+max(xpres))
-  xprestmp = where(xpres.lt.1010,xpres,1010.)
-  xpace = 1e-4*dim_sum_n( (4.4*(1010.-xprestmp)^0.76)^2.,1)
-  xpace = where(ismissing(xpace) .and. .not.(ismissing(xglon)),0.0,xpace)
-  delete(xprestmp)
-  ;print("min: "+min(xpace)+"   max: "+max(xpace))
+  calcPolyFitPACE=True
+  if calcPolyFitPACE then
+    if (zz .eq. 0) then
+      print("Calculating regression for best-fit line")
+      polyn = 3
+      xprestmp = where(xpres.lt.1010,xpres,1010.)
+      quad_a = lspoly(ndtooned(xpres), ndtooned(xwind) , 1, polyn)
+    end if
+    xwindtmp = quad_a(0) + quad_a(1)*xpres + quad_a(2)*xpres^2
+    xpace = 1e-4*dim_sum_n((ms_to_kts*xwindtmp)^2.,1)
+    delete(xwindtmp)
+  else
+    ;print("min: "+min(xpres)+"   max: "+max(xpres))
+    xpace = 1e-4*dim_sum_n( (4.4*(1010.-xprestmp)^0.76)^2.,1)
+    xpace = where(ismissing(xpace) .and. .not.(ismissing(xglon)),0.0,xpace)
+    delete(xprestmp)
+    ;print("min: "+min(xpace)+"   max: "+max(xpace))
+  end if
+
 
   ; Find maximum intensity, integrated TC days, and genesis year/month
   xmpres  = dim_min_n(xpres,1)
@@ -267,7 +294,10 @@ if (str_get_cols(files(zz),0,0).ne."!") then
     tmptcd=where(cgyear.eq.thisYr,ctcd,ctcd@_FillValue)
     tcdByYear(zz,ii)=sum(tmptcd)
 
-    delete([/tmpace,tmppace,tmptcd/])
+    tmplmi=where(cgyear.eq.thisYr,clatmi,clatmi@_FillValue)
+    lmiByYear(zz,ii)=avg(tmplmi)
+
+    delete([/tmpace,tmppace,tmptcd,tmplmi/])
   end do
 
   do ii = 1,nmonths
@@ -282,7 +312,10 @@ if (str_get_cols(files(zz),0,0).ne."!") then
     tmptcd=where(cgmonth.eq.ii,ctcd,ctcd@_FillValue)
     tcdByMonth(zz,ii-1)=sum(tmptcd)
 
-    delete([/tmpace,tmppace,tmptcd/])
+    tmplmi=where(cgmonth.eq.ii,clatmi,clatmi@_FillValue)
+    lmiByMonth(zz,ii-1)=avg(tmplmi)
+
+    delete([/tmpace,tmppace,tmptcd,tmplmi/])
   end do
 
   ; Calculate bulk averages per calendar year
@@ -290,6 +323,7 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   avgTcdPY(zz) = sum(ctcd)/nmodyears
   avgPacePY(zz) = sum(cpace)/nmodyears
   avgAcePY(zz) = sum(cace)/nmodyears
+  avgLmiPY(zz) = avg(clatmi)
 
   ; Calculate individual per storm averages
   avgTcdPS(zz) = avg(ctcd)
@@ -339,12 +373,18 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   fullwind(zz,:,:)=maxwind(:,:)
   fullgen(zz,:,:)=gendens(:,:)
 
-
-  wks = gsn_open_wks("pdf","./pdfs/trackdens."+basinstr+"_"+files(zz))
+spapltvarsstr=(/"trackdens","minpres","maxwind","gendens"/)
+spapltvars=[/ trackdens, minpres, maxwind, gendens /] 
+spapltmincontour=(/0.,880.,0.,0./)
+spapltmaxcontour=(/20.,1010.,100.,1./)
+do bb = 0,3
+  wks = gsn_open_wks("pdf","./pdfs/"+tostring(spapltvarsstr(bb))+"."+basinstr+"_"+files(zz))
   plot = new(1,"graphic")
-  toPlot = fulldens(zz,:,:)
+  ;print(spapltvars[bb])
+  toPlot=spapltvars[bb]
   toPlot = where(toPlot.gt.0.,toPlot,toPlot@_FillValue)
   colorMap1="WhiteBlueGreenYellowRed"
+  ;colorMap1="prcp_1"
   res                       = True     ; plot mods desired
   res@gsnDraw = False
   res@gsnFrame = False
@@ -365,15 +405,18 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   res@mpMaxLonF             = 360.
   res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
   res@cnLevelSelectionMode  = "ManualLevels"
-  res@cnMinLevelValF        = 0.
-  res@cnMaxLevelValF        = 16.0
-  res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 16.
+  res@cnMinLevelValF        = spapltmincontour(bb)
+  ;res@cnMaxLevelValF        = 20.0
+  res@cnMaxLevelValF        = spapltmaxcontour(bb)
+  res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 10.
   res@cnFillPalette=colorMap1
   plot(0) = gsn_csm_contour_map_ce(wks,toPlot,res)
   resP=True
   resP@txString           = "Annual TC track density, all storms"
   resP@amJust           = "TopLeft"
   gsn_panel(wks,plot,(/1,1/),resP)
+
+end do
 
   ; clean up arrays before returning to start of loop
   delete([/xtcdpp,xyear,xmonth,xhour,xday/])
@@ -430,7 +473,7 @@ OPT=0
 print("... doing PAIRED basin-mean statistics")
 outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_climo_pairmean.csv"
 system("rm "+outputname)
-system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
+system("echo Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   if (mm .eq. 0) then
@@ -450,41 +493,42 @@ do qq = 0,nfiles-1
 end do
 
 ;; this is bias as OVERALL statistics, i.e., all available data for each product
-/;
-print("... doing basin-mean statistics2")
-outputname=csvdir+"/"+"metrics_climo_mean2.csv"
-system("rm "+outputname)
-system("echo ,Model,Count,TCDays,ACE1,ACE2,Length >> "+outputname)
-do mm = 1,nfiles-1
-  OUTSTR=strs(mm)+delim+ \
-    (avgStorms(mm)-avgStorms(0))+delim+ \
-    (avgTcd(mm)-avgTcd(0))+delim+ \
-    (avgAce(mm)-avgAce(0))+delim+ \
-    (avgPace(mm)-avgPace(0))+delim+ \
-    (avgLatgen(mm)-avgLatgen(0))+delim+ \
-    (avgLMI(mm)-avgLMI(0))+delim+ \
-    (avgLength(mm)-avgLength(0))
-  system("echo "+OUTSTR+" >> "+outputname)
-end do
-;/
+;>print("... doing basin-mean statistics2")
+;>outputname=csvdir+"/"+"metrics_climo_mean2.csv"
+;>system("rm "+outputname)
+;>system("echo ,Model,Count,TCDays,ACE1,ACE2,Length >> "+outputname)
+;>do mm = 1,nfiles-1
+;>  OUTSTR=strs(mm)+delim+ \
+;>    (avgStorms(mm)-avgStorms(0))+delim+ \
+;>    (avgTcd(mm)-avgTcd(0))+delim+ \
+;>    (avgAce(mm)-avgAce(0))+delim+ \
+;>    (avgPace(mm)-avgPace(0))+delim+ \
+;>    (avgLatgen(mm)-avgLatgen(0))+delim+ \
+;>    (avgLMI(mm)-avgLMI(0))+delim+ \
+;>    (avgLength(mm)-avgLength(0))
+;>  system("echo "+OUTSTR+" >> "+outputname)
+;>end do
+
+
 print("... doing un-paired basin-mean statistics")
 outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_climo_mean.csv"
 system("rm "+outputname)
-system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
+system("echo Model,Count,TCDays,ACE1,ACE2,LMI >> "+outputname)
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   OUTSTR=strs(mm)+delim+ \
     avgStormsPY(mm)+delim+ \
     avgTcdPY(mm)+delim+ \
     avgAcePY(mm)+delim+ \
-    avgPacePY(mm)
+    avgPacePY(mm)+delim+ \
+    avgLmiPY(mm)
   system("echo "+OUTSTR+" >> "+outputname)
 end do
 
 print("... doing un-paired storm-mean statistics")
 outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_storm_mean.csv"
 system("rm "+outputname)
-system("echo ,Model,TCDays,ACE1,ACE2,LatGen,LMI >> "+outputname)
+system("echo Model,TCDays,ACE1,ACE2,LatGen,LMI >> "+outputname)
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   OUTSTR=strs(mm)+delim+ \
@@ -498,21 +542,21 @@ end do
 
 outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_temporal_pcorr.csv"
 system("rm "+outputname)
-system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
+system("echo Model,Count,TCDays,ACE1,ACE2,LMI >> "+outputname)
 print("... doing Pearson seasonal cycle correlation.")
 do qq = 0,nfiles-1
   jj = valid_files(qq)
-  OUTSTR=strs(jj)+delim+escorc(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+escorc(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+escorc(aceByMonth(0,:),aceByMonth(jj,:))+delim+escorc(paceByMonth(0,:),paceByMonth(jj,:))
+  OUTSTR=strs(jj)+delim+escorc(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+escorc(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+escorc(aceByMonth(0,:),aceByMonth(jj,:))+delim+escorc(paceByMonth(0,:),paceByMonth(jj,:))+delim+escorc(lmiByMonth(0,:),lmiByMonth(jj,:))
   system("echo "+OUTSTR+" >> "+outputname)
 end do
 
 outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_temporal_scorr.csv"
 system("rm "+outputname)
-system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
+system("echo Model,Count,TCDays,ACE1,ACE2,LMI >> "+outputname)
 print("... doing Spearman seasonal cycle correlation.")
 do qq = 0,nfiles-1
   jj = valid_files(qq)
-  OUTSTR=strs(jj)+delim+spcorr(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+spcorr(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+spcorr(aceByMonth(0,:),aceByMonth(jj,:))+delim+spcorr(paceByMonth(0,:),paceByMonth(jj,:))
+  OUTSTR=strs(jj)+delim+spcorr(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+spcorr(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+spcorr(aceByMonth(0,:),aceByMonth(jj,:))+delim+spcorr(paceByMonth(0,:),paceByMonth(jj,:))+delim+spcorr(lmiByMonth(0,:),lmiByMonth(jj,:))
   system("echo "+OUTSTR+" >> "+outputname)
 end do
 
@@ -525,6 +569,7 @@ end do
 
 taylor_cco=new((/2,nfiles-1/),"float")
 taylor_rat=new((/2,nfiles-1/),"float")
+taylor_bia=new((/2,nfiles-1/),"float")
 taylor_rms=new((/2,nfiles-1/),"float")
 
 print("... doing spatial correlation and Taylor")
@@ -533,7 +578,7 @@ quote = inttochar(34)
 delim=","
 OPT=0
 system("rm "+outputname)
-system("echo ,Model,Track,Genesis,U10,SLP >> "+outputname)
+system("echo Model,Track,Genesis,U10,SLP >> "+outputname)
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   tmprefr=fulldens(0,:,:)
@@ -550,6 +595,7 @@ do qq = 0,nfiles-1
   if (mm .ne. 0) then
     taylor_cco(0,qq-1)=taylorVals(0)
     taylor_rat(0,qq-1)=taylorVals(1)
+    taylor_bia(0,qq-1)=taylorVals(2)
     taylor_rms(0,qq-1)=taylorVals(7);/stddev(tmptest)
   end if
 
@@ -575,7 +621,7 @@ dimslatlon=dimsizes(fulldens(0,:,:))
 print("... doing RMSE")
 outrmsname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_spatial_rmse.csv"
 system("rm "+outrmsname)
-system("echo ,Model,Track,Genesis,U10,SLP >> "+outrmsname)
+system("echo Model,Track,Genesis,U10,SLP >> "+outrmsname)
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   tmprefr=fulldens(0,:,:)
@@ -612,13 +658,23 @@ do qq = 0,nfiles-1
   system("echo "+OUTSTR+" >> "+outrmsname)
 end do
 
+; do some additional taylor stats
+
+taylor_bia2=new((/2,nfiles-1/),"float")
+do qq = 1,nfiles-1
+  mm = valid_files(qq)
+  taylor_bia2(0,qq-1)=100.*(avgStormsPY(mm)-avgStormsPY(0))/avgStormsPY(0)
+end do
+
 ; plot Taylor diagram
 wks   = gsn_open_wks("pdf","./pdfs/taylor_"+basecsv+"_"+basinstr)      ; send graphics to PNG file
 res   = True
-res@Markers = (/16,4/)
 res@txFontHeightF = 0.02
-res@markerTxYOffset = 0.02
+res@markerTxYOffset = 0.03
+res@Colors = (/"blue","red"/)
 res@varLabels = valid_strs(1:nfiles-1)  ; don't include obs
-plot  = taylor_diagram(wks, taylor_rat, taylor_cco, res)
+plot  = taylor_diagram_cam(wks, taylor_rat, taylor_cco, taylor_bia2, res)
 
+print(res@varLabels+" ")
+print(taylor_rat+" "+taylor_cco+" "+taylor_bia+" "+taylor_bia2)
 end
