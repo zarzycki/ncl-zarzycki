@@ -1,4 +1,4 @@
-;=================== Description ==================================
+;==================i Description ==================================
 ; This script reads in Tempeset
 ; tracking code and plots a track density
 ;==================================================================
@@ -20,8 +20,8 @@ wind_factor = 0.85
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
 do_genesis=True
 gridsize = 8.0
-trajDir="./trajs/"
-csvdir="./csv-files/"
+trajDir="./TRAJ_FINAL/"
+csvdir="./orig-files/"
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
@@ -32,7 +32,7 @@ maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 ;=================== Get traj data ================================
-filename = "Z200_configs.csv"
+filename = "test_configs.csv"
 lines = asciiread(filename,-1,"string")
 delim = ","
 files  =           str_get_field(lines,1,delim)
@@ -162,10 +162,11 @@ end if
     fullgen(zz,:,:)=trackdens(:,:)
   end if
 
-wks = gsn_open_wks("pdf","./pdfs/trackdens"+thisFile)
+wks = gsn_open_wks("pdf","./pdfs/XXpres"+thisFile)
 plot = new(1,"graphic")
 
-toPlot = fulldens(zz,:,:)
+toPlot = fullpres(zz,:,:)
+print("min pres: "+min(toPlot))
 toPlot = where(toPlot.gt.0.,toPlot,toPlot@_FillValue)
 
 colorMap1="WhiteBlueGreenYellowRed"
@@ -195,8 +196,8 @@ res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
 ; plot absolute data
 res@cnLevelSelectionMode  = "ManualLevels"
 ; 0-120
-res@cnMinLevelValF        = 0.
-res@cnMaxLevelValF        = 16.0
+res@cnMinLevelValF        = 850.
+res@cnMaxLevelValF        = 1000.
 res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 16.
 res@cnFillPalette=colorMap1
 plot(0) = gsn_csm_contour_map_ce(wks,toPlot,res)
@@ -303,7 +304,7 @@ res   = True
 res@Markers = (/16,4/)
 res@txFontHeightF = 0.02
 res@markerTxYOffset = 0.02
-;res@varLabels = strs(1:nfiles-1)  ; don't include obs
+res@varLabels = strs(1:nfiles-1)  ; don't include obs
 plot  = taylor_diagram(wks, taylor_rat, taylor_cco, res)
 
 end

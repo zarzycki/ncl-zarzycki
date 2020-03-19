@@ -103,21 +103,43 @@ end if
   
   return(maskArr)
 
-; ;**************************************************
-; ; create plot
-; ;**************************************************
-;   wks = gsn_open_wks("pdf","tc_mask")
-;  
-; 	res                      = True
-; 	res@gsnMaximize          = True
-; 	  
-; 	res@cnFillOn             = True              ; turn on color
-;   res@cnLinesOn            = False             ; turn off contour lines
-;   res@cnLineLabelsOn       = False
-;  
-;   res@gsnAddCyclic = False
-;   
-;   plot = gsn_csm_contour_map(wks,maskArr,res)
+end
+
+
+
+
+function getbasinmaskstr(gridchoice:integer)
+
+begin
+
+if (gridchoice .eq. 1) then
+  basinstr="NATL"
+else if (gridchoice .eq. 2) then
+  basinstr="EPAC"
+else if (gridchoice .eq. 3) then
+  basinstr="CPAC"
+else if (gridchoice .eq. 4) then
+  basinstr="WPAC"
+else if (gridchoice .eq. 5) then
+  basinstr="NIO"
+else if (gridchoice .eq. 6) then
+  basinstr="SIO"
+else if (gridchoice .eq. 7) then
+  basinstr="SPAC"
+else if (gridchoice .eq. 8) then
+  basinstr="SATL"
+else
+  basinstr="NONE"
+end if
+end if
+end if
+end if
+end if
+end if
+end if
+end if
+  
+return(basinstr)
 
 end
 

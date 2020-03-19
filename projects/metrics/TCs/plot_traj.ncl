@@ -10,7 +10,7 @@ load "../../../functions/mask_tc.ncl"
 begin
 
 output_type="png"
-basin="atlantic"
+basin="tropics"
 cutwind=0.0
 factor = 1.0
 
@@ -19,13 +19,15 @@ basinfilt = 1
 maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
-thefile="trajs/trajectories.txt.TEST.NE120.1979_2012.SUB"
+thedir="./TRAJ_FINAL/"
+;thefile="trajectories.txt.theta.20190910.branch_noCNT.n438b.unc03.A_WCYCL1950S_CMIP6_HR.ne120_oRRS18v3_ICG"
+thefile="trajectories.txt.MERRA2"
 ncols = -1                    ; assign number of columns
 maxLines = -1
 headerDelimStr = "start"
 delimStr="tab"
 isHeader=False
-traj_data = getTrajectoriesGeneric(thefile,ncols,maxLines,headerDelimStr,delimStr,True,isHeader)
+traj_data = getTrajectoriesGeneric(thedir+"/"+thefile,ncols,maxLines,headerDelimStr,delimStr,False,isHeader)
 
 lon = traj_data(:,2,:)
 lat = traj_data(:,3,:)
@@ -67,7 +69,7 @@ end if
 
 ;--------------------------------------------------------
 print("Beginning plot sequence")
-wks  = gsn_open_wks(output_type,"fig."+thefile)
+wks  = gsn_open_wks(output_type,"fig.trajs/fig."+thefile)
 map = new(1,graphic)
   
 res  = True
