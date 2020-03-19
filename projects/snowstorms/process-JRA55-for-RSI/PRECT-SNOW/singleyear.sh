@@ -7,23 +7,27 @@ OUTBASE=/glade/scratch/zarzycki/j1files/JRA/
 YYYY=$1
 echo $YYYY
 
-if [ ! -f ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc ]; then
+#if [ ! -f ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc ]; then
 
   echo ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc" does not exist"
 
   ### Symlink JRA files
   mkdir -p ${SYMDIR}/${YYYY}
 
-  declare -a prect_arr=("rof" "srweq" "tprat" "snwe")
+  #declare -a prect_arr=("tmp")
+  declare -a prect_arr=("rof" "srweq" "tprat" "snwe" "tmp")
   for i in "${prect_arr[@]}"
   do
     if [ "${i}" == "snwe" ]; then
       FILES=${JRABASEDIR}/fcst_land/${YYYY}/*_${i}.reg_tl319.*
     elif [ "${i}" == "rof" ]; then
       FILES=${JRABASEDIR}/fcst_phyland/${YYYY}/*_${i}.reg_tl319.*
+    elif [ "${i}" == "tmp" ]; then
+      FILES=${JRABASEDIR}/anl_surf/${YYYY}/*_${i}.reg_tl319.*
     else
-      FILES=${JRABASEDIR}/fcst_phy2m/${YYYY}/*_${i}.reg_tl319.*
+      FILES=${JRABASEDIR}/fcst_surf/${YYYY}/*_${i}.reg_tl319.*
     fi
+    
     for f in $FILES
     do
       echo "Processing $f file..."
@@ -37,5 +41,6 @@ if [ ! -f ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc ]; then
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="tprat"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="rof"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="snwe"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
+  ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="tmp"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
 
-fi
+#fi
