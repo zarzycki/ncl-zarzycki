@@ -49,6 +49,8 @@ count&lon =  lon
 ;=================== Count data ==================================
 
 count = 0    ; set initial count to zero
+jl=0
+il=0
 
 npts = dimsizes(clat)
 
@@ -140,6 +142,8 @@ count&lon =  lon
 
 count = 0               ; set initial count to zero
 cumulative = count      ; set cumulative array to count
+jl=0
+il=0
 
 npts = dimsizes(clat)
 
@@ -240,6 +244,8 @@ count&lon =  lon
 ;=================== Count data ==================================
 
 count = count@_FillValue
+jl=0
+il=0
 
 npts = dimsizes(clat)
 
@@ -253,6 +259,7 @@ do n=0,npts-1
        il = 0
      end if
 
+     if (.not.ismissing(cvar(n)))
      if (ismissing(count(jl,il))) then
        count(jl,il) = tofloat(cvar(n))
      else
@@ -263,6 +270,7 @@ do n=0,npts-1
        else
        end if
        end if
+     end if
      end if
    end if
 end do

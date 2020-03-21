@@ -16,10 +16,10 @@
 ; ncl plot-table.ncl plot_bias=False relative_performance=True invert_stoplight=False calc_deltas=False 'csvfilename="metrics_spatial_corr.csv"'
 begin
 
-  ;plot_bias=False
-  ;relative_performance=False
-  ;invert_stoplight=False
-  ;calc_deltas=False
+  plot_bias=False
+  relative_performance=False
+  invert_stoplight=False
+  calc_deltas=False
   filepath = "../csv-files/"
   ;csvfilename=
   filename = filepath+"/"+csvfilename
@@ -48,23 +48,8 @@ begin
   end if
 
   header = new(nvars,"string")
-  lines(0) = ","+lines(0)
   do jj = 0,nvars-1
     header(jj) = str_get_field(lines(0),jj+2,delim)
-
-    if (header(jj) .eq. "SLP") then
-      header(jj) = "r~B~xy,SLP~N~"
-    end if
-    if (header(jj) .eq. "U10") then
-      header(jj) = "r~B~xy,u10~N~"
-    end if
-    if (header(jj) .eq. "Genesis") then
-      header(jj) = "r~B~xy,gen~N~"
-    end if
-    if (header(jj) .eq. "Track") then
-      header(jj) = "r~B~xy,track~N~"
-    end if
-
   end do
 
   name_var  =           str_get_field(lines(stloadix:),1,delim)

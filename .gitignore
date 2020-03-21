@@ -1,3 +1,5 @@
+tmp.nc
+*OLD
 *.pyc
 .DS_Store
 __pycache__
