@@ -1,13 +1,15 @@
 begin
 
+;f=addfile("RCE.QPC6.ne0np4tcfplane.ne15x8.exp606.001.cam.h1.0001-01-09-00000.nc_regrid.nc","r")
 f=addfile("tmp.nc","r")
 
 shf=f->SHFLX
 lhf=f->LHFLX
 tbot=f->TBOT
 ubot=f->UBOT
+ustar=f->USTAR
 vbot=f->VBOT
-qbot=f->QBOT
+wbot=f->QBOT
 sst=f->SST
 ps=f->PS
 taux=f->TAUX
@@ -24,11 +26,19 @@ theta = pot_temp(fullpres(:,29,:,:), tbot, 0, False)
 windbot=vbot
 windbot=sqrt(vbot^2+ubot^2)
 
-qsat = qbot
-qsat = 640380.0 / exp(5107.4/sst)
+;qbot = mixhum_convert(wbot, "w", (/0,0/))
+
+qbot = wbot
+qbot = wbot / (1 + wbot)
+
+;qsat = qbot
+;qsat = 640380.0 / exp(5107.4/sst)
+
+qsat = mixhum_ptrh (ps/100., conform (ps,sst,-1), conform(ps,100.,-1), 2)
+
 
 delq=qsat-qbot
-delt=sst-theta
+delt=sst-tbot
 rho=1.003
 cp=1004.
 Lv = 2.5104e6
@@ -38,11 +48,12 @@ CD=ps
 CQ=ps
 CK=ps
 
-CH = shf/rho/cp/windbot/delt
-CD = tau/rho/windbot/windbot
-CQ = lhf/rho/Lv/windbot/delq
+CH = (shf/rho/cp/windbot/delt)
+CD = (ustar/windbot)^2
+CQ = (lhf/rho/Lv/windbot/delq)
 
-CK = (shf+lhf)/(rho*Lv*windbot*delq+rho*cp*windbot*delt)
+;CK = (shf+lhf)/(rho*Lv*windbot*delq+rho*cp*windbot*delt)
+CK = (CH*shf+CQ*lhf)/(shf+lhf)
 
 ratio=ps
 ratio=CK/CD
