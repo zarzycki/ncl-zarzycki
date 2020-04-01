@@ -21,22 +21,23 @@ def return_indices_of_a(a, b):
   b_set = set(b)
   return [i for i, v in enumerate(a) if v in b_set]
 
-raw_df0 = pd.read_csv('stats.LAND.txt', header=None, delim_whitespace=True)
+raw_df0 = pd.read_csv('stats.CMZtest.txt', header=None, delim_whitespace=True)
 raw_df0.columns = ['date', 'GFS', 'CAM', 'ratio', 'config', 'lead', 'region', 'verifvar']
 raw_df0['DateTime'] = raw_df0['date'].apply(lambda x: pd.to_datetime(str(x), format='%Y%m%d%H'))
 raw_df0.set_index('DateTime', inplace=True)
 
 print raw_df0
 
-testlead=240
-region="conus"
-azvar="T850"
-df1 = orig_split_index(raw_df0,"hindcast_conus_30_x8_CAM5_L30",testlead,region,azvar,"CAM5")
-df1 = merge_on_index(df1,raw_df0,"hindcast_conus_30_x8_CAM6_L32",testlead,region,azvar,"CAM6")
-df1 = merge_on_index(df1,raw_df0,"hindcast_conus_30_x8_CAM4_L26_HV",testlead,region,azvar,"CAM4")
+testlead=6
+region="nhemi"
+azvar="TS"
+df1 = orig_split_index(raw_df0,"Q-adjustPS-ne30-F2000climo",testlead,region,azvar,"adjustPS")
+df1 = merge_on_index(df1,raw_df0,"Q-adjustALL-ne30-F2000climo",testlead,region,azvar,"adjustALL")
+df1 = merge_on_index(df1,raw_df0,"Q-Ofilter-ne30-F2000climo",testlead,region,azvar,"Ofilter")
+df1 = merge_on_index(df1,raw_df0,"Q-NOfilter-ne30-F2000climo",testlead,region,azvar,"NOfilter")
 
 
-t, p = ttest_ind(df1["CAM5"], df1["GFS"], equal_var=False, nan_policy="omit")
+t, p = ttest_ind(df1["adjustALL"], df1["GFS"], equal_var=False, nan_policy="omit")
 print("ttest_ind:            t = %g  p = %g" % (t, p))
 
 print df1
@@ -44,7 +45,7 @@ print df1
 print df1.describe()
 
 ### Subset particular configurations
-configsToAnalyze=['GFS', 'hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_15_x16_CAM5_L30', 'hindcast_conus_60_x4_CAM5_L30']
+configsToAnalyze=['GFS', 'Q-adjustPS-ne30-F2000climo', 'Q-adjustALL-ne30-F2000climo', 'Q-Ofilter-ne30-F2000climo', 'Q-NOfilter-ne30-F2000climo']
 #configsToAnalyze=['hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_30_x8_CAM5_L30_NOFILT', 'hindcast_conus_30_x8_CAM5_L30_RTOPO']
 #raw_df1=raw_df0.loc[raw_df0['config'].isin(configsToAnalyze)]
 
@@ -81,7 +82,7 @@ configs_configs=[ \
 #  ['hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_30_x8_CAM4_L26_HV', 'hindcast_conus_30_x8_CAM6_L32'], \
 #  ['GFS', 'hindcast_conus_30_x8_CAM5_L30', 'hindcast_mp15a-120a-US_CAM5_L30'], \
 #  ['hindcast_conus_30_x8_CAM4_L26', 'hindcast_conus_30_x8_CAM4_L26_HV'] \
-  ['hindcast_conus_30_x8_CAM5_L30', 'hindcast_conus_30_x8_CAM5_L30_NOLAND'] \
+  ['Q-adjustPS-ne30-F2000climo', 'Q-adjustALL-ne30-F2000climo', 'Q-Ofilter-ne30-F2000climo', 'Q-NOfilter-ne30-F2000climo'] \
   ]
 
 for CONIX, zz in enumerate(configs_configs):
@@ -106,8 +107,8 @@ for CONIX, zz in enumerate(configs_configs):
 
       plt.xlabel('Lead (hours)')
       plt.ylabel(forecast_vars[VARIX]+' ACC ('+forecast_regions[REGIX]+')')
-      plt.xlim( 0, 240 )
-      plt.ylim( 0.0, 1.0 )
+      plt.xlim( 0, 168 )
+      plt.ylim( 0.5, 1.0 )
 
       plt.xticks([12, 24, 36, 48, 60, 72, 96, 120, 144, 168, 192, 216, 240])
 

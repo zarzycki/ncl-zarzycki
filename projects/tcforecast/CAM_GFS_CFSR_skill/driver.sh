@@ -13,7 +13,7 @@ do
 for kk in "${configs[@]}"
 do
   cd /glade/scratch/zarzycki/${kk}/run/ 
-  for i in $( ls -d 201712* ); do
+  for i in $( ls -d 201908* ); do
     echo $i
     cd /glade/u/home/zarzycki/ncl/projects/tcforecast/CAM_GFS_CFSR_skill/
     echo YYYYMMDDHH=$i region=${ii} hourForecast=${jj} fcst_config=${kk}
