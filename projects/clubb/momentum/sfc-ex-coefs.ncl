@@ -15,13 +15,18 @@ ps=f->PS
 taux=f->TAUX
 tauy=f->TAUY
 
+print("SST -- max: "+max(sst)+"   min: "+min(sst)+"   mean: "+avg(sst))
+
 tau = sqrt(taux^2+tauy^2)
 
 fullpres=pres_hybrid_ccm(ps,100000.,f->hyam,f->hybm)
-print(fullpres(0,:,0,0))
 
 theta = pot_temp(fullpres(:,29,:,:), tbot, 0, False)
 
+rho = fullpres(:,29,:,:)/287./tbot
+;rho=1.003
+cp=1004.
+Lv = 2.5104e6
 
 windbot=vbot
 windbot=sqrt(vbot^2+ubot^2)
@@ -29,19 +34,29 @@ windbot=sqrt(vbot^2+ubot^2)
 ;qbot = mixhum_convert(wbot, "w", (/0,0/))
 
 qbot = wbot
-qbot = wbot / (1 + wbot)
+print("qbot 1 "+avg(qbot))
+
+qbot = wbot / (1. + wbot)
+print("qbot 2 "+avg(qbot))
 
 ;qsat = qbot
 ;qsat = 640380.0 / exp(5107.4/sst)
 
-qsat = mixhum_ptrh (ps/100., conform (ps,sst,-1), conform(ps,100.,-1), 2)
+qsat = mixhum_ptrh (ps/100., conform (ps,sst,-1), conform(ps,100.,-1), 2)*1.02
+print("qsat 1 "+avg(qsat))
 
+; method from model
+qsat2 = 640380. / exp(5107.4/sst)
+qsat2 := 0.98 * qsat2 / rho
+print("qsat 2 "+avg(qsat2))
 
 delq=qsat-qbot
 delt=sst-tbot
-rho=1.003
-cp=1004.
-Lv = 2.5104e6
+
+;print("ustar 1 "+avg(ustar))
+;myustar = windbot * sqrt(1.2E-3)
+;print("ustar 2 "+avg(myustar))
+
 
 CH=ps
 CD=ps
@@ -54,6 +69,11 @@ CQ = (lhf/rho/Lv/windbot/delq)
 
 ;CK = (shf+lhf)/(rho*Lv*windbot*delq+rho*cp*windbot*delt)
 CK = (CH*shf+CQ*lhf)/(shf+lhf)
+
+print("CH: "+dim_median_n(CH,(/1,2/)))
+print("CQ: "+dim_median_n(CQ,(/1,2/)))
+print("CD: "+dim_median_n(CD,(/1,2/)))
+print("CK: "+dim_median_n(CK,(/1,2/)))
 
 ratio=ps
 ratio=CK/CD

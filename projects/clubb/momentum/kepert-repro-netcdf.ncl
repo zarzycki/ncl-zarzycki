@@ -4,7 +4,7 @@ load "../../../functions/radialAvg.ncl"
 
 begin
 
-config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp999.003"
+config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp703.001"
 dayofsim="09"
 k10=0.5
 cam5=False
@@ -20,14 +20,14 @@ plot_K_ref=True
 ;end if
 
 if(cam5) then
-  FILEDIR="/glade/u/home/zarzycki/scratch/"+config+"/run/"
+  FILEDIR="/glade/u/home/zarzycki/scratch/output/"+config+"/run/"
   filename = FILEDIR+"/"+config+".cam.h1.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   f2= FILEDIR+"/"+config+".cam.h3.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   kvmvar="UW_kvm"
   tkevar="UW_tke"
   lengthvar="UW_leng"
 else
-  FILEDIR="/storage/home/cmz5202/scratch/"+config+"/run/"
+  FILEDIR="/storage/home/cmz5202/scratch/output/"+config+"/run/"
   filename = FILEDIR+"/"+config+".cam.h1.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   f2= FILEDIR+"/"+config+".cam.h3.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   kvmvar="KVH_CLUBB"

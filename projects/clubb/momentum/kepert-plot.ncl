@@ -4,12 +4,12 @@ load "../../../functions/surfaceWindCorrFactor.ncl"
 
 begin
 
-out_type="pdf"
+out_type="png"
 
-config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp999"
+config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp703"
 
 ; load data
-ncdf=addfile("./netcdf/"+config+".003_09.nc","r")
+ncdf=addfile("./netcdf/"+config+".001_09.nc","r")
 rad_v_theta=ncdf->rad_v_theta
 rad_v_rad=ncdf->rad_v_rad
 rad_v_rad=ncdf->rad_v_rad
