@@ -89,7 +89,7 @@ end
 
 
 
-function track_mean(gridsize,lonstart,clat,clon,cvar,minhits)
+function track_mean(gridsize,lonstart,clat,clon,cvar,meanornot,minhits)
 
 ; author: Colin Zarzycki (with help from Dennis Shea)
 ; zarzycki@ucar.edu
@@ -164,9 +164,11 @@ end do
 ; Where count < minhits, set cumulative to missing
 cumulative = where(count.lt.minhits,cumulative@_FillValue,cumulative)
 
-; Normalize by dividing by count
-count = where(count.eq.0, count@_FillValue,count)
-cumulative = cumulative / count
+if meanornot then
+  ; Normalize by dividing by count
+  count = where(count.eq.0, count@_FillValue,count)
+  cumulative = cumulative / count
+end if
 
 print("count: min="+min(count(:,:))+"   max="+max(count(:,:)))
 print("count: sum="+sum(count(:,:)))

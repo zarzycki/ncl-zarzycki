@@ -9,6 +9,7 @@ ibenyr=2015
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
+print_to_screen=False
 
 
 factor=1.0
@@ -126,12 +127,27 @@ do ii = 0,ibstormcount-1
 
       thisdate=cd_calendar(ibtime(ii,0),0)
       numentries=num(.not.ismissing(iblat(ii,:)))
-      print("    ")
-      ;header=ibname(ii,0)
-      header="start"
+
+      header=ibname(ii,0)
+      ;header="start"
       HEADSTR=header+delim+numentries+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
-      print(HEADSTR+"")
+      if print_to_screen then
+        print("    ")
+        print(HEADSTR+"")
+      end if
       system("echo "+quote+      HEADSTR      +quote+" >> "+filename)
+
+      missingBoth := where(ismissing(ibpres(ii,:)) .and. ismissing(ibwind_(ii,:)) .and. .not.(ismissing(iblat(ii,:))), True, False)
+      ;if (ibname(ii,0) .eq. "HYACINTHE") then
+      ;  print(missingBoth)
+      ;end if
+      if (all( .not.(ismissing(iblat(ii,:))) .eq. missingBoth   )) then
+        print("********** "+ibname(ii,0)+" in "+ibbasin(ii,0)+" is missing ALL pres and wind data at all times "+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3))
+      else if (any(missingBoth.eq.True)) then
+        ;print(ibname(ii,0)+" is missing some pres and wind data at same time "+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3))
+      else
+      end if
+      end if
 
 
 
@@ -164,8 +180,10 @@ do ii = 0,ibstormcount-1
 
 ;          STORMSTR=delim+thisLon+delim+thisLat+delim+iblon(ii,jj)+delim+iblat(ii,jj)+delim+ibpres(ii,jj)+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
 ;          STORMSTR=delim+thisLon+delim+thisLat+delim+gridlon(thisLon)+delim+gridlat(thisLat)+delim+tofloat(ibpres(ii,jj))+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+          if print_to_screen then
+            print(STORMSTR+"")
+          end if
 
-          print(STORMSTR+"")
           system("echo "+quote+      STORMSTR       +quote+" >> "+filename)
         end if
       end do

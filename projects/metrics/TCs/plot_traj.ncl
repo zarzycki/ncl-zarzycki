@@ -44,6 +44,16 @@ ndims = dimsizes(lon)
 nstorms = ndims(0)
 ntimes = ndims(1)
 
+if (0 .eq. 0) then
+  do ii = 0,nstorms-1
+    if (yyyy(ii,0) .ne. 1991) then
+      lat(ii,:)=lat@_FillValue
+      lon(ii,:)=lon@_FillValue
+      wind(ii,:)=wind@_FillValue
+    end if
+  end do
+end if
+
 if (1 .eq. 0) then
   do ii = 0,nstorms-1
     orilat=lat(ii,0)

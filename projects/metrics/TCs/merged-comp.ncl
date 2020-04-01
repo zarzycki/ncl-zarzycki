@@ -19,7 +19,7 @@ csvdir="./csv-files/"
 gridsize = 8.0
 ;basin=(/1,2,3,4/)
 basin=1
-filename = "hyp_configs.csv"
+filename="hyp_configs.csv"
 
 defineMIbypres=False
 
@@ -43,7 +43,7 @@ if (any(basin.gt.0)) then
   if (dimsizes(basin) .eq. 1) then
     basinstr=getbasinmaskstr(basin)
   else
-    basinstr="user"
+    basinstr="NHEMI"
   end if
 else
   basinstr="GLOB"
@@ -148,6 +148,38 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   nstorms=dims(0)
   ntimes=dims(1)
 
+  ; Filter observational records
+  if (zz.eq.0) then
+
+    aaa=4.4
+    bbb=1010.
+    ccc=0.76
+    ;xpres := 980.
+    ;xwind := -1.
+    ; first, when xpres is missing but xwind exists, try to fill in xpres
+    xpres=where( xpres .lt. 0. .and. xwind .gt. 0. , -1*((xwind/aaa)^(1./ccc)-bbb) , xpres)
+    ; next, when xwind is missing but xpres exists, try to fill in xwind
+    xwind=where( xwind .lt. 0. .and. xpres .gt. 0. , aaa*(bbb - xpres)^ccc , xwind)
+    ;print(xpres+" "+xwind)
+    ;exit
+
+    ; now if still missing assume TD
+    xpres=where( xpres .lt. 0. , 1008. , xpres)
+    ; next, when xwind is missing but xpres exists, try to fill in xwind
+    xwind=where( xwind .lt. 0. , 15. , xwind)
+
+    windthreshold=17.
+    xlon=where(xwind.gt.windthreshold,xlon,xlon@_FillValue)
+    xlat=where(xwind.gt.windthreshold,xlat,xlat@_FillValue)
+    xpres=where(xwind.gt.windthreshold,xpres,xpres@_FillValue)
+    xwind=where(xwind.gt.windthreshold,xwind,xwind@_FillValue)
+
+    ;xlon=where(xpres.lt.850.,xlon@_FillValue,xlon)
+    ;xlat=where(xpres.lt.850.,xlat@_FillValue,xlat)
+    ;xpres=where(xpres.lt.850.,xpres@_FillValue,xpres)
+    ;xwind=where(xpres.lt.850.,xwind@_FillValue,xwind)
+  end if
+
   ; Get genesis latitude and longitude
   ; Note, we scan for genesis locations that may not occur at time t=0 due to filtering
   xlontmp=xlon
@@ -173,13 +205,20 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   ; if basin filtering requested, loop over all storms to filter using TC mask
   if (any(basin .gt. 0)) then
     do ii = 0,nstorms-1
-      orilat=xglat(ii)
-      orilon=xglon(ii)
-      if (orilon .gt. 360.0-maskspacing) then
-        orilon=360.0-maskspacing
-        print("    original lon: "+xglon(ii)+"   modified lon: "+orilon)
+      maskoff=True
+      if (.not. ismissing(xglat(ii))) then
+        maskoff=False
+        orilat=xglat(ii)
+        orilon=xglon(ii)
+        if (orilon .gt. 360.0-maskspacing) then
+          orilon=360.0-maskspacing
+          print("    original lon: "+xglon(ii)+"   modified lon: "+orilon)
+        end if
+        if (all(basin .ne. tcMask({orilat},{orilon}))) then
+          maskoff=True
+        end if
       end if
-      if (all(basin .ne. tcMask({orilat},{orilon}))) then
+      if maskoff then
         xlon(ii,:)=xlon@_FillValue
         xlat(ii,:)=xlat@_FillValue
         xpres(ii,:)=xpres@_FillValue
@@ -192,19 +231,6 @@ if (str_get_cols(files(zz),0,0).ne."!") then
         xgmonth(ii)=xgmonth@_FillValue
       end if
     end do
-  end if
-
-  ; Filter observational records
-  if (zz.eq.0) then
-    xlon=where(xwind.gt.35/ms_to_kts,xlon,xlon@_FillValue)
-    xlat=where(xwind.gt.35/ms_to_kts,xlat,xlat@_FillValue)
-    xpres=where(xwind.gt.35/ms_to_kts,xpres,xpres@_FillValue)
-    xwind=where(xwind.gt.35/ms_to_kts,xwind,xwind@_FillValue)
-
-    xlon=where(xpres.lt.850.,xlon@_FillValue,xlon)
-    xlat=where(xpres.lt.850.,xlat@_FillValue,xlat)
-    xpres=where(xpres.lt.850.,xpres@_FillValue,xpres)
-    xwind=where(xpres.lt.850.,xwind@_FillValue,xwind)
   end if
 
   ; Get location of maximum intensity for each trajectory
@@ -232,9 +258,10 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   xtcdpp = where(.not.ismissing(xwind),0.25,xwind@_FillValue)
 
   ; Calculate ACE for each storm
-  xace = 1e-4*dim_sum_n((ms_to_kts*xwind)^2.,1)
+  xaceall = 1e-4*(ms_to_kts*xwind)^2.
   ; if ace is missing BUT xlon is not missing (storm in this basin) set ACE to zero
   ; if xlon is missing, will leave ace as missing since storm isn't in basin
+  xace = dim_sum_n(xaceall,1)
   xace = where(ismissing(xace) .and. .not.(ismissing(xglon)),0.0,xace)
 
   ; Calculate PACE for each storm
@@ -247,16 +274,17 @@ if (str_get_cols(files(zz),0,0).ne."!") then
       quad_a = lspoly(ndtooned(xpres), ndtooned(xwind) , 1, polyn)
     end if
     xwindtmp = quad_a(0) + quad_a(1)*xpres + quad_a(2)*xpres^2
-    xpace = 1e-4*dim_sum_n((ms_to_kts*xwindtmp)^2.,1)
+    xpaceall = 1e-4*(ms_to_kts*xwindtmp)^2.
     delete(xwindtmp)
   else
     ;print("min: "+min(xpres)+"   max: "+max(xpres))
-    xpace = 1e-4*dim_sum_n( (4.4*(1010.-xprestmp)^0.76)^2.,1)
-    xpace = where(ismissing(xpace) .and. .not.(ismissing(xglon)),0.0,xpace)
+    xpaceall = 1e-4*(4.4*(1010.-xprestmp)^0.76)^2.
     delete(xprestmp)
     ;print("min: "+min(xpace)+"   max: "+max(xpace))
   end if
-
+  ; clean up
+  xpace = dim_sum_n(xpaceall,1)
+  xpace = where(ismissing(xpace) .and. .not.(ismissing(xglon)),0.0,xpace)
 
   ; Find maximum intensity, integrated TC days, and genesis year/month
   xmpres  = dim_min_n(xpres,1)
@@ -275,8 +303,15 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   cmpres = ndtooned(xmpres)
   cmwind = ndtooned(xmwind)
   ctcd = ndtooned(xtcd)
+  ctcdpp = ndtooned(xtcdpp)
+
   cace = ndtooned(xace)
+  caceall = ndtooned(xaceall)
   cpace = ndtooned(xpace)
+  cpaceall = ndtooned(xpaceall)
+
+  printVarSummary(cpaceall)
+
   cgyear = ndtooned(xgyear)
   cgmonth = ndtooned(xgmonth)
 
@@ -319,6 +354,12 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   end do
 
   ; Calculate bulk averages per calendar year
+
+  print("cpres storms "+num(.not.ismissing(cmpres)))
+  print("cace storms "+num(.not.ismissing(cace)))
+  print("cpace storms "+num(.not.ismissing(cpace)))
+  print("ctcd storms "+num(.not.ismissing(ctcd)))
+
   avgStormsPY(zz) = tofloat(num(.not.ismissing(cmpres)))/nmodyears
   avgTcdPY(zz) = sum(ctcd)/nmodyears
   avgPacePY(zz) = sum(cpace)/nmodyears
@@ -338,11 +379,23 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   gendens = track_density(gridsize,0.0,cglat,cglon,False)
   gendens = gendens/nmodyears
 
+  tcddens = track_mean(gridsize,0.0,clat,clon,ctcdpp,False,0)
+  tcddens = tcddens/nmodyears
+
+  pacedens = track_mean(gridsize,0.0,clat,clon,cpaceall,False,0)
+  pacedens = pacedens/nmodyears
+
+  acedens = track_mean(gridsize,0.0,clat,clon,caceall,False,0)
+  acedens = acedens/nmodyears
+
   minpres = track_minmax(gridsize,0.0,clat,clon,cpres,"min",20)
   maxwind = track_minmax(gridsize,0.0,clat,clon,cwind,"max",20)
 
   if (sum(trackdens).eq.0) then
     trackdens=trackdens@_FillValue
+    pacedens=trackdens@_FillValue
+    acedens=trackdens@_FillValue
+    tcddens=trackdens@_FillValue
     gendens=trackdens@_FillValue
     minpres=trackdens@_FillValue
     maxwind=trackdens@_FillValue
@@ -365,6 +418,10 @@ if (str_get_cols(files(zz),0,0).ne."!") then
     fullpres=fulldens
     fullwind=fulldens
     fullgen=fulldens
+    fullpace=fulldens
+    fullace=fulldens
+    fulltcd=fulldens
+
     delete(tmpdims)
   end if
   
@@ -372,12 +429,16 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   fullpres(zz,:,:)=minpres(:,:)
   fullwind(zz,:,:)=maxwind(:,:)
   fullgen(zz,:,:)=gendens(:,:)
+  fullpace(zz,:,:)=pacedens(:,:)
+  fullace(zz,:,:)=acedens(:,:)
+  fulltcd(zz,:,:)=tcddens(:,:)
 
-spapltvarsstr=(/"trackdens","minpres","maxwind","gendens"/)
-spapltvars=[/ trackdens, minpres, maxwind, gendens /] 
-spapltmincontour=(/0.,880.,0.,0./)
-spapltmaxcontour=(/20.,1010.,100.,1./)
-do bb = 0,3
+spapltvarsstr=(/"trackdens","minpres","maxwind","gendens","pacedens","acedens","tcddens"/)
+spapltvars=[/ trackdens, minpres, maxwind, gendens, pacedens,acedens,tcddens /] 
+spapltmincontour=(/0.,880.,0.,0.,0.,0.,0./)
+spapltmaxcontour=(/20.,1010.,100.,1.,6.,6.,5./)
+do bb = 0,dimsizes(spapltvarsstr)-1
+  print("plotting "+tostring(spapltvarsstr(bb))+"."+basinstr+"_"+files(zz))
   wks = gsn_open_wks("pdf","./pdfs/"+tostring(spapltvarsstr(bb))+"."+basinstr+"_"+files(zz))
   plot = new(1,"graphic")
   ;print(spapltvars[bb])
@@ -419,9 +480,9 @@ do bb = 0,3
 end do
 
   ; clean up arrays before returning to start of loop
-  delete([/xtcdpp,xyear,xmonth,xhour,xday/])
-  delete([/xlon,xlat,xpres,xwind,xace,xpace,xtcd,xlatmi,xlonmi,xglon,xglat,xmpres,xmwind,xgyear,xgmonth/])
-  delete([/clon,clat,cpres,cwind,cace,cpace,ctcd,clatmi,clonmi,cglon,cglat,cmpres,cmwind,cgyear,cgmonth/])
+  delete([/xyear,xmonth,xhour,xday/])
+  delete([/xlon,xlat,xpres,xwind,xace,xaceall,xpace,xpaceall,xtcd,xtcdpp,xlatmi,xlonmi,xglon,xglat,xmpres,xmwind,xgyear,xgmonth/])
+  delete([/clon,clat,cpres,cwind,cace,caceall,cpace,cpaceall,ctcd,ctcdpp,clatmi,clonmi,cglon,cglat,cmpres,cmwind,cgyear,cgmonth/])
   delete([/traj_data,maxLines,ncols,thefile/])
   delete([/thisYr/])
   delete([/trackdens,minpres,maxwind/])
@@ -578,17 +639,17 @@ quote = inttochar(34)
 delim=","
 OPT=0
 system("rm "+outputname)
-system("echo Model,Track,Genesis,U10,SLP >> "+outputname)
+system("echo Model,Track,SLP,WIND,TCD,ACE,PACE,GEN >> "+outputname)
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   tmprefr=fulldens(0,:,:)
   tmptest=fulldens(mm,:,:)
-  tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
-  tmptest=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmptest@_FillValue,tmptest)
+  ;tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
+  ;tmptest=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmptest@_FillValue,tmptest)
   tm2refr=fullgen(0,:,:)
   tm2test=fullgen(mm,:,:)
-  tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
-  tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
+  ;tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
+  ;tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
 
   taylorVals=taylor_stats(tmptest,tmprefr,denslatwgt,1)
   
@@ -607,6 +668,9 @@ do qq = 0,nfiles-1
     pattern_cor(tmprefr,tmptest,denslatwgt,OPT)+delim+ \
     pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),denslatwgt,OPT)+delim+ \
+    pattern_cor(fulltcd(0,:,:),fulltcd(mm,:,:),denslatwgt,OPT)+delim+ \
+    pattern_cor(fullace(0,:,:),fullace(mm,:,:),denslatwgt,OPT)+delim+ \
+    pattern_cor(fullpace(0,:,:),fullpace(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(tm2refr,tm2test,denslatwgt,OPT)
   print(OUTSTR+"")
   system("echo "+OUTSTR+" >> "+outputname)
