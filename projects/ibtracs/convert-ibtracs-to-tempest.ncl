@@ -4,8 +4,8 @@ begin
 ;gridfile="/glade/u/home/zarzycki/scratch/j1files/GPCP/2005/precip.2005_interp.nc"
 gridfile=""
 
-ibstyr=1980
-ibenyr=2015
+ibstyr=1998
+ibenyr=2008
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
@@ -100,7 +100,7 @@ ibpres = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibpres@
 iblat  = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,iblat@_FillValue,iblat)
 iblon  = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,iblon@_FillValue,iblon)
 ibtime = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibtime@_FillValue,ibtime)
-ibname = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibname@_FillValue,ibname)
+;ibname = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibname@_FillValue,ibname)
 
 ;=============================================================================
 ; Load optional PHIS file
@@ -125,11 +125,20 @@ do ii = 0,ibstormcount-1
   ;if (toint(ibbasin(ii,0)) .eq. 0 ) then
     if (.not.ismissing(ibname(ii,0))) then
 
-      thisdate=cd_calendar(ibtime(ii,0),0)
       numentries=num(.not.ismissing(iblat(ii,:)))
 
-      header=ibname(ii,0)
-      ;header="start"
+      ; find first non missing index
+      do zz = 0,ibntimes-1
+        if (.not.ismissing(iblat(ii,zz))) then
+          IBSTIX=zz
+          break
+        end if
+      end do
+
+      thisdate=cd_calendar(ibtime(ii,IBSTIX),0)
+
+      ;header=ibname(ii,0)
+      header="start"
       HEADSTR=header+delim+numentries+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
       if print_to_screen then
         print("    ")
@@ -151,7 +160,7 @@ do ii = 0,ibstormcount-1
 
 
 
-      do jj = 0,ibntimes-1
+      do jj = IBSTIX,ibntimes-1
         if (.not.ismissing(iblat(ii,jj))) then
 
           ; if gridfile not empty string, find nearest coordinate
