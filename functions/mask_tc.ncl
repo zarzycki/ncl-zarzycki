@@ -121,3 +121,64 @@ end if
 
 end
 
+
+
+function mask_tc_latlon(lat:numeric,lon:numeric)
+
+begin
+
+if (lon .lt. 0) then
+  lon = lon + 360.
+end if
+
+; Coefficients for calculating ATL/EPAC sloped line
+m = -0.58
+b = 00 - m*295
+maxlat = 45.0
+
+; 1 = ATL
+; 2 = EPAC
+; 3 = CPAC
+; 4 = WPAC
+; 5 = NIO
+; 6 = SIO
+; 7 = SPAC
+; 8 = SATL
+; Atlantic
+
+    if (lat .ge. 0 .and. lat .le. maxlat .and. lon .gt. 257 .and. lon .le. 355) then
+      ;print(lon)
+      funcval = m*lon + b
+    ;print(funcval)
+      if (lat .gt. funcval) then
+        maskArr = 1
+      else
+        maskArr = 2
+      end if
+    else if (lat .ge. 0 .and. lat .le. maxlat .and. lon .gt. 220 .and. lon .le. 257) then
+            maskArr = 2
+    else if (lat .ge. 0 .and. lat .le. maxlat .and. lon .gt. 180 .and. lon .le. 220) then
+            maskArr = 3
+    else if (lat .ge. 0 .and. lat .le. maxlat .and. lon .gt. 100 .and. lon .le. 180) then
+            maskArr = 4
+    else if (lat .ge. 0 .and. lat .le. maxlat .and. lon .gt. 30 .and. lon .le. 100) then
+            maskArr = 5
+    else if (lat .lt. 0 .and. lat .ge. -maxlat .and. lon .gt. 30 .and. lon .le. 135) then
+            maskArr = 6
+    else if (lat .lt. 0 .and. lat .ge. -maxlat .and. lon .gt. 135 .and. lon .le. 290) then
+            maskArr = 7   
+    else
+      maskArr = 0
+    end if
+    end if
+    end if
+    end if
+    end if
+    end if
+    end if
+
+
+return(maskArr)
+
+end
+
