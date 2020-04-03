@@ -4,8 +4,8 @@ begin
 ;gridfile="/glade/u/home/zarzycki/scratch/j1files/GPCP/2005/precip.2005_interp.nc"
 gridfile=""
 
-ibstyr=1998
-ibenyr=2008
+ibstyr=1980
+ibenyr=2015
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
@@ -20,8 +20,16 @@ wcStrt     = systemfunc("date")
 
 print("Plotting iBtracks data from: "+ibstyr+" to "+ibenyr)
 print("Loading data, this may take awhile.")
+
 ibdir = "./"
 ibfilename="IBTrACS.ALL.v04r00.nc"
+ibversion="v4"
+
+;ibdir = "/Users/cmz5202/NetCDF/ibtracs/"
+;ibfilename="Allstorms.ibtracs_wmo.v03r10.nc"
+;ibversion="v3"
+
+print_names=False
 
 ibfile = addfile(ibdir+ibfilename,"r")
 
@@ -55,17 +63,27 @@ print("Starting index: "+stix+"     end index: "+enix)
 delete(ibyear)
 ;=============================================================================
 
-iblat = ibfile->lat(stix:enix,:)
-iblon = ibfile->lon(stix:enix,:)
-ibtype = tostring(ibfile->nature(stix:enix,:,:))
-ibwind_ = ibfile->wmo_wind(stix:enix,:)/ms_to_kts
-ibpres = ibfile->wmo_pres(stix:enix,:)*100.
-ibtime = ibfile->time(stix:enix,:)
-ibnamechar = ibfile->name(stix:enix,:)
+if (ibversion .eq. "v3") then
+  iblat = ibfile->lat_wmo(stix:enix,:)*.01
+  iblon = ibfile->lon_wmo(stix:enix,:)*.01
+  ibtype = toint(ibfile->nature_wmo(stix:enix,:))
+  ibwind_ = ibfile->wind_wmo(stix:enix,:)*.1/ms_to_kts
+  ibpres = ibfile->pres_wmo(stix:enix,:)
+  ibtime = ibfile->time_wmo(stix:enix,:)
+  ibnamechar = ibfile->name(stix:enix,:)
+  ibbasin = tostring(ibfile->basin(stix:enix,:))
+else
+  iblat = ibfile->lat(stix:enix,:)
+  iblon = ibfile->lon(stix:enix,:)
+  ibtype = tostring(ibfile->nature(stix:enix,:,:))
+  ibwind_ = ibfile->wmo_wind(stix:enix,:)/ms_to_kts
+  ibpres = ibfile->wmo_pres(stix:enix,:)*100.
+  ibtime = ibfile->time(stix:enix,:)
+  ibnamechar = ibfile->name(stix:enix,:)
+  ibbasin = tostring(ibfile->basin(stix:enix,:,:))
+end if
 
 iblon=where(iblon.lt.0,iblon+360.,iblon)
-
-ibbasin = tostring(ibfile->basin(stix:enix,:,:))
 
 stDateIBUnits=cd_inv_calendar(ibstyr,1,1,0,0,0,ibtime@units,0)
 enDateIBUnits=cd_inv_calendar(ibenyr,12,31,23,0,0,ibtime@units,0)
@@ -118,14 +136,16 @@ PHIS=phisfile->PHIS
 quote = inttochar(34)
 delim="	"
 filename="./test.txt"
+system("rm -rf "+filename)
 
 do ii = 0,ibstormcount-1
   ;print(ibname(ii,0)+" "+toint(ibbasin(ii,0)))
   ;if (toint(ibbasin(ii,0)) .eq. 0 .or. toint(ibbasin(ii,0)) .eq. 12 .or. toint(ibbasin(ii,0)) .eq. 13) then
   ;if (toint(ibbasin(ii,0)) .eq. 0 ) then
-    if (.not.ismissing(ibname(ii,0))) then
+    numentries=num(.not.ismissing(iblat(ii,:)))
 
-      numentries=num(.not.ismissing(iblat(ii,:)))
+    ;if (.not.ismissing(ibname(ii,0))) then
+    if (numentries .gt. 0) then
 
       ; find first non missing index
       do zz = 0,ibntimes-1
@@ -135,10 +155,13 @@ do ii = 0,ibstormcount-1
         end if
       end do
 
-      thisdate=cd_calendar(ibtime(ii,IBSTIX),0)
+      thisdate:=cd_calendar(ibtime(ii,IBSTIX),0)
 
-      ;header=ibname(ii,0)
-      header="start"
+      if print_names then
+        header=ibname(ii,0)
+      else
+        header="start"
+      end if
       HEADSTR=header+delim+numentries+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
       if print_to_screen then
         print("    ")
