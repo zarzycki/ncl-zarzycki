@@ -1,37 +1,29 @@
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
-
 begin
 
-numlevels=30
+ENS="001"
+res="ne15x8"
+numlevels=56
+
+; perturbation values
+rseed1 = toint(systemfunc(" date +%s"))
+rseed2 = toint((12345l*rseed1)%2147483398l)
+random_setallseed(rseed1, rseed2)
+latpert=random_uniform(-0.1d0,0.1d0,1)
+lonpert=random_uniform(-0.1d0,0.1d0,1)
+dppert =random_uniform(-5.d0,5.d0,1)
+rppert =random_uniform(-1000.d0,1000.d0,1)
+
+logname = getenv("LOGNAME")
+
 dycore="se"   ; fv or se
-P0 = 100000.
+P0 = 100000.d
 
 wcStrt = systemfunc("date")
 
 print("---------------------------------------------------------")
-print("Loading CAM levels")
-if (numlevels .eq. 30)
-  print("Loading 30 level data")
-  fC   = addfile ("./L30template.nc", "r")
-else if (numlevels .eq. 32)
-  print("Loading 32 level data")
-  fC   = addfile ("./L32template.nc", "r")
-else if (numlevels .eq. 26)
-  print("Loading 26 level data")
-  fC   = addfile ("./L26template.nc", "r")
-else if (numlevels .eq. 59)
-  print("Loading 59 level data")
-  fC   = addfile ("./L59template.nc", "r")
-else
-  print("Bad numlevs, exiting...")
-  exit
-end if
-end if
-end if
-end if
+
+fC   = addfile ("/storage/home/cmz5202/ncl/projects/idealized/L"+tostring(numlevels)+"template.nc", "r")
+
 hya  = fC->hyam
 hyb  = fC->hybm
 hyai  = fC->hyai
@@ -41,7 +33,7 @@ ilev = fC->ilev
 
 nlev=dimsizes(lev)
 
-fH = addfile("/glade/u/home/zarzycki/work/grids/latlon/ne0np4tcfplane.ne15x16_template.nc","r")
+fH = addfile("/storage/work/cmz5202/grids/latlon/ne0np4tcfplane."+res+"_template.nc","r")
 
 selat = fH->lat
 selon = fH->lon
@@ -53,42 +45,60 @@ Q_ = new((/1,nlev,ncol/),"double")
 T_ = new((/1,nlev,ncol/),"double")
 PD = new((/1,ncol/),"double")
 
-;=======================================================================================================================================
+;========================================================================================================================================
 
 ; Constants
-a	= 6371220.	        ; Earth's Radius (m)
-Rd 	= 287.0	          ; Ideal gas const dry air (J kg^-1 K^1)
-g	= 9.80616	          ; Gravity (m s^2)
+a	= 6371220.d0	        ; Earth's Radius (m)
+Rd 	= 287.0d0	          ; Ideal gas const dry air (J kg^-1 K^1)
+g	= 9.80616d0	          ; Gravity (m s^2)
 omega   = 7.292115d-5 ; angular velocity 1/s
-pi      = 4.*atan(1.)       ; pi
+pi      = 4.d0*atan(1.)       ; pi
 convert = 180./pi   ; conversion factor: radians to degrees
-rp         = 282000.  ; Radius for calculation of PS
-dp         = 1115.    ; Delta P for calculation of PS
-zp         = 7000.    ; Height for calculation of P
-q0         = 0.021    ; q at surface from Jordan
-gamma_      = 0.007    ; lapse rate
-Ts0        = 302.0   ; Surface temperature (SST)
-p00        = 101500.  ; global mean surface pressure
-p0         = 100000.  ; p for model level calculation
-cen_lat    = 0.0      ; Center latitude of initial vortex
-cen_lon    = 0.0     ; Center longitufe of initial vortex
-zq1        = 3000.    ; Height 1 for q calculation
-zq2        = 8000.    ; Height 2 for q calculation
-exppr      = 1.5      ; Exponent for r dependence of p
-exppz      = 2.       ; Exponent for z dependence of p
-ztrop      = 15000.   ; Tropopause Height
-qtrop      = 1.e-11     ; Tropopause specific humidity
-rfpi       = 1000000. ; Radius within which to use fixed-point iter.
-constTv    = 0.608    ; Constant for Virtual Temp Conversion
-deltaz     = 2.e-5     ; Small number to ensure convergence in FPI
-epsilon    = 1.e-25     ; Small number to aviod dividing by zero in wind calc
+rp         = 282000.d0  ; Radius for calculation of PS
+dp         = 1115.d0    ; Delta P for calculation of PS
+zp         = 7000.d0    ; Height for calculation of P
+q0         = 0.021d0    ; q at surface from Jordan
+gamma_      = 0.007d0    ; lapse rate
+Ts0        = 302.0d0   ; Surface temperature (SST)
+p00        = 101500.d0  ; global mean surface pressure
+p0         = 100000.d0  ; p for model level calculation
+cen_lat    = 0.0d0      ; Center latitude of initial vortex
+cen_lon    = 0.0d0     ; Center longitufe of initial vortex
+zq1        = 3000.d0    ; Height 1 for q calculation
+zq2        = 8000.d0    ; Height 2 for q calculation
+exppr      = 1.5d0      ; Exponent for r dependence of p
+exppz      = 2.d0       ; Exponent for z dependence of p
+ztrop      = 15000.d0   ; Tropopause Height
+qtrop      = 1.0d-11     ; Tropopause specific humidity
+rfpi       = 1000000.d0 ; Radius within which to use fixed-point iter.
+constTv    = 0.608d0    ; Constant for Virtual Temp Conversion
+deltaz     = 2.0d-12     ; Small number to ensure convergence in FPI
+epsilon    = 1.0d-25     ; Small number to aviod dividing by zero in wind calc
 exponent = Rd*gamma_/g   ; exponent
 T0    = Ts0*(1.+constTv*q0)   ; Surface temp
 Ttrop = T0 - gamma_*ztrop     ; Tropopause temp
 ptrop = p00*(Ttrop/T0)^(1./exponent); Tropopause pressure
 
+print("... ADD PERTURBATIONS")
+print("Starting...")
+print("cen_lat "+cen_lat)
+print("cen_lon "+cen_lon)
+print("dp "+dp)
+print("rp "+rp)
+cen_lat=cen_lat+latpert
+cen_lon=cen_lon+lonpert
+dp=dp+dppert
+rp=rp+rppert
+print("Ending...")
+print("cen_lat "+cen_lat)
+print("cen_lon "+cen_lon)
+print("dp "+dp)
+print("rp "+rp)
+
 do ii=0,ncol-1
-    print("doing "+ii+" of "+ncol)
+    if (mod(ii,250) .eq. 0) then
+      print( ((tofloat(ii) / tofloat(ncol-1) )*100.)+" % done")
+    end if
     do k = 0,nlev-1
  
       lat=selat(ii)
@@ -131,12 +141,13 @@ do ii=0,ncol-1
             
             if (n .eq. 500) then
               print("FPI did not converge after 500 interations in q & T!!!")
+              exit
             end if
           end do
           
           height = zn
-          
-          print("Corrected: "+zherebefore+" to: "+height)
+
+          ;print("Corrected: "+zherebefore+" to: "+height+"   at "+lat+" "+lon)
           
       end if
 
@@ -254,10 +265,8 @@ Q_!2 = "ncol"
 selat!0 = "ncol"
 selon!0 = "ncol"
 
-
-print("Writing output file")
-
-se_inic="/glade/scratch/zarzycki/TCINIC.nc"
+se_inic="/storage/work/"+logname+"/inic/ne0np4tcplane"+res+"_INIC_L"+numlevels+"."+ENS+".nc"
+print("Writing output file "+se_inic)
 system("/bin/rm -f "+se_inic)   ; remove any pre-existing file
 in2 = addfile(se_inic,"c")  ; open output netCDF file
 
