@@ -3,12 +3,7 @@
 ; tracking code and plots a track density
 ;==================================================================
 
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 load "../../../functions/getTrajectoriesGeneric.ncl"
-load "../../../functions/trackDensity.ncl"
 load "../../../functions/mask_tc.ncl"
 
 begin
@@ -16,6 +11,8 @@ begin
 ;=================== User Settings ================================
 out_type = "pdf"
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
+trajDir="./TRAJ_FINAL/"
+csvdir="./orig-files/"
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
@@ -49,25 +46,40 @@ linecolors = str_get_field(lines,7,delim)
 
 isUnstruct = where(isUnstructStr.eq."True",True,False)
 
-;=================== Get traj data ================================
+;=================== Init arrays ================================
 
 nfiles=dimsizes(files)
 
-nmonths=12
-
+; Init PAIRED per year arrays
 stormsByYear=new((/nfiles,nyears/),"float")
 aceByYear=new((/nfiles,nyears/),"float")
 paceByYear=new((/nfiles,nyears/),"float")
 tcdByYear=new((/nfiles,nyears/),"float")
 
-stormsByMonth=new((/nfiles,12/),"float")
-aceByMonth=new((/nfiles,12/),"float")
-paceByMonth=new((/nfiles,12/),"float")
-tcdByMonth=new((/nfiles,12/),"float")
+; Init per month arrays
+stormsByMonth=new((/nfiles,nmonths/),"float")
+aceByMonth=new((/nfiles,nmonths/),"float")
+paceByMonth=new((/nfiles,nmonths/),"float")
+tcdByMonth=new((/nfiles,nmonths/),"float")
+
+; Init per year arrays
+avgStormsPY=new((/nfiles/),"float")
+avgTcdPY=new((/nfiles/),"float")
+avgAcePY=new((/nfiles/),"float")
+avgPacePY=new((/nfiles/),"float")
+
+; Init per storm arrays
+avgTcdPS=new((/nfiles/),"float")
+avgLmiPS=new((/nfiles/),"float")
+avgAcePS=new((/nfiles/),"float")
+avgPacePS=new((/nfiles/),"float")
+avgLatgenPS=new((/nfiles/),"float")
+
+;=================== Loop over data files ================================
 
 do zz = 0,nfiles-1
 
-  thefile=files(zz)
+  thefile=trajDir+"/"+files(zz)
   ncols = 11 ; number of columns in non-header rows of trajectory file
   maxLines = -1  ; set to -1 for auto-detection
   if (isUnstruct(zz)) then
@@ -86,68 +98,86 @@ do zz = 0,nfiles-1
   xyear  = toint(traj_data(:,7,:))
   xmonth  = toint(traj_data(:,8,:))
 
+  ; get nstorms + ntimes (max) from dims of one of the returned arrays
   dims=dimsizes(xlon)
   nstorms=dims(0)
   ntimes=dims(1)
 
-;  if (zz.eq.3 .or. zz.eq.4) then
-;    xlon = where(xlon.lt.0,xlon+360.,xlon)
-;  end if
+  ; if basin filtering requested, loop over all storms to filter using TC mask
+  if (basin .gt. 0) then
+    do ii = 0,nstorms-1
+      orilat=xlat(ii,0)
+      orilon=xlon(ii,0)
+      if (orilon .gt. 360.0-maskspacing) then
+        orilon=360.0-maskspacing
+        print("    original lon: "+xlon(ii,0)+"   modified lon: "+orilon)
+      end if
+      if (tcMask({orilat},{orilon}) .ne. basin)
+        xlon(ii,:)=xlon@_FillValue
+        xlat(ii,:)=xlat@_FillValue
+        xpres(ii,:)=xpres@_FillValue
+        xwind(ii,:)=xwind@_FillValue
+        xyear(ii,:)=xyear@_FillValue
+        xmonth(ii,:)=xmonth@_FillValue
+      end if
+    end do
+  end if
 
-  do ii = 0,nstorms-1
-    orilat=xlat(ii,0)
-    orilon=xlon(ii,0)
-    if (orilon .gt. 360.0-maskspacing) then
-      orilon=360.0-maskspacing
-      print("    original lon: "+xlon(ii,0)+"   modified lon: "+orilon)
-    end if
-    if (tcMask({orilat},{orilon}) .ne. basin)
-      xlon(ii,:)=xlon@_FillValue
-      xlat(ii,:)=xlat@_FillValue
-      xpres(ii,:)=xpres@_FillValue
-      xwind(ii,:)=xwind@_FillValue
-      xyear(ii,:)=xyear@_FillValue
-      xmonth(ii,:)=xmonth@_FillValue
+  if (zz.eq.0)
+    xpres=where(xwind.gt.35/ms_to_kts,xpres,xpres@_FillValue)
+    xwind=where(xwind.gt.35/ms_to_kts,xwind,xwind@_FillValue)
+
+    xpres=where(xpres.lt.850.,xpres@_FillValue,xpres)
+    xwind=where(xpres.lt.850.,xwind@_FillValue,xwind)
+  end if
+
+  ; Get location of maximum intensity
+  xlatmi=new(nstorms,typeof(xlat))
+  xlonmi=xlatmi
+  do kk = 0,nstorms-1
+    if(.not.all(ismissing(xpres(kk,:)))) then
+      locMI=minind(xpres(kk,:))
+      ;print(""+locMI)
+      xlatmi(kk)=xlat(kk,locMI)
+      xlonmi(kk)=xlon(kk,locMI)
     end if
   end do
 
-if (zz.eq.0)
-  ;xlon=where(xwind.gt.35/ms_to_kts,xlon,xlon@_FillValue)
-  ;xlat=where(xwind.gt.35/ms_to_kts,xlat,xlat@_FillValue)
-  xpres=where(xwind.gt.35/ms_to_kts,xpres,xpres@_FillValue)
-  xwind=where(xwind.gt.35/ms_to_kts,xwind,xwind@_FillValue)
-  ;xyear=where(xwind.gt.35/ms_to_kts,xyear,xyear@_FillValue)
-  ;xmonth=where(xwind.gt.35/ms_to_kts,xmonth,xmonth@_FillValue)
-
-  ;xlon=where(xpres.lt.850.,xlon@_FillValue,xlon)
-  ;xlat=where(xpres.lt.850.,xlat@_FillValue,xlat)
-  xpres=where(xpres.lt.850.,xpres@_FillValue,xpres)
-  xwind=where(xpres.lt.850.,xwind@_FillValue,xwind)
-  ;xyear=where(xpres.lt.850.,xyear@_FillValue,xyear)
-  ;xmonth=where(xpres.lt.850.,xmonth@_FillValue,xmonth)
-end if
-
+  ; Count the number of TC days per storm (i.e., trajectory length)
   xtcd = xwind
   xtcd = where(.not.ismissing(xwind),0.25,xwind@_FillValue)
 
+  ; Get genesis latitude and longitude
   xlon  := xlon(:,0)
   xlat  := xlat(:,0)
+
   xace  := 1e-4*dim_sum_n((ms_to_kts*xwind)^2.,1)
+  xace = where(ismissing(xace) .and. .not.(ismissing(xlon)),0.0,xace)
+  ; if ace is missing BUT xlon is not missing (storm in this basin) set ACE to zero
+  ; if xlon is missing, will leave ace as missing since storm isn't in basin
+
+  ;do jj=0,nstorms-1
+  ;  print(xlon(jj,:)+" "+xlat(jj,:)+" "+xwind(jj,:)+" "+tostring(1e-4*(ms_to_kts*xwind(jj,:))^2.))
+  ;end do
+
   print("min: "+min(xpres)+"   max: "+max(xpres))
-  xprestmp = where(xpres.lt.1016,xpres,1016.)
-  xpace := 1e-4*dim_sum_n( (ms_to_kts*3.92*(1016.-xprestmp)^0.644)^2.,1)
+  xprestmp = where(xpres.lt.1010,xpres,1010.)
+  xpace := 1e-4*dim_sum_n( (4.4*(1010.-xprestmp)^0.76)^2.,1)
+  xpace = where(ismissing(xpace) .and. .not.(ismissing(xlon)),0.0,xpace)
   delete(xprestmp)
   print("min: "+min(xpace)+"   max: "+max(xpace))
+
   xpres := dim_min_n(xpres,1)
   xwind := dim_max_n(xwind,1)
   xtcd  := dim_sum_n(xtcd,1)
   xyear := xyear(:,0)
   xmonth := xmonth(:,0)
 
-  ;xyear=where(xpres.lt.990.,xyear,xyear@_FillValue)
-  
+  ; Convert to 1-D masked arrays for ease of processing
   clat = ndtooned(xlat)
   clon = ndtooned(xlon)
+  clatmi = ndtooned(xlatmi)
+  clonmi = ndtooned(xlonmi)
   cpres = ndtooned(xpres)
   cwind = ndtooned(xwind)
   ctcd = ndtooned(xtcd)
@@ -155,6 +185,9 @@ end if
   cpace = ndtooned(xpace)
   cyear = ndtooned(xyear)
   cmonth = ndtooned(xmonth)
+
+;  print(cace)
+;  print(" SUM "+sum(cace)+"")
 
   do ii = 0,nyears-1
     thisYr=ii+styr
@@ -188,15 +221,32 @@ end if
     delete([/tmpace,tmppace,tmptcd/])
   end do
 
-  delete([/xlon,xlat,xpres,xwind,xace,xpace,xyear,xmonth,xtcd,clon,clat,cpres,cace,cpace,cwind,ctcd,cyear,cmonth/])
+  ; Calculate bulk averages per calendar year
+  DENOM=ensmembers(zz)*yearspermember(zz)
+  avgStormsPY(zz) = tofloat(num(.not.ismissing(cpres)))/DENOM
+  avgTcdPY(zz) = sum(ctcd)/DENOM
+  avgPacePY(zz) = sum(cpace)/DENOM
+  avgAcePY(zz) = sum(cace)/DENOM
+
+  ; Calculate individual per storm averages
+  avgTcdPS(zz) = avg(ctcd)
+  avgPacePS(zz) = avg(cpace)
+  avgAcePS(zz) = avg(cace)
+  avgLmiPS(zz) = avg(abs(clatmi))
+  avgLatgenPS(zz) = avg(abs(clat))
+
+  delete([/xlon,xlat,xpres,xwind,xace,xpace,xyear,xmonth,xtcd,xlatmi,xlonmi/])
+  delete([/clon,clat,cpres,cwind,cace,cpace,cyear,cmonth,ctcd,clatmi,clonmi/])
   delete([/traj_data,maxLines,ncols,thefile/])
   delete([/thisYr/])
 
+  print("---------------------------------------------------- DONE")
 end do
 
+; if we don't have any storms, assume we didn't have data for year...
 stormsByYear=where(stormsByYear.eq.0,stormsByYear@_FillValue,stormsByYear)
 
-; Correct for number of ensemble members
+print("Correcting for number of ensemble members")
 do mm = 0,nfiles-1
   stormsByYear(mm,:)=stormsByYear(mm,:)/ensmembers(mm)
   aceByYear(mm,:)=aceByYear(mm,:)/ensmembers(mm)
@@ -206,34 +256,115 @@ do mm = 0,nfiles-1
   aceByMonth(mm,:)=aceByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
   paceByMonth(mm,:)=paceByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
   tcdByMonth(mm,:)=tcdByMonth(mm,:)/ensmembers(mm)/yearspermember(mm)
-  print(monArr+" "+paceByMonth(mm,:)+" "+aceByMonth(mm,:))
+  ;print(yearArr+" "+stormsByYear(mm,:)+" "+aceByYear(mm,:)+" "+tcdByYear(mm,:))
 end do
 
+;print("Bias correction.")
+;stormsCorrected=tofloat(stormsByYear)
+;sumobs=avg(stormsCorrected(0,:))
+;do kk = 1,nfiles-1
+;  summod=avg(stormsCorrected(kk,:))
+;  ratio=sumobs/summod
+;  stormsCorrected(kk,:)=ratio*stormsCorrected(kk,:)
+;end do
+
+print("Setting CSV parameters")
+quote = inttochar(34)
 delim=","
-print("MEAN CLIMO")
+OPT=0
+
+;; this is MATCHED basin mean statistics, i.e., only overlapping years
+;; so if ibtracs is 1980-2000 but model is only 1988-1990, n = 3 and match those years.
+print("... doing PAIRED basin-mean statistics")
+outputname=csvdir+"/"+"metrics_climo_pairmean.csv"
+system("rm "+outputname)
+system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
 do mm = 0,nfiles-1
-  print(strs(mm)+delim+avg(stormsByYear(mm,:))+delim+avg(tcdByYear(mm,:))+delim+avg(aceByYear(mm,:))+delim+avg(paceByYear(mm,:)))
+  if (mm .eq. 0) then
+  OUTSTR=strs(mm)+delim+ \
+    avg(stormsByYear(0,:))+delim+ \
+    avg(tcdByYear(0,:))+delim+ \
+    avg(aceByYear(0,:))+delim+ \
+    avg(paceByYear(0,:))
+  else
+  OUTSTR=strs(mm)+delim+ \
+    avg(stormsByYear(mm,:)-stormsByYear(0,:))+delim+ \
+    avg(tcdByYear(mm,:)-tcdByYear(0,:))+delim+ \
+    avg(aceByYear(mm,:)-aceByYear(0,:))+delim+ \
+    avg(paceByYear(mm,:)-paceByYear(0,:))
+  end if
+  system("echo "+OUTSTR+" >> "+outputname)
 end do
 
-; Bias correct
-stormsCorrected=tofloat(stormsByYear)
-sumobs=avg(stormsCorrected(0,:))
-do kk = 1,nfiles-1
-  summod=avg(stormsCorrected(kk,:))
-  ratio=sumobs/summod
-  stormsCorrected(kk,:)=ratio*stormsCorrected(kk,:)
+;; this is bias as OVERALL statistics, i.e., all available data for each product
+/;
+print("... doing basin-mean statistics2")
+outputname=csvdir+"/"+"metrics_climo_mean2.csv"
+system("rm "+outputname)
+system("echo ,Model,Count,TCDays,ACE1,ACE2,Length >> "+outputname)
+do mm = 1,nfiles-1
+  OUTSTR=strs(mm)+delim+ \
+    (avgStorms(mm)-avgStorms(0))+delim+ \
+    (avgTcd(mm)-avgTcd(0))+delim+ \
+    (avgAce(mm)-avgAce(0))+delim+ \
+    (avgPace(mm)-avgPace(0))+delim+ \
+    (avgLatgen(mm)-avgLatgen(0))+delim+ \
+    (avgLMI(mm)-avgLMI(0))+delim+ \
+    (avgLength(mm)-avgLength(0))
+  system("echo "+OUTSTR+" >> "+outputname)
+end do
+;/
+print("... doing un-paired basin-mean statistics")
+outputname=csvdir+"/"+"metrics_climo_mean.csv"
+system("rm "+outputname)
+system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
+do mm = 0,nfiles-1
+  OUTSTR=strs(mm)+delim+ \
+    avgStormsPY(mm)+delim+ \
+    avgTcdPY(mm)+delim+ \
+    avgAcePY(mm)+delim+ \
+    avgPacePY(mm)
+  system("echo "+OUTSTR+" >> "+outputname)
 end do
 
-print("INTERANNUAL")
+print("... doing un-paired storm-mean statistics")
+outputname=csvdir+"/"+"metrics_storm_mean.csv"
+system("rm "+outputname)
+system("echo ,Model,TCDays,ACE1,ACE2,LatGen,LMI >> "+outputname)
+do mm = 0,nfiles-1
+  OUTSTR=strs(mm)+delim+ \
+    avgTcdPS(mm)+delim+ \
+    avgAcePS(mm)+delim+ \
+    avgPacePS(mm)+delim+ \
+    avgLatgenPS(mm)+delim+ \
+    avgLmiPS(mm)
+  system("echo "+OUTSTR+" >> "+outputname)
+end do
+
+outputname=csvdir+"/"+"metrics_temporal_pcorr.csv"
+system("rm "+outputname)
+system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
+print("... doing Pearson seasonal cycle correlation.")
+do jj = 0,nfiles-1
+  OUTSTR=strs(jj)+delim+escorc(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+escorc(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+escorc(aceByMonth(0,:),aceByMonth(jj,:))+delim+escorc(paceByMonth(0,:),paceByMonth(jj,:))
+  system("echo "+OUTSTR+" >> "+outputname)
+end do
+
+outputname=csvdir+"/"+"metrics_temporal_scorr.csv"
+system("rm "+outputname)
+system("echo ,Model,Count,TCDays,ACE1,ACE2 >> "+outputname)
+print("... doing Spearman seasonal cycle correlation.")
+do jj = 0,nfiles-1
+  OUTSTR=strs(jj)+delim+spcorr(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+spcorr(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+spcorr(aceByMonth(0,:),aceByMonth(jj,:))+delim+spcorr(paceByMonth(0,:),paceByMonth(jj,:))
+  system("echo "+OUTSTR+" >> "+outputname)
+end do
+
+print("... doing interannual linear correlation")
 do jj = 0,nfiles-1
   print(strs(jj)+delim+escorc(stormsByYear(0,:),stormsByYear(jj,:))+delim+escorc(tcdByYear(0,:),tcdByYear(jj,:))+delim+escorc(aceByYear(0,:),aceByYear(jj,:))+delim+escorc(paceByYear(0,:),paceByYear(jj,:)))
 end do
-print("SEASONAL CYCLE")
-do jj = 0,nfiles-1
-  print(strs(jj)+delim+escorc(stormsByMonth(0,:),stormsByMonth(jj,:))+delim+escorc(tcdByMonth(0,:),tcdByMonth(jj,:))+delim+escorc(aceByMonth(0,:),aceByMonth(jj,:))+delim+escorc(paceByMonth(0,:),paceByMonth(jj,:)))
-end do
 
-wks   = gsn_open_wks ("pdf","xy") 
+wks   = gsn_open_wks ("pdf","./pdfs/xy") 
 
 res                   = True                      ; plot mods desired
 res@gsnDraw=False

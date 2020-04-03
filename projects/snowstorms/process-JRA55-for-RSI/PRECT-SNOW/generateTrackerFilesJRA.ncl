@@ -22,9 +22,12 @@ else if (VAR .eq. "snwe")
   FILES = systemfunc ("ls "+SYMDIR+"/fcst_land.*"+VAR+".reg_tl319*.grb2")
 else if (VAR .eq. "rof")
   FILES = systemfunc ("ls "+SYMDIR+"/fcst_phyland.*"+VAR+".reg_tl319*.grb2")
+else if (VAR .eq. "tmp")
+  FILES = systemfunc ("ls "+SYMDIR+"/anl_surf.*"+VAR+".reg_tl319*.grb2")
 else
   print("bad var")
   exit
+end if
 end if
 end if
 end if
@@ -33,6 +36,8 @@ end if
 FILE=addfiles(FILES, "r")   ; note the "s" of addfile
 ListSetType(FILE, "cat")             ; concatenate or "merge" (default)
 print("...done loading files")
+
+print(FILE)
 
 if (VAR .eq. "tprat") then
   PRECVAR="TPRAT_GDS4_SFC_ave3h"
@@ -49,6 +54,9 @@ else if (VAR .eq. "snwe") then
 else if (VAR .eq. "rof") then
   PRECVAR="ROF_GDS4_SFC_ave3h"
   OUTVAR="ROF"
+else if (VAR .eq. "tmp") then
+  PRECVAR="TMP_GDS4_HTGL"
+  OUTVAR="T2M"
 else
   print("incorrect VAR... exiting...")
   exit
@@ -57,12 +65,24 @@ end if
 end if
 end if
 end if
+end if
 
-sizeDims=dimsizes(FILE[:]->$PRECVAR$(:,:,:,:))
-ntim=sizeDims(0)
-nfor=sizeDims(1)  ; number of forecasts (generally 2)
-nlat=sizeDims(2)
-nlon=sizeDims(3)
+sizeDims=dimsizes(FILE[:]->$PRECVAR$)
+if (dimsizes(sizeDims) .eq. 4) then
+  ntim=sizeDims(0)
+  nfor=sizeDims(1)  ; number of forecasts (generally 2)
+  nlat=sizeDims(2)
+  nlon=sizeDims(3)
+  lat=FILE[0]->g4_lat_2(::-1)
+  lon=FILE[0]->g4_lon_3
+else
+  ntim=sizeDims(0)
+  nfor=0
+  nlat=sizeDims(1)
+  nlon=sizeDims(2)
+  lat=FILE[0]->g4_lat_1(::-1)
+  lon=FILE[0]->g4_lon_2
+end if
 
 timeix = ispan(0,ntim-1,1)
 if (VAR .eq. "snwe") then
@@ -76,28 +96,34 @@ if (VAR .eq. "snwe") then
   goodix = ind(.not.ismissing(timeix))
   timeix := timeix(goodix)
 end if
-lat=FILE[0]->g4_lat_2(::-1)
-lon=FILE[0]->g4_lon_3
 
 year_time=FILE[:]->initial_time0_hours(timeix)
 JRAunits=year_time@units
 
-PRECSN=FILE[:]->$PRECVAR$(timeix,:,::-1,:)
+if (dimsizes(sizeDims) .eq. 4) then
+  PRECSN=FILE[:]->$PRECVAR$(timeix,:,::-1,:)
+else
+  PRECSN=FILE[:]->$PRECVAR$(timeix,::-1,:)
+end if
 
 ms_to_mmday=8.64e7
 
-if (VAR .eq. "prmsl")
-  PRECSN_SUM=PRECSN(:,1,:,:)
-else
-  if (VAR .eq. "snwe")
-    PRECSN_SUM = dim_avg_n_Wrap(PRECSN,1)
+if (dimsizes(sizeDims) .eq. 4) then
+  if (VAR .eq. "prmsl")
+    PRECSN_SUM=PRECSN(:,1,:,:)
   else
-    ; Convert from mm/day to m/s to match CAM data
-    PRECSN=PRECSN/ms_to_mmday
-    ; Sum the +3 and +6 forecast average for each cycle
-    PRECSN_SUM = dim_sum_n_Wrap(PRECSN,1)
-    PRECSN_SUM = PRECSN_SUM / 2.0
+    if (VAR .eq. "snwe")
+      PRECSN_SUM = dim_avg_n_Wrap(PRECSN,1)
+    else
+      ; Convert from mm/day to m/s to match CAM data
+      PRECSN=PRECSN/ms_to_mmday
+      ; Sum the +3 and +6 forecast average for each cycle
+      PRECSN_SUM = dim_sum_n_Wrap(PRECSN,1)
+      PRECSN_SUM = PRECSN_SUM / 2.0
+    end if
   end if
+else
+  PRECSN_SUM=PRECSN
 end if
 
 PRECSN_SUM!0="time"

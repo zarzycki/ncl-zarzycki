@@ -1,24 +1,15 @@
-;========================================================
-; This file reads in a traj file produced by the TC tracker
-; and produces a lat-lon plot of trajectories color-coded by intensity
-;========================================================
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
-load "/glade/u/home/zarzycki/ncl/functions/plot_outline_fcn.ncl"
-;========================================================
 begin
 
 
 ;gridfile="/glade/u/home/zarzycki/scratch/j1files/GPCP/2005/precip.2005_interp.nc"
 gridfile=""
 
-ibstyr=2010
-ibenyr=2016
+ibstyr=1980
+ibenyr=2015
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
+print_to_screen=False
 
 
 factor=1.0
@@ -29,8 +20,16 @@ wcStrt     = systemfunc("date")
 
 print("Plotting iBtracks data from: "+ibstyr+" to "+ibenyr)
 print("Loading data, this may take awhile.")
-ibdir = "/glade/u/home/zarzycki/work/ibtracs/"
-ibfilename="Allstorms.ibtracs_wmo.v03r10.nc"
+
+ibdir = "./"
+ibfilename="IBTrACS.ALL.v04r00.nc"
+ibversion="v4"
+
+;ibdir = "/Users/cmz5202/NetCDF/ibtracs/"
+;ibfilename="Allstorms.ibtracs_wmo.v03r10.nc"
+;ibversion="v3"
+
+print_names=False
 
 ibfile = addfile(ibdir+ibfilename,"r")
 
@@ -64,17 +63,27 @@ print("Starting index: "+stix+"     end index: "+enix)
 delete(ibyear)
 ;=============================================================================
 
-iblat = ibfile->lat_wmo(stix:enix,:)*.01
-iblon = ibfile->lon_wmo(stix:enix,:)*.01
-ibtype = toint(ibfile->nature_wmo(stix:enix,:))
-ibwind_ = ibfile->wind_wmo(stix:enix,:)*.1/ms_to_kts
-ibpres = ibfile->pres_wmo(stix:enix,:)*.1*100.
-ibtime = ibfile->time_wmo(stix:enix,:)
-ibnamechar = ibfile->name(stix:enix,:)
+if (ibversion .eq. "v3") then
+  iblat = ibfile->lat_wmo(stix:enix,:)*.01
+  iblon = ibfile->lon_wmo(stix:enix,:)*.01
+  ibtype = toint(ibfile->nature_wmo(stix:enix,:))
+  ibwind_ = ibfile->wind_wmo(stix:enix,:)*.1/ms_to_kts
+  ibpres = ibfile->pres_wmo(stix:enix,:)
+  ibtime = ibfile->time_wmo(stix:enix,:)
+  ibnamechar = ibfile->name(stix:enix,:)
+  ibbasin = tostring(ibfile->basin(stix:enix,:))
+else
+  iblat = ibfile->lat(stix:enix,:)
+  iblon = ibfile->lon(stix:enix,:)
+  ibtype = tostring(ibfile->nature(stix:enix,:,:))
+  ibwind_ = ibfile->wmo_wind(stix:enix,:)/ms_to_kts
+  ibpres = ibfile->wmo_pres(stix:enix,:)*100.
+  ibtime = ibfile->time(stix:enix,:)
+  ibnamechar = ibfile->name(stix:enix,:)
+  ibbasin = tostring(ibfile->basin(stix:enix,:,:))
+end if
 
 iblon=where(iblon.lt.0,iblon+360.,iblon)
-
-ibbasin = byte2flt(ibfile->sub_basin(stix:enix,:))
 
 stDateIBUnits=cd_inv_calendar(ibstyr,1,1,0,0,0,ibtime@units,0)
 enDateIBUnits=cd_inv_calendar(ibenyr,12,31,23,0,0,ibtime@units,0)
@@ -109,13 +118,13 @@ ibpres = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibpres@
 iblat  = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,iblat@_FillValue,iblat)
 iblon  = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,iblon@_FillValue,iblon)
 ibtime = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibtime@_FillValue,ibtime)
-ibname = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibname@_FillValue,ibname)
+;ibname = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibname@_FillValue,ibname)
 
 ;=============================================================================
 ; Load optional PHIS file
 ;=============================================================================
 
-phisfile=addfile("/glade/u/home/zarzycki/work/cam_tools/hires-topo/2deg_cesm_topo_latlon.nc","r")
+phisfile=addfile("/Users/cmz5202/NetCDF/MERRA.topo.nc","r")
 PHIS=phisfile->PHIS
 
 
@@ -127,25 +136,54 @@ PHIS=phisfile->PHIS
 quote = inttochar(34)
 delim="	"
 filename="./test.txt"
+system("rm -rf "+filename)
 
 do ii = 0,ibstormcount-1
   ;print(ibname(ii,0)+" "+toint(ibbasin(ii,0)))
   ;if (toint(ibbasin(ii,0)) .eq. 0 .or. toint(ibbasin(ii,0)) .eq. 12 .or. toint(ibbasin(ii,0)) .eq. 13) then
   ;if (toint(ibbasin(ii,0)) .eq. 0 ) then
-    if (.not.ismissing(ibname(ii,0))) then
+    numentries=num(.not.ismissing(iblat(ii,:)))
 
-      thisdate=cd_calendar(ibtime(ii,0),0)
-      numentries=num(.not.ismissing(iblat(ii,:)))
-      print("    ")
-      ;header=ibname(ii,0)
-      header="start"
+    ;if (.not.ismissing(ibname(ii,0))) then
+    if (numentries .gt. 0) then
+
+      ; find first non missing index
+      do zz = 0,ibntimes-1
+        if (.not.ismissing(iblat(ii,zz))) then
+          IBSTIX=zz
+          break
+        end if
+      end do
+
+      thisdate:=cd_calendar(ibtime(ii,IBSTIX),0)
+
+      if print_names then
+        header=ibname(ii,0)
+      else
+        header="start"
+      end if
       HEADSTR=header+delim+numentries+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
-      print(HEADSTR+"")
+      if print_to_screen then
+        print("    ")
+        print(HEADSTR+"")
+      end if
       system("echo "+quote+      HEADSTR      +quote+" >> "+filename)
 
+      missingBoth := where(ismissing(ibpres(ii,:)) .and. ismissing(ibwind_(ii,:)) .and. .not.(ismissing(iblat(ii,:))), True, False)
+      ;if (ibname(ii,0) .eq. "HYACINTHE") then
+      ;  print(missingBoth)
+      ;end if
+      if (all( .not.(ismissing(iblat(ii,:))) .eq. missingBoth   )) then
+        print("********** "+ibname(ii,0)+" in "+ibbasin(ii,0)+" is missing ALL pres and wind data at all times "+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3))
+      else if (any(missingBoth.eq.True)) then
+        ;print(ibname(ii,0)+" is missing some pres and wind data at same time "+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3))
+      else
+      end if
+      end if
 
 
-      do jj = 0,ibntimes-1
+
+      do jj = IBSTIX,ibntimes-1
         if (.not.ismissing(iblat(ii,jj))) then
 
           ; if gridfile not empty string, find nearest coordinate
@@ -158,8 +196,8 @@ do ii = 0,ibstormcount-1
             thisLat=minind(abs(gridlat-iblat(ii,jj)))
             thisLon=minind(abs(gridlon-iblon(ii,jj)))
           else
-            thisLat=-99999
-            thisLon=-99999
+            thisLat=-999
+            thisLon=-999
           end if
           
           ;print(iblat(ii,jj)+" "+iblon(ii,jj))
@@ -170,10 +208,14 @@ do ii = 0,ibstormcount-1
           end if
 
           thisdate=cd_calendar(ibtime(ii,jj),0)
-          STORMSTR=delim+thisLon+delim+thisLat+delim+iblon(ii,jj)+delim+iblat(ii,jj)+delim+ibpres(ii,jj)+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
-;          STORMSTR=delim+thisLon+delim+thisLat+delim+gridlon(thisLon)+delim+gridlat(thisLat)+delim+tofloat(ibpres(ii,jj))+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+          STORMSTR=delim+thisLon+delim+thisLat+delim+sprintf("%6.2f", iblon(ii,jj))+delim+sprintf("%6.2f", iblat(ii,jj))+delim+sprintf("%6.0f", ibpres(ii,jj))+delim+sprintf("%8.2f", ibwind_(ii,jj))+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
 
-          print(STORMSTR+"")
+;          STORMSTR=delim+thisLon+delim+thisLat+delim+iblon(ii,jj)+delim+iblat(ii,jj)+delim+ibpres(ii,jj)+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+;          STORMSTR=delim+thisLon+delim+thisLat+delim+gridlon(thisLon)+delim+gridlat(thisLat)+delim+tofloat(ibpres(ii,jj))+delim+ibwind_(ii,jj)+delim+sprintf("%7.3e", thisPHIS)+delim+thisdate(0,0)+delim+thisdate(0,1)+delim+thisdate(0,2)+delim+thisdate(0,3)
+          if print_to_screen then
+            print(STORMSTR+"")
+          end if
+
           system("echo "+quote+      STORMSTR       +quote+" >> "+filename)
         end if
       end do

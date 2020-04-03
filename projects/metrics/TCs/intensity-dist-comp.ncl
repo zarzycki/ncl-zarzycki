@@ -17,6 +17,8 @@ begin
 out_type = "pdf"
 wind_factor = 0.85
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
+trajDir="./TRAJ_FINAL/"
+
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
@@ -37,6 +39,8 @@ isUnstructStr   = str_get_field(lines,3,delim)
 ensmembers= toint(str_get_field(lines,4,delim))
 yearspermember= toint(str_get_field(lines,5,delim))
 windcorrs = tofloat(str_get_field(lines,6,delim))
+linecolors = str_get_field(lines,7,delim)
+
 isUnstruct = where(isUnstructStr.eq."True",True,False)
 ;==========================================================
 
@@ -49,7 +53,8 @@ intenDist_msw_yy=intenDist_msw_xx
 
 do zz = 0,nfiles-1
 
-  thefile=files(zz)
+  thisFile=str_right_strip(files(zz))
+  thefile=trajDir+"/"+thisFile
   ncols = 11 ; number of columns in non-header rows of trajectory file
   maxLines = -1  ; set to -1 for auto-detection
   if (isUnstruct(zz)) then
@@ -136,22 +141,41 @@ end if
   binSettings@bin_min=890.0
   binSettings@bin_max=1020.0
   ap  = pdfx(cpres, nbins, binSettings)
+  ap := ap(::-1)
+
+  ; cumulative distribution
+  sap = ap
+  do tot=0,nbins-1
+    sap(tot) = sum(ap(0:tot))
+  end do
+  ap = sap
+
   intenDist_psl_yy(zz,:)  = ap
-  intenDist_psl_xx(zz,:)  = ap@bin_center
+  intenDist_psl_xx(zz,:)  = ap@bin_center(::-1)
   if (zz .eq. 0) then
     printVarSummary(ap)
     print(ap@bin_center)
   end if
-  if (zz .eq. nfiles-1) then
-    intenDist_psl_yy(zz,:) = 0.
-    intenDist_psl_yy(zz,10) = 100.0
-  end if
+
+; ?????
+;  if (zz .eq. nfiles-1) then
+;    intenDist_psl_yy(zz,:) = 0.
+;    intenDist_psl_yy(zz,10) = 100.0
+;  end if
   delete(ap)
 
   binSettings=True
   binSettings@bin_min=10.0
   binSettings@bin_max=75.0
   ap  = pdfx(cwind, nbins, binSettings)
+  
+  ; cumulative distribution
+  sap = ap
+  do tot=0,nbins-1
+    sap(tot) = sum(ap(0:tot))
+  end do
+  ap = sap
+
   intenDist_msw_yy(zz,:)  = ap
   intenDist_msw_xx(zz,:)  = ap@bin_center
   if (zz .eq. 0) then
@@ -175,10 +199,12 @@ end do
  res                   = True                      ; plot mods desired
  res@tiMainString      = "Two curve XY plot"       ; add title
 
- res@xyLineThicknesses = (/  1.0,   2.0/)          ; make second line thicker
- res@xyLineColors      = (/"blue","red"/)          ; change line color
+res@xyMonoDashPattern=True
+res@xyMonoLineThickness=True
+res@xyLineThicknessF = 5.0
+ res@xyLineColors      = linecolors          ; change line color
 
- plot  = gsn_csm_xy (wks, intenDist_msw_xx, intenDist_msw_yy, res) 
+ plot  = gsn_csm_xy (wks, intenDist_psl_xx, intenDist_psl_yy, res) 
 
 
 end

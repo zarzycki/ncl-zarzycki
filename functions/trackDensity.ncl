@@ -49,6 +49,8 @@ count&lon =  lon
 ;=================== Count data ==================================
 
 count = 0    ; set initial count to zero
+jl=0
+il=0
 
 npts = dimsizes(clat)
 
@@ -87,7 +89,7 @@ end
 
 
 
-function track_mean(gridsize,lonstart,clat,clon,cvar,minhits)
+function track_mean(gridsize,lonstart,clat,clon,cvar,meanornot,minhits)
 
 ; author: Colin Zarzycki (with help from Dennis Shea)
 ; zarzycki@ucar.edu
@@ -140,6 +142,8 @@ count&lon =  lon
 
 count = 0               ; set initial count to zero
 cumulative = count      ; set cumulative array to count
+jl=0
+il=0
 
 npts = dimsizes(clat)
 
@@ -160,9 +164,11 @@ end do
 ; Where count < minhits, set cumulative to missing
 cumulative = where(count.lt.minhits,cumulative@_FillValue,cumulative)
 
-; Normalize by dividing by count
-count = where(count.eq.0, count@_FillValue,count)
-cumulative = cumulative / count
+if meanornot then
+  ; Normalize by dividing by count
+  count = where(count.eq.0, count@_FillValue,count)
+  cumulative = cumulative / count
+end if
 
 print("count: min="+min(count(:,:))+"   max="+max(count(:,:)))
 print("count: sum="+sum(count(:,:)))
@@ -240,6 +246,8 @@ count&lon =  lon
 ;=================== Count data ==================================
 
 count = count@_FillValue
+jl=0
+il=0
 
 npts = dimsizes(clat)
 
@@ -253,6 +261,7 @@ do n=0,npts-1
        il = 0
      end if
 
+     if (.not.ismissing(cvar(n)))
      if (ismissing(count(jl,il))) then
        count(jl,il) = tofloat(cvar(n))
      else
@@ -263,6 +272,7 @@ do n=0,npts-1
        else
        end if
        end if
+     end if
      end if
    end if
 end do

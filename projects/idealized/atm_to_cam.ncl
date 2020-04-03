@@ -41,7 +41,7 @@ ilev = fC->ilev
 
 nlev=dimsizes(lev)
 
-fH = addfile("/glade/u/home/zarzycki/work/grids/latlon/ne0np4tcfplane.ne15x8_template.nc","r")
+fH = addfile("/glade/u/home/zarzycki/work/grids/latlon/ne0np4tcfplane.ne15x16_template.nc","r")
 
 selat = fH->lat
 selon = fH->lon

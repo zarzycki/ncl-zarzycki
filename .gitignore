@@ -1,3 +1,8 @@
+tmp.nc
+*OLD
+*.pyc
+.DS_Store
+__pycache__
 projects/snowstorms/RoS/data/
 CPC_gauge_precip_1985-2017.nc
 *_to_CPC_conserve.nc

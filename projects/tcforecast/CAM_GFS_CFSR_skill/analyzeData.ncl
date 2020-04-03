@@ -7,32 +7,36 @@ load "calc_acc.ncl"
 begin
 
 ;; USER SETTINGS
-do_plot = True          ; Do we want a 3 panel plot?
+do_plot = False        ; Do we want a 3 panel plot?
 deleteGFSfiles = False     ; do we want to delete GFS files?
 do_cam = True
 do_comparison = True
 use_Z500 = False
 
 ;;; COMMENT THESE WHEN RUNNING BATCH
-azvar="Z500"
-fcst_config = "hindcast_conus_30_x8_CAM5_L30_NOLAND"
-region="nhemi"   ; region = conus or nhemi
-hourForecast=12         ; What forecast do we want to analyze
-YYYYMMDDHH=2017123100
-PATHTOCAM="/glade/scratch/zarzycki/"+fcst_config+"/run/"
+;azvar="TS"
+;fcst_config = "Q-Ofilter-ne30-F2000climo"
+;region="nhemi"   ; region = conus or nhemi
+;hourForecast=120         ; What forecast do we want to analyze
+;YYYYMMDDHH=2017123000
+;PATHTOCAM="/glade/scratch/zarzycki/"+fcst_config+"/run/"
 
 stats_string=fcst_config+"_"+region+"_"+azvar+"_"+sprinti("%0.10i",YYYYMMDDHH)+"_"+sprinti("%0.4i",hourForecast)
 
 ;;; check for dycore
-strs = str_split(fcst_config, "_")
-modres = strs(1)
-if (str_get_cols(modres,0,1) .eq. "mp") then
-  print("using MPAS...")
-  mpas=True
-else
-  print("using SE...")
-  mpas=False
-end if
+
+;strs = str_split(fcst_config, "_")
+;modres = strs(1)
+;if (str_get_cols(modres,0,1) .eq. "mp") then
+;  print("using MPAS...")
+;  mpas=True
+;else
+;  print("using SE...")
+;  mpas=False
+;end if
+
+
+mpas=False
 
 ;;; RANGE FOR ANOMALY CALCULATION
 
@@ -55,6 +59,7 @@ end if
 if (azvar .eq. "TS") then
   print("cannot parse, not an interpolatable value")
   varname=azvar
+  climo_varname="T850"
 else
   varname=str_get_cols(azvar,0,0)
   varlev=tofloat(str_get_cols(azvar,1,3))
@@ -91,8 +96,9 @@ print("Forecast at "+hourForecast+" HOURS: verification at: "+f_hh+"Z on "+f_mm+
 
 THISDIR=systemfunc("pwd") 
 WORKDIR="/glade/scratch/zarzycki/CFSRskill/"
+system("mkdir -p "+WORKDIR)
 
-climo_netcdf = "/glade/u/home/zarzycki/sewx-cam-forecast/plotting_ncl/climo-files/"+climo_varname+"-1980-2009-NCEP.nc"
+climo_netcdf = "/glade/u/home/zarzycki/betacast/plotting_ncl/climo-files/"+climo_varname+"-1980-2009-NCEP.nc"
 
 ;;;; ===== GET CAM FORECAST FILE
 if (do_cam) then
@@ -110,24 +116,45 @@ if (do_cam) then
     else if (.not.ismissing(str_match(fcst_config, "conus_15_x16"))) then
       wgt_file = "/glade/p/work/zarzycki/maps/VR_to_latlon/map_conus_15_x16_to_0.25x0.25glob_patch.nc"
     else
+      wgt_file = "/glade/u/home/zarzycki/work/ASD2017_files/offline-remap/map_ne30_to_0.25x0.25glob_patch.nc"
       print("incorrect matching SE weight file string")
-      exit()
+      ;exit()
     end if
     end if
     end if
   end if
 end if
 
-gfs_grib = "gfs_4_"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+"_"+sprinti("%0.2i",hh)+"00_"+sprinti("%0.3i",hourForecast)+".grb2"
+;gfs_grib = "gfs_4_"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+"_"+sprinti("%0.2i",hh)+"00_"+sprinti("%0.3i",hourForecast)+".grb2"
+;print("GFS FORECAST FILE: "+gfs_grib)
+;if (.not.isfilepresent(WORKDIR+gfs_grib)) then
+;  system("cd "+WORKDIR+"; wget ftp://nomads.ncdc.noaa.gov/GFS/Grid4/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+"/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+"/"+gfs_grib)
+;end if
+;anal_grib = "gfsanl_4_"+sprinti("%0.4i",f_yyyy)+sprinti("%0.2i",f_mm)+sprinti("%0.2i",f_dd)+"_"+sprinti("%0.2i",f_hh)+"00_000.grb2"
+;print("GFS ANALYSIS FILE: "+anal_grib)
+;if (.not.isfilepresent(WORKDIR+anal_grib)) then
+;  system("cd "+WORKDIR+"; wget ftp://nomads.ncdc.noaa.gov/GFS/analysis_only/"+sprinti("%0.4i",f_yyyy)+sprinti("%0.2i",f_mm)+"/"+sprinti("%0.4i",f_yyyy)+sprinti("%0.2i",f_mm)+sprinti("%0.2i",f_dd)+"/"+anal_grib)
+;end if
+
+;/glade/u/home/zarzycki/rda/ds083.2/grib2/2019/2019.09/fnl_20190928_00_00.grib2
+;/glade/u/home/zarzycki/rda/ds083.3/2019/201909/gdas1.fnl0p25.2019091018.f00.grib2
+
+;gfs.0p25.2019092806.f000.grib2
+gfs_grib = "gfs.0p25."+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+sprinti("%0.2i",hh)+".f"+sprinti("%0.3i",hourForecast)+".grib2"
+print("gfs.0p25.2019092806.f000.grib2")
+print(gfs_grib+"")
 print("GFS FORECAST FILE: "+gfs_grib)
 if (.not.isfilepresent(WORKDIR+gfs_grib)) then
-  system("cd "+WORKDIR+"; wget ftp://nomads.ncdc.noaa.gov/GFS/Grid4/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+"/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+"/"+gfs_grib)
+  system("cd "+WORKDIR+"; cp /glade/u/home/zarzycki/rda/ds084.1/"+sprinti("%0.4i",yyyy)+"/"+sprinti("%0.4i",yyyy)+sprinti("%0.2i",mm)+sprinti("%0.2i",dd)+"/"+gfs_grib+" .")
 end if
-anal_grib = "gfsanl_4_"+sprinti("%0.4i",f_yyyy)+sprinti("%0.2i",f_mm)+sprinti("%0.2i",f_dd)+"_"+sprinti("%0.2i",f_hh)+"00_000.grb2"
+anal_grib = "gdas1.fnl0p25."+sprinti("%0.4i",f_yyyy)+sprinti("%0.2i",f_mm)+sprinti("%0.2i",f_dd)+sprinti("%0.2i",f_hh)+".f00.grib2"
+print("gdas1.fnl0p25.2019091018.f00.grib2")
+print(anal_grib+"")
 print("GFS ANALYSIS FILE: "+anal_grib)
 if (.not.isfilepresent(WORKDIR+anal_grib)) then
-  system("cd "+WORKDIR+"; wget ftp://nomads.ncdc.noaa.gov/GFS/analysis_only/"+sprinti("%0.4i",f_yyyy)+sprinti("%0.2i",f_mm)+"/"+sprinti("%0.4i",f_yyyy)+sprinti("%0.2i",f_mm)+sprinti("%0.2i",f_dd)+"/"+anal_grib)
+  system("cd "+WORKDIR+"; cp /glade/u/home/zarzycki/rda/ds083.3/"+sprinti("%0.4i",f_yyyy)+"/"+sprinti("%0.4i",f_yyyy)+sprinti("%0.2i",f_mm)+"/"+anal_grib+" .")
 end if
+
 
 if (.not.isfilepresent(WORKDIR+gfs_grib)) then
   print("We couldn't get gfs_grib! Now exiting...")
@@ -154,8 +181,10 @@ if (varname .eq. "Z") then
   Z500gfs = gfsFile->HGT_P0_L100_GLL0({varlev*100.},:,:)
   Z500anal = analFile->HGT_P0_L100_GLL0({varlev*100.},:,:)
 else if (varname .eq. "TS") then
-  Z500gfs = gfsFile->TMP_P0_L1_GLL0(:,:)
-  Z500anal = analFile->TMP_P0_L1_GLL0(:,:)
+  ;Z500gfs = gfsFile->TMP_P0_L1_GLL0(:,:)
+  ;Z500anal = analFile->TMP_P0_L1_GLL0(:,:)
+  Z500gfs = gfsFile->TMP_P0_L100_GLL0({850.*100.},:,:)
+  Z500anal = analFile->TMP_P0_L100_GLL0({850.*100.},:,:)
 else if (varname .eq. "T") then
   Z500gfs = gfsFile->TMP_P0_L100_GLL0({varlev*100.},:,:)
   Z500anal = analFile->TMP_P0_L100_GLL0({varlev*100.},:,:)
@@ -301,7 +330,7 @@ if (do_cam) then
         Z500forecast = Z500forecast_interp(0,:,:)
       end if
   else if (azvar .eq. "TS") then
-    Z500_se = forecastFile->TREFHT(0,:)
+    Z500_se = forecastFile->T850(0,:)
     Opt         = True
     Z500forecast  = ESMF_regrid_with_weights(Z500_se,wgt_file,Opt)
   else
@@ -319,6 +348,7 @@ if (do_cam) then
   relc      = 0.5              ; relaxation coefficient
   opt       = 0                ; not used
   poisson_grid_fill( Z500forecast, is_cyclic, guess, nscan, eps, relc, opt)
+  printVarSummary(Z500forecast)
   Z500forecast_ = Z500forecast(:,0:1439)
   Z500forecast_ = lonFlip(Z500forecast_)
   newZ500 = linint2(Z500forecast_&lon,Z500forecast_&lat,Z500forecast_,True,Z500gfs&lon_0,Z500gfs&lat_0,0)
@@ -329,6 +359,10 @@ if (do_cam) then
   Z500forecastAnom = Z500climo
   Z500forecastAnom = newZ500 - Z500climo
 end if
+
+printVarSummary(Z500climo)
+printVarSummary(Z500gfs)
+printVarSummary(Z500anal)
 
 ; Calculate anoms
 Z500gfsAnom  = Z500climo

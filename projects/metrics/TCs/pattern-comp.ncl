@@ -1,4 +1,4 @@
-;=================== Description ==================================
+;==================i Description ==================================
 ; This script reads in Tempeset
 ; tracking code and plots a track density
 ;==================================================================
@@ -20,7 +20,8 @@ wind_factor = 0.85
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
 do_genesis=True
 gridsize = 8.0
-
+trajDir="./TRAJ_FINAL/"
+csvdir="./orig-files/"
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
@@ -51,7 +52,8 @@ nmonths=12
 do zz = 0,nfiles-1
   nyears=ensmembers(zz)*yearspermember(zz)
 
-  thefile=str_right_strip(files(zz))
+  thisFile=str_right_strip(files(zz))
+  thefile=trajDir+"/"+thisFile
   ncols = 11 ; number of columns in non-header rows of trajectory file
   maxLines = -1  ; set to -1 for auto-detection
   if (isUnstruct(zz)) then
@@ -118,6 +120,11 @@ end if
   minpres = track_minmax(gridsize,0.0,clat,clon,cpres,"min",20)
   maxwind = track_minmax(gridsize,0.0,clat,clon,cwind,"max",20)
   printVarSummary(trackdens)
+  if (zz.eq.0) then
+    deg2rad = get_d2r("float")
+    denslatwgt = cos(deg2rad*trackdens&lat)
+    print(denslatwgt)
+  end if
 
   if (zz.eq.0) then
     tmpdims=dimsizes(trackdens)
@@ -155,79 +162,14 @@ end if
     fullgen(zz,:,:)=trackdens(:,:)
   end if
 
-  delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind/])
-  delete([/traj_data,maxLines,ncols,thefile/])
-  delete([/trackdens,minpres,maxwind/])
+wks = gsn_open_wks("pdf","./pdfs/XXpres"+thisFile)
+plot = new(1,"graphic")
 
-end do
-
-taylor_cco=new((/2,nfiles-1/),"float")
-taylor_rat=new((/2,nfiles-1/),"float")
-
-delim=","
-OPT=0
-print("PATTERN")
-do mm = 1,nfiles-1
-  tmprefr=fulldens(0,:,:)
-  tmptest=fulldens(mm,:,:)
-  tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
-  tmptest=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmptest@_FillValue,tmptest)
-  tm2refr=fullgen(0,:,:)
-  tm2test=fullgen(mm,:,:)
-  tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
-  tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
-  print(strs(mm)+delim+pattern_cor(tmprefr,tmptest,1.,OPT)+delim+ \
-    pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),1.,OPT)+delim+ \
-    pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),1.,OPT)+delim+ \
-    pattern_cor(tm2refr,tm2test,1.,OPT) )
-  taylorVals=taylor_stats(tmptest,tmprefr,1.,0)
-  taylor_cco(0,mm-1)=taylorVals(0)
-  taylor_rat(0,mm-1)=taylorVals(1)
-  ;taylorVals=taylor_stats(tm2test,tm2refr,1.,0)
-  ;taylor_cco(1,mm-1)=taylorVals(0)
-  ;taylor_rat(1,mm-1)=taylorVals(1)
-end do
-print("RMSE")
-do mm = 1,nfiles-1
-  tmprefr=fulldens(0,:,:)
-  tmptest=fulldens(mm,:,:)
-  tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
-  tmptest=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmptest@_FillValue,tmptest)
-
-  ;rmean   = avg(tmprefr)            ; area weighted means
-  ;tmean   = avg(tmptest)
-  ;tmprefr=tmprefr-rmean
-  ;tmptest=tmptest-tmean
-  ;print(sqrt(sum(tmptest^2)/sum(tmprefr^2)))
-
-  tm2refr=fullgen(0,:,:)
-  tm2test=fullgen(mm,:,:)
-  tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
-  tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
-  print(strs(mm)+delim+dim_rmsd_n(tmprefr,tmptest,(/0,1/))+delim+ \
-    dim_rmsd_n(fullpres(0,:,:),fullpres(mm,:,:),(/0,1/))+delim+ \
-    dim_rmsd_n(fullwind(0,:,:),fullwind(mm,:,:),(/0,1/))+delim+ \
-    dim_rmsd_n(tm2refr,tm2test,(/0,1/)) )
-end do
-
-print(taylor_cco+" "+taylor_rat)
-
-wks   = gsn_open_wks("pdf","taylor")      ; send graphics to PNG file
-res   = True
-res@Markers = (/16,4/)
-res@txFontHeightF = 0.02
-res@markerTxYOffset = 0.02
-;res@varLabels = strs(1:nfiles-1)  ; don't include obs
-plot  = taylor_diagram(wks, taylor_rat, taylor_cco, res)
-exit
-
-plots = (/0,5,9,10/)
-
-wks = gsn_open_wks("pdf","test")
-plot = new(4,"graphic")
+toPlot = fullpres(zz,:,:)
+print("min pres: "+min(toPlot))
+toPlot = where(toPlot.gt.0.,toPlot,toPlot@_FillValue)
 
 colorMap1="WhiteBlueGreenYellowRed"
-colorMap2="BlueWhiteOrangeRed"
 
 res                       = True     ; plot mods desired
 res@gsnDraw = False
@@ -254,24 +196,115 @@ res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
 ; plot absolute data
 res@cnLevelSelectionMode  = "ManualLevels"
 ; 0-120
-res@cnMinLevelValF        = 0.
-res@cnMaxLevelValF        = 15.0
-res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 15.
+res@cnMinLevelValF        = 850.
+res@cnMaxLevelValF        = 1000.
+res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 16.
 res@cnFillPalette=colorMap1
-plot(0) = gsn_csm_contour_map_ce(wks,fulldens(plots(0),:,:),res)
-plot(1) = gsn_csm_contour_map_ce(wks,fulldens(plots(1),:,:),res)
-plot(2) = gsn_csm_contour_map_ce(wks,fulldens(plots(2),:,:),res)
-plot(3) = gsn_csm_contour_map_ce(wks,fulldens(plots(3),:,:),res)
+plot(0) = gsn_csm_contour_map_ce(wks,toPlot,res)
 
 resP=True
 resP@txString           = "Annual TC track density, all storms"
 resP@amJust           = "TopLeft"
-resP@gsnPanelFigureStringsFontHeightF = 0.014
-resP@gsnPanelFigureStrings= strs(plots)
 
-gsn_panel(wks,plot,(/2,2/),resP)
+gsn_panel(wks,plot,(/1,1/),resP)
 
+delete([/xlon,xlat,xpres,xwind,clon,clat,cpres,cwind/])
+delete([/traj_data,maxLines,ncols,thefile/])
+delete([/trackdens,minpres,maxwind/])
+delete([/wks,res,plot/])
 
+end do
 
+taylor_cco=new((/2,nfiles-1/),"float")
+taylor_rat=new((/2,nfiles-1/),"float")
+taylor_rms=new((/2,nfiles-1/),"float")
+
+print("... doing spatial correlation and Taylor")
+outputname=csvdir+"/"+"metrics_spatial_corr.csv"
+quote = inttochar(34)
+delim=","
+OPT=0
+system("rm "+outputname)
+system("echo ,Model,Track,Genesis,U10,SLP >> "+outputname)
+do mm = 1,nfiles-1
+  tmprefr=fulldens(0,:,:)
+  tmptest=fulldens(mm,:,:)
+  tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
+  tmptest=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmptest@_FillValue,tmptest)
+  tm2refr=fullgen(0,:,:)
+  tm2test=fullgen(mm,:,:)
+  tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
+  tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
+
+  taylorVals=taylor_stats(tmptest,tmprefr,denslatwgt,1)
+  taylor_cco(0,mm-1)=taylorVals(0)
+  taylor_rat(0,mm-1)=taylorVals(1)
+  taylor_rms(0,mm-1)=taylorVals(7);/stddev(tmptest)
+
+  ; these are equivalent...
+  ;pattern_cor(tmprefr,tmptest,denslatwgt,OPT)
+  ;taylor_cco(0,mm-1)
+
+  OUTSTR=strs(mm)+delim+ \
+    pattern_cor(tmprefr,tmptest,denslatwgt,OPT)+delim+ \
+    pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),denslatwgt,OPT)+delim+ \
+    pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),denslatwgt,OPT)+delim+ \
+    pattern_cor(tm2refr,tm2test,denslatwgt,OPT)
+  system("echo "+OUTSTR+" >> "+outputname)
+
+  ;taylorVals=taylor_stats(tm2test,tm2refr,1.,0)
+  ;taylor_cco(1,mm-1)=taylorVals(0)
+  ;taylor_rat(1,mm-1)=taylorVals(1)
+end do
+
+dimslatlon=dimsizes(fulldens(0,:,:))
+print("... doing RMSE")
+outrmsname=csvdir+"/"+"metrics_spatial_rmse.csv"
+system("rm "+outrmsname)
+system("echo ,Model,Track,Genesis,U10,SLP >> "+outrmsname)
+do mm = 1,nfiles-1
+  tmprefr=fulldens(0,:,:)
+  tmptest=fulldens(mm,:,:)
+  tmprefr=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmprefr@_FillValue,tmprefr)
+  tmptest=where(fulldens(0,:,:) .eq. 0 .and. fulldens(mm,:,:) .eq. 0,tmptest@_FillValue,tmptest)
+
+  ;rmean   = avg(tmprefr)            ; area weighted means
+  ;tmean   = avg(tmptest)
+  ;tmprefr=tmprefr-rmean
+  ;tmptest=tmptest-tmean
+  ;print(sqrt(sum(tmptest^2)/sum(tmprefr^2)))
+
+  tm2refr=fullgen(0,:,:)
+  tm2test=fullgen(mm,:,:)
+  tm2refr=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2refr@_FillValue,tm2refr)
+  tm2test=where(fullgen(0,:,:) .eq. 0 .and. fullgen(mm,:,:) .eq. 0,tm2test@_FillValue,tm2test)
+;  OUTSTR=strs(mm)+delim+wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)+delim+ \
+
+  ; these are equivalent...
+  ;wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)
+  ;taylor_rms(0,mm-1)
+
+    ;wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)/stddev(tmptest)+delim+ \
+    ;wgt_arearmse2(fullpres(0,:,:),fullpres(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)/stddev(fullpres(mm,:,:))+delim+ \
+    ;wgt_arearmse2(fullwind(0,:,:),fullwind(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)/stddev(fullwind(mm,:,:))+delim+ \
+    ;wgt_arearmse2(tm2refr,tm2test,conform_dims(dimslatlon,denslatwgt,0),0)/stddev(tm2test)
+  OUTSTR=strs(mm)+delim+ \
+    wgt_arearmse2(tmprefr,tmptest,conform_dims(dimslatlon,denslatwgt,0),0)/ (max(tmptest)-min(tmptest)) +delim+ \
+    wgt_arearmse2(fullpres(0,:,:),fullpres(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)/(max(fullpres(mm,:,:))-min(fullpres(mm,:,:)))+delim+ \
+    wgt_arearmse2(fullwind(0,:,:),fullwind(mm,:,:),conform_dims(dimslatlon,denslatwgt,0),0)/(max(fullwind(mm,:,:))-min(fullwind(mm,:,:)))+delim+ \
+    wgt_arearmse2(tm2refr,tm2test,conform_dims(dimslatlon,denslatwgt,0),0)/(max(tm2test)-min(tm2test))
+  system("echo "+OUTSTR+" >> "+outrmsname)
+end do
+
+print("Taylor stats...")
+print(taylor_cco+" "+taylor_rat)
+
+wks   = gsn_open_wks("pdf","./pdfs/taylor")      ; send graphics to PNG file
+res   = True
+res@Markers = (/16,4/)
+res@txFontHeightF = 0.02
+res@markerTxYOffset = 0.02
+res@varLabels = strs(1:nfiles-1)  ; don't include obs
+plot  = taylor_diagram(wks, taylor_rat, taylor_cco, res)
 
 end
