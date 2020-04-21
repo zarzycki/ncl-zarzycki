@@ -1,12 +1,4 @@
-;========================================================
-; This file reads in a traj file produced by the TC tracker
-; and produces a lat-lon plot of trajectories color-coded by intensity
-;========================================================
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
-load "/glade/u/home/zarzycki/ncl/functions/plot_outline_fcn.ncl"
+
 ;========================================================
 begin
 
@@ -46,10 +38,12 @@ ibenyr=toint(ibenyrStr)
 
 numyears=tofloat(ibenyr-ibstyr+1)
 
+print(traj_dir+"/"+traj_filename)
+
 ;summaryFileName
 ; implement check to see if zero lines
 quote = inttochar(34)
-totLines = systemfunc("grep -r start "+traj_dir+"/"+traj_filename+" | wc -l")
+totLines = toint(systemfunc("grep -r start "+traj_dir+"/"+traj_filename+" | wc -l"))
 if (totLines .lt. 1) then
   system("echo "+quote+ 0+","+0+","+0+","+0+","+0+","+0+","+0+","+0+","+whichData+","+whichCase+","+caseID+","+inputParms+quote+" >> "+traj_dir+"/"+summaryFileName)
   exit
@@ -57,8 +51,6 @@ end if
 delete(totLines)
 
 ;trajOutFormat="tempest" ; tempest or gfdl
-
-
 
 ;traj_dir = "/glade/p/work/zarzycki/tempestextremes/"
 ;traj_filename = "traj.txt"
@@ -71,8 +63,8 @@ wcStrt     = systemfunc("date")
 
 print("Plotting iBtracks data from: "+ibstyr+" to "+ibenyr)
 print("Loading data, this may take awhile.")
-ibdir = "/glade/u/home/zarzycki/work/ibtracs/"
-ibfilename="Allstorms.ibtracs_wmo.v03r08.nc"
+ibdir = "/Users/cmz5202/NetCDF/ibtracs/"
+ibfilename="Allstorms.ibtracs_wmo.v03r10.nc"
 
 ibfile = addfile(ibdir+ibfilename,"r")
 
@@ -153,8 +145,10 @@ onedwind = where(mod(onedtime,0.25) .ge. eps .or. mod(onedtime,0.25) .le. -eps,o
 onedlat  = where(mod(onedtime,0.25) .ge. eps .or. mod(onedtime,0.25) .le. -eps,onedlat@_FillValue,onedlat)
 onedlon  = where(mod(onedtime,0.25) .ge. eps .or. mod(onedtime,0.25) .le. -eps,onedlon@_FillValue,onedlon)
 onedtime = where(mod(onedtime,0.25) .ge. eps .or. mod(onedtime,0.25) .le. -eps,onedtime@_FillValue,onedtime)
-onedname = where(mod(onedtime,0.25) .ge. eps .or. mod(onedtime,0.25) .le. -eps,onedname@_FillValue,onedname)
+;onedname = where(mod(onedtime,0.25) .ge. eps .or. mod(onedtime,0.25) .le. -eps,onedname@_FillValue,onedname)
 
+;onedtime@units=ibtime@units
+;print(onedname+" "+cd_calendar(onedtime,-3))
 
 if (1 .eq. 0) then
   printVarSummary(onedwind)
@@ -299,6 +293,10 @@ FAarr=1
 namesTracked=new(dimsizes(tracktime),"string")
 namesTracked="..."
 jndices = ind(.not.ismissing(onedtime))
+
+print(num(.not.ismissing(onedtime)))
+print(num(.not.ismissing(tracktime)))
+
 do j = 0,dimsizes(jndices)-1
     jx = jndices(j)
     obslat = onedlat(jx)
@@ -310,6 +308,7 @@ do j = 0,dimsizes(jndices)-1
         tklat = tracklat(ix)
         tklon = tracklon(ix)
         if(gc_latlon(obslat,obslon,tklat,tklon,2,2) .le. 2.0)
+          ;print(obslat+" "+obslon+" "+tklat+" "+tklon)
           FAarr(ix)=FAarr@_FillValue
           namesTracked(ix)=onedname(jx)
         end if
@@ -329,6 +328,7 @@ do j = 0,dimsizes(jndices)-1
   ;end if
 end do
 delete(jndices)
+
 
 wallClockElapseTime(wcFAStrt, "False alarm calculation", 0)
 
@@ -518,7 +518,7 @@ system("echo "+quote+ totnstorms_pyr+HRstr+","+FAR+","+tcdays_pyr+","+ace_pyr+",
   
 wallClockElapseTime(wcStrt, "Total run time", 0)
 
-if (0 .eq. 0) then
+if (1 .eq. 0) then
   ; FOR PLOTTING
 
   print("Beginning plot sequence")
