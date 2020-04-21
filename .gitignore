@@ -1,3 +1,4 @@
+*.so
 tmp.nc
 *OLD
 *.pyc
