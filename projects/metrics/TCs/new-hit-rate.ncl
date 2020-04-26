@@ -22,14 +22,13 @@ dq       = str_get_dq()
 date_cmd = "date +" + dq + "%a %b %d %H:%M:%S %Z %Y" + dq
 
 
-; this is really only for correlations
 styr=1980
-enyr=2014
+enyr=2015
 nyears=enyr-styr+1
 
 
 
-thefile:="dev/ibtracs-1980-2015-GLOB.txt"
+thefile:="TRAJ_FINAL/ibtracs-1980-2019-GLOB.v4.txt"
 ;thefile:="dev/ibtracs-1998-2008-GLOB.txt"
 ;thefile:="dev/test.txt"
 
@@ -58,7 +57,7 @@ xntimes=xdims(1)
 ; =====
 
 ;thefile:="dev/traj.ab.0105"
-thefile:="TRAJ_FINAL/trajectories.txt.MERRA2"
+thefile:="TRAJ_FINAL/trajectories.txt.ERA5"
 
 ncols := 11 ; number of columns in non-header rows of trajectory file
 maxLines := -1  ; set to -1 for auto-detection
@@ -86,8 +85,12 @@ yntimes=ydims(1)
 ; cleanup
 delete(traj_data)
 
+
+
+
 stDateIBUnits=cd_inv_calendar(styr,1,1,0,0,0,timeunits,0)
 enDateIBUnits=cd_inv_calendar(enyr,12,31,23,0,0,timeunits,0)
+
 
 tracktime=ndtooned(ytime)
 tracklat=ndtooned(ylat)
@@ -98,26 +101,29 @@ onedlat=ndtooned(xlat)
 onedlon=ndtooned(xlon)
 onedwind=ndtooned(xwind)
 
+; data points before filter
 print(num(.not.ismissing(onedtime)))
 print(num(.not.ismissing(tracktime)))
 print(stDateIBUnits+" "+enDateIBUnits)
 tracktime=where(tracktime .ge. stDateIBUnits .and. tracktime .le. enDateIBUnits,tracktime,tracktime@_FillValue)
 onedtime=where(onedtime .ge. stDateIBUnits .and. onedtime .le. enDateIBUnits,onedtime,onedtime@_FillValue)
+
+; date points after filter
 print(num(.not.ismissing(onedtime)))
 print(num(.not.ismissing(tracktime)))
+
+;=========================================================================================
 
 ; THIS IS THE OLD ZARZYCKI AND ULLRICH CODE
 ; FALSE ALARM POINT BY POINT
 
+if (0 .eq. 0) then
+
 wcStrtFAPBP = systemfunc(date_cmd)
-
-
 
 FAarr=new(dimsizes(tracktime),"integer")
 FAarr=where(ismissing(tracktime),FAarr@_FillValue,1)
 jndices = ind(.not.ismissing(onedtime))
-
-
 
 do j = 0,dimsizes(jndices)-1
   jx = jndices(j)
@@ -149,7 +155,7 @@ print("FAR: "+FAR)
 
 wallClockElapseTime(wcStrtFAPBP, "Point by point false alarm", 0)
 
-
+end if
 
 
 ; HR point by point
@@ -203,9 +209,9 @@ end do
 wallClockElapseTime(wcStrtHRPBP, "Point by point hit rate", 0)
 
 
-; =========================================================================================
+;=========================================================================================
 
-
+; New 2020 code doing storm-by-storm stats
 
 
 ;   DO FILTERS
@@ -273,54 +279,70 @@ end do
 numhits=tofloat(num(xhitRateArray.eq.True))
 nummisses=tofloat(num(xhitRateArray.eq.False))
 HR = numhits / (numhits + nummisses)
+print("numhits: "+numhits+"   nummisses: "+nummisses)
 print("HR "+HR)
 
 wallClockElapseTime(wcStrtHR, "Storm hit rate", 0)
 
 
 ; FALSE ALARM RATE
+; note: we do not have to filter by year or intensity because ideally, if ANY
+; IBTrACS point exists we are cool.
+; e.g., if TE starts a storm at 12/30/$enyr but iBTrACS starts the same storm at 1/1
+; (further along its trajectory) we don't want to call that a false alarm
 
 wcStrtFA = systemfunc(date_cmd)
 
+;   DO FILTERS
+analyzeTrackedStorm=new(ynstorms,"logical")
+analyzeTrackedStorm=True
+;filter by year
+ygyear=yyear(:,0)
+analyzeTrackedStorm=where(ygyear.ge.styr .and. ygyear.le.enyr, analyzeTrackedStorm, False)
+
+
 yFalseAlarmArray = new(ynstorms,"logical")
 do ii = 0,ynstorms-1
-  isFA=True
-  do jj = 0,yntimes-1
-    ; if still flagged as potential FA and a valid ytime exists, keep looping
-    if (isFA .and. .not.ismissing(ytime(ii,jj)) ) then
-      matchedTimes := where(xtime.eq.ytime(ii,jj),xtime,xtime@_FillValue)
-      if (any(matchedTimes.ne.matchedTimes@_FillValue)) then
-        matchedTimes1D = ndtooned(matchedTimes)     ; only do this once
-        indMax := ind_resolve(ind(matchedTimes1D.ne.matchedTimes1D@_FillValue),dimsizes(matchedTimes))  ; locations of max
-        delete (matchedTimes1D)
-        potentialMatchDims = dimsizes(indMax)
-        potentialStormsNum = potentialMatchDims(0)
-        if (.not.ismissing(potentialStormsNum)) then
-          ylatSingle = ylat(ii,jj)
-          ylonSingle = ylon(ii,jj)
-          do zz = 0,potentialStormsNum-1
-            xlatSingle=xlat(indMax(zz,0),indMax(zz,1))
-            xlonSingle=xlon(indMax(zz,0),indMax(zz,1))
-            if (gc_latlon(ylatSingle,ylonSingle,xlatSingle,xlonSingle,2,2) .le. 2.0) then
-              ;print("Found match to: "+ylatSingle+" "+ylonSingle+"   at "+xlatSingle+" "+xlonSingle+" on "+cd_calendar(ytime(ii,jj),-3))
-              isFA=False
-              break
-            end if
-          end do
+  if (analyzeTrackedStorm(ii)) then
+    isFA=True
+    do jj = 0,yntimes-1
+      ; if still flagged as potential FA and a valid ytime exists, keep looping
+      if (isFA .and. .not.ismissing(ytime(ii,jj)) ) then
+        matchedTimes := where(xtime.eq.ytime(ii,jj),xtime,xtime@_FillValue)
+        if (any(matchedTimes.ne.matchedTimes@_FillValue)) then
+          matchedTimes1D = ndtooned(matchedTimes)     ; only do this once
+          indMax := ind_resolve(ind(matchedTimes1D.ne.matchedTimes1D@_FillValue),dimsizes(matchedTimes))  ; locations of max
+          delete (matchedTimes1D)
+          potentialMatchDims = dimsizes(indMax)
+          potentialStormsNum = potentialMatchDims(0)
+          if (.not.ismissing(potentialStormsNum)) then
+            ylatSingle = ylat(ii,jj)
+            ylonSingle = ylon(ii,jj)
+            do zz = 0,potentialStormsNum-1
+              xlatSingle=xlat(indMax(zz,0),indMax(zz,1))
+              xlonSingle=xlon(indMax(zz,0),indMax(zz,1))
+              if (gc_latlon(ylatSingle,ylonSingle,xlatSingle,xlonSingle,2,2) .le. 2.0) then
+                ;print("Found match to: "+ylatSingle+" "+ylonSingle+"   at "+xlatSingle+" "+xlonSingle+" on "+cd_calendar(ytime(ii,jj),-3))
+                isFA=False
+                break
+              end if
+            end do
+          end if
+        else
+          continue
         end if
       else
-        continue
+        break
       end if
-    else
-      break
-    end if
-  end do
-  yFalseAlarmArray(ii) = isFA
+    end do
+    yFalseAlarmArray(ii) = isFA
+  end if
 end do
 
 numalarms=tofloat(num(yFalseAlarmArray.eq.True))
 nummatches=tofloat(num(yFalseAlarmArray.eq.False))
 FARS = numalarms/(numalarms+nummatches)
+print("num alarms: "+numalarms+"   nummatches: "+nummatches)
 print("FAR "+FARS)
 
 wallClockElapseTime(wcStrtFA, "Storm false alarm", 0)
