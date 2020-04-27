@@ -22,16 +22,19 @@ FINIX=3
 
 #--  data file name
 fname  = "T.nc"
-ds = xr.load_dataset(fname)
+ds = xr.open_dataset(fname)
 T = ds.T[0:FINIX,:,:,:]
 
 fname  = "Q.nc"
-ds = xr.load_dataset(fname)
+ds = xr.open_dataset(fname)
 Q = ds.Q[0:FINIX,:,:,:]
 
 fname  = "PS.nc"
-ds = xr.load_dataset(fname)
+ds = xr.open_dataset(fname)
 PS=ds.PS[0:FINIX,:,:]
+
+print(ds.hyam)
+
 pmid = ds.hyam*ds.P0 + ds.hybm*PS
 pmid.name="PMID"
 pmid.attrs['units'] = 'Pa'
