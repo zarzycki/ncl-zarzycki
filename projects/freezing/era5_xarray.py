@@ -35,6 +35,38 @@ def calc_ptype(ptype,T,Q,pmid,pint,zint2,ntim,nlon,nlat):
   
   return ptype 
 
+@numba.jit
+def calc_zint(pint,PHIS,TKV,p1dims,ntim,nlevp1,doFlip=False):
+
+  # doFlip flips ordering
+
+  grav=9.80665
+  rog=287.04/grav
+  
+  # Now calculate zint
+  zint=np.empty(p1dims)
+
+  # Note, we always want to build zint from the "bottom" up (0 -> nlev) as an integral.
+  # If p is top -> bottom, we can built a numpy zint by "flipping" the p and TKV indices
+  if doFlip:
+    for zz in range(ntim):
+      zint[zz,0,:,:] = PHIS/grav
+      for kk in range(nlevp1-1):
+        kkf = nlevp1-kk-1
+        zint[zz,kk+1,:,:] = zint[zz,kk,:,:] + rog * TKV[zz,kkf-1,:,:] * np.log(pint[zz,kkf,:,:]/pint[zz,kkf-1,:,:])
+    
+    # If zint doesn't match orientation of other vars, we can just flip the numpy array before
+    # building an xr DataArray
+    zint = zint[:,::-1,:,:]
+
+  else:
+    for zz in range(ntim):
+      zint[zz,0,:,:] = PHIS/grav
+      for kk in range(nlevp1-1):
+        zint[zz,kk+1,:,:] = zint[zz,kk,:,:] + rog * TKV[zz,kk,:,:] * np.log(pint[zz,kk,:,:]/pint[zz,kk+1,:,:])
+
+  return zint
+
 
 
 
@@ -62,7 +94,7 @@ stride=1
 
 # Indices
 STAIX=args.stix
-FINIX=STAIX+12
+FINIX=STAIX+6
 LOOPIX=FINIX-STAIX
 
 #--  data file name
@@ -114,7 +146,6 @@ pmid = lev.expand_dims({'time': T.coords['time'],'lat': T.coords['lat'], 'lon': 
 pmid.name="P4D"
 pmid = pmid * 100.
 pmid.attrs['units'] = 'Pa'
-print(pmid)
 
 print("Getting PHIS")
 ## This handles model level data by reading PS and "building" p at model levels
@@ -123,7 +154,6 @@ ds = xr.open_dataset(fname)
 PHIS=ds.Z[0,::stride,::stride]
 PHIS = PHIS.rename({'latitude':'lat','longitude':'lon'})
 ds.close()
-print(PHIS)
 
 
 ### Handle vertical coordinate stuff
@@ -168,8 +198,14 @@ pmid = pmid.where(pmid > 0, pmax)
 # Set lowest model level P interface to PS.
 model_lid=10.  # lid in Pa to avoid 0 issues
 pintnp[:,nlevp1-1,:,:] = PS
-pintnp[:,0,:,:] = pmid[:,0,:,:].values - (pmid[:,1,:,:].values - pmid[:,0,:,:].values) + model_lid
+pintnp[:,0,:,:] = pmid[:,0,:,:].values - (pmid[:,1,:,:].values - pmid[:,0,:,:].values)
+pintnp[:,0,:,:] = np.where(pintnp[:,0,:,:] > 0, pintnp[:,0,:,:], model_lid)
+## Calculate interface levels by "splitting"
 pintnp[:,1:nlevp1-1,:,:] = np.add( pmid[:,0:nlev-1,:,:].values , pmid[:,1:nlev,:,:].values ) / 2.
+## Calculate interface levels using S+B (1981) eq. 3.18  ### NOT WORKING!
+#delpmid = np.subtract( pmid[:,1:nlev,:,:].values, pmid[:,0:nlev-1,:,:].values )
+#pintnp[:,1:nlevp1-1,:,:] = np.where(delpmid > 0.00001, np.exp( np.divide ( np.subtract( np.multiply(pmid[:,1:nlev,:,:].values,np.log(pmid[:,1:nlev,:,:].values)), np.multiply(pmid[:,0:nlev-1,:,:].values,np.log(pmid[:,0:nlev-1,:,:].values))  ) , delpmid ) - 1.0 ), pmid[:,0:nlev-1,:,:].values)
+## NOTE: The error between S+B and straight average in the troposphere is <0.06% (0.0006) for L60.
 
 # Turn pint into an xarray
 pint = xr.DataArray(np.asarray(pintnp), dims=('time', 'ilev', 'lat', 'lon'), coords={'time': T.coords['time'], 'ilev' : pintnp[0,:,0,0] , 'lat': T.coords['lat'], 'lon': T.coords['lon']})
@@ -182,7 +218,6 @@ pint.attrs['units'] = 'Pa'
         
 # Do some cleanup here
 del psexpand, psexpandi, pintnp
-
 
 # Now do some derived variables...
 print("Calculating virtual temperature")
@@ -217,31 +252,33 @@ MyWho()
 #       END DO
 
 
-# Now calculate zint
-zint=np.empty(p1dims)
+#>> # Now calculate zint
+#>> zint=np.empty(p1dims)
+#>> 
+#>> # Note, we always want to build zint from the "bottom" up (0 -> nlev) as an integral.
+#>> # If p is top -> bottom, we can built a numpy zint by "flipping" the p and TKV indices
+#>> for zz in tqdm(range(LOOPIX)):
+#>>   zint[zz,0,:,:] = PHIS/grav
+#>>   for kk in range(nlevp1-1):
+#>>     
+#>>     #print(kk,' ',pint[zz,kk+1,0,0].values)
+#>>     #TVBAR[zz,kk+1,:,:] = ( TKV[zz,kk+1,:,:]*np.log(pint[zz,kk+1,:,:]) + TKV[zz,kk,:,:]*np.log(pint[zz,kk,:,:]) ) / np.log(pint[zz,kk,:,:] * pint[zz,kk+1,:,:])
+#>>     #zint[zz,kk+1,:,:] = zint[zz,kk+1,:,:] + rog * TVBAR[zz,kk+1,:,:] * np.log(pint[zz,kk,:,:]/pint[zz,kk+1,:,:])
+#>>     kkf = nlevp1-kk-1
+#>>     zint[zz,kk+1,:,:] = zint[zz,kk,:,:] + rog * TKV[zz,kkf-1,:,:] * np.log(pint[zz,kkf,:,:]/pint[zz,kkf-1,:,:])
+#>> 
+#>> # If zint doesn't match orientation of other vars, we can just flip the numpy array before
+#>> # building an xr DataArray
+#>> zint = zint[:,::-1,:,:]
 
-# Note, we always want to build zint from the "bottom" up (0 -> nlev) as an integral.
-# If p is top -> bottom, we can built a numpy zint by "flipping" the p and TKV indices
-for zz in range(LOOPIX):
-  zint[zz,0,:,:] = PHIS/grav
-  for kk in range(nlevp1-1):
-    
-    #print(kk,' ',pint[zz,kk+1,0,0].values)
-    #TVBAR[zz,kk+1,:,:] = ( TKV[zz,kk+1,:,:]*np.log(pint[zz,kk+1,:,:]) + TKV[zz,kk,:,:]*np.log(pint[zz,kk,:,:]) ) / np.log(pint[zz,kk,:,:] * pint[zz,kk+1,:,:])
-    #zint[zz,kk+1,:,:] = zint[zz,kk+1,:,:] + rog * TVBAR[zz,kk+1,:,:] * np.log(pint[zz,kk,:,:]/pint[zz,kk+1,:,:])
-    kkf = nlevp1-kk-1
-    zint[zz,kk+1,:,:] = zint[zz,kk,:,:] + rog * TKV[zz,kkf-1,:,:] * np.log(pint[zz,kkf,:,:]/pint[zz,kkf-1,:,:])
-
-# If zint doesn't match orientation of other vars, we can just flip the numpy array before
-# building an xr DataArray
-zint = zint[:,::-1,:,:]
-
+### ZINT function
+zint = calc_zint(pint,PHIS,TKV,p1dims,LOOPIX,nlevp1,doFlip=True)
+#>>>
 # Built xr DataArray
 zint2 = xr.DataArray(np.asarray(zint), dims=('time', 'ilev', 'lat', 'lon'), coords={'time': T.coords['time'], 'ilev' : pint[0,:,0,0] , 'lat': T.coords['lat'], 'lon': T.coords['lon']})
 zint2.name="ZINT2"
-
-
-
+del zint
+  
 
 
 
