@@ -23,7 +23,7 @@ date_cmd = "date +" + dq + "%a %b %d %H:%M:%S %Z %Y" + dq
 
 
 styr=1980
-enyr=2015
+enyr=2016
 nyears=enyr-styr+1
 
 
@@ -58,6 +58,7 @@ xntimes=xdims(1)
 
 ;thefile:="dev/trajectories.txt.JRA"
 thefile:="TRAJ_FINAL/trajectories.txt.JRA"
+;thefile:="e3sm/trajectories.txt.ERA5.T400.DEFAULT"
 
 ncols := 11 ; number of columns in non-header rows of trajectory file
 maxLines := -1  ; set to -1 for auto-detection
@@ -117,7 +118,7 @@ print(num(.not.ismissing(tracktime)))
 ; THIS IS THE OLD ZARZYCKI AND ULLRICH CODE
 ; FALSE ALARM POINT BY POINT
 
-if (0 .eq. 0) then
+if (0 .eq. 1) then
 
 wcStrtFAPBP = systemfunc(date_cmd)
 
@@ -155,7 +156,7 @@ print("FAR: "+FAR)
 
 wallClockElapseTime(wcStrtFAPBP, "Point by point false alarm", 0)
 
-end if
+
 
 
 ; HR point by point
@@ -208,6 +209,7 @@ end do
 
 wallClockElapseTime(wcStrtHRPBP, "Point by point hit rate", 0)
 
+end if
 
 ;=========================================================================================
 
@@ -278,11 +280,13 @@ end do
 
 numhits=tofloat(num(xhitRateArray.eq.True))
 nummisses=tofloat(num(xhitRateArray.eq.False))
-HR = numhits / (numhits + nummisses)
 print("numhits: "+numhits+"   nummisses: "+nummisses)
-print("HR "+HR)
 
 wallClockElapseTime(wcStrtHR, "Storm hit rate", 0)
+
+
+
+
 
 
 ; FALSE ALARM RATE
@@ -341,21 +345,30 @@ end do
 
 numalarms=tofloat(num(yFalseAlarmArray.eq.True))
 nummatches=tofloat(num(yFalseAlarmArray.eq.False))
-FARS = numalarms/(numalarms+nummatches)
 print("num alarms: "+numalarms+"   nummatches: "+nummatches)
-print("FAR "+FARS)
+
 
 wallClockElapseTime(wcStrtFA, "Storm false alarm", 0)
 
+;HR = numhits / (numhits + nummisses)
+HR = nummatches / (nummatches + nummisses)
+print("HR "+HR)
+FARS = numalarms/(numalarms+nummatches)
+print("FAR "+FARS)
+CSI = nummatches/(nummatches+numhits+numalarms)
+print("CSI "+CSI)
+
 
 basin = "tropics"
+plotstride=1
 ;--------------------------------------------------------
 print("Beginning plot sequence")
+wcStrtPlot = systemfunc(date_cmd)
 wks  = gsn_open_wks("png","hr_traj")
 map = new(1,graphic)
   
 res  = True
-res@gsnDraw    = False
+;res@gsnDraw    = False
 res@gsnFrame   = False
 res@gsnMaximize = True
 res@mpFillOn             = True              ; turn off gray continents
@@ -404,29 +417,26 @@ text = new((/ynstorms/),graphic)
 
 lineres@gsLineThicknessF = linethicknesses(1)
 
+linecolors=new(ynstorms,"string")
+linecolors=where(yFalseAlarmArray .eq. True,"blue","red")
+
 do i = 0,ynstorms-1
-
-print("Doing "+i+" of "+(ynstorms-1))
+  print("Doing "+i+" of "+(ynstorms-1))
   if .not.ismissing(yFalseAlarmArray(i)) then
-
-  ;  polyres@gsMarkerSizeF = 2.0           ; select size to avoid streaking
-  if (yFalseAlarmArray(i) .eq. True)
-    lineres@gsLineColor = (/"blue"/)
-  else
-    lineres@gsLineColor = (/"red"/)
-  end if
-
-  dum(i,:) = gsn_add_polyline(wks,map,ylon(i,:),ylat(i,:),lineres)
-
+    lineres@gsLineColor=linecolors(i)
+    igood := ind(.not.ismissing(ylon(i,:)))
+    ; slow? but allows for plot resizing, panels, etc.
+    ;dum(i,:) = gsn_add_polyline(wks,map,ylon(i,igood),ylat(i,igood),lineres)
+    ; fast, but cannot delay draw
+    gsn_polyline(wks,map,ylon(i,igood),ylat(i,igood),lineres)
   end if
 end do
 
+frame(wks)
+
 print("Drawing plot")
 
-resP = True
-resP@amJust           = "TopRight"
-resP@gsnPanelFigureStringsFontHeightF = 0.027
-gsn_panel(wks,map,(/1,1/),resP)
+wallClockElapseTime(wcStrtPlot, "Time to plot", 0)
 
- 
+
 end
