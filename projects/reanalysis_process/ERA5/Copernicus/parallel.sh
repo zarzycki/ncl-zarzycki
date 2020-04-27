@@ -26,7 +26,7 @@ NUMCORES=1
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
-for DATA_YEAR in {2010..2019}
+for DATA_YEAR in {2016..2019}
 do
   LINECOMMAND="ncl process-PSL.ncl YEAR=$DATA_YEAR"
   echo ${LINECOMMAND} >> ${COMMANDFILE}

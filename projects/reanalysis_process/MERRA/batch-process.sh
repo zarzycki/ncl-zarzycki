@@ -16,7 +16,7 @@ NUMCORES=4
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
-for DATA_YEAR in {1980..2015}
+for DATA_YEAR in {2016..2019}
 do
   LINECOMMAND="/bin/bash ./driver-MERRA.sh ${DATA_YEAR}"
   echo ${LINECOMMAND} >> ${COMMANDFILE}

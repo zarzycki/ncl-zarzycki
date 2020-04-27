@@ -17,7 +17,7 @@ NUMCORES=4
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
-for DATA_YEAR in {2004..2005}
+for DATA_YEAR in {2017..2019}
 do
   LINECOMMAND="/bin/bash ./driver-NARR.sh ${DATA_YEAR}"
   echo ${LINECOMMAND} >> ${COMMANDFILE}

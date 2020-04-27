@@ -17,7 +17,7 @@ TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 rm ${COMMANDFILE}
 
-for YYYY in `seq 1980 1989`; do
+for YYYY in `seq 2017 2019`; do
   LINECOMMAND="./driver.sh ${YYYY}   "
   echo ${LINECOMMAND} >> ${COMMANDFILE}
 done

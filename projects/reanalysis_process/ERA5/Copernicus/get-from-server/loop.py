@@ -1,7 +1,7 @@
 import sys
 
-start_year=1980
-end_year=2016
+start_year=2016
+end_year=2019
 
 # single vars
 vars = ["mean_sea_level_pressure", "10m_u_component_of_wind", "10m_v_component_of_wind"]

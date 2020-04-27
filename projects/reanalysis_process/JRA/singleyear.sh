@@ -14,8 +14,8 @@
 ################################################################
 
 JRABASEDIR=~/rda/ds628.0/
-SYMDIR=/glade/u/home/zarzycki/scratch/JRAsym/
-OUTBASE=/glade/scratch/zarzycki/h1files/JRA/
+SYMDIR=/glade/u/home/${LOGNAME}/scratch/JRAsym/
+OUTBASE=/glade/scratch/${LOGNAME}/h1files/JRA/
 YYYY=${1}
 
 ### Symlink JRA files
@@ -46,14 +46,20 @@ do
   done
 done
 
+gpyyyy=$YYYY
+if (( gpyyyy > 2014 )); then
+  gpyyyy=2014
+fi
+
 declare -a tl319_arr=("gp")
 for i in "${tl319_arr[@]}"
 do
-  FILES=${JRABASEDIR}/tl319/${YYYY}/tl319.*_${i}.reg_tl319.*
+  FILES=${JRABASEDIR}/tl319/${gpyyyy}/tl319.*_${i}.reg_tl319.*
   for f in $FILES
   do
     echo "Processing $f file..."
     a=$(basename $f)
+    a=${a/${gpyyyy}/$YYYY}
     ln -s ${f} ${SYMDIR}/${YYYY}/${a}.grb2
   done
 done
@@ -83,7 +89,7 @@ rm ${arrayFileName}
 
 
 CONFIG=JRA
-OUTFILEDIR=/glade/scratch/zarzycki/h1files/JRA/${YYYY}/
+OUTFILEDIR=/glade/scratch/${LOGNAME}/h1files/JRA/${YYYY}/
 ### Generate time array file
 arrayFileName=test_timesArray_${YYYY}.txt
 rm ${arrayFileName}

@@ -17,7 +17,7 @@ TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 rm ${COMMANDFILE}
 
-for YYYY in `seq 1980 1989`; do
+for YYYY in `seq 2015 2015`; do
   LINECOMMAND="./singleyear.sh ${YYYY}   "
   echo ${LINECOMMAND} >> ${COMMANDFILE}
 done
