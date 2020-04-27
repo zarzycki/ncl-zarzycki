@@ -56,8 +56,8 @@ xntimes=xdims(1)
 
 ; =====
 
-;thefile:="dev/traj.ab.0105"
-thefile:="TRAJ_FINAL/trajectories.txt.ERA5"
+;thefile:="dev/trajectories.txt.JRA"
+thefile:="TRAJ_FINAL/trajectories.txt.JRA"
 
 ncols := 11 ; number of columns in non-header rows of trajectory file
 maxLines := -1  ; set to -1 for auto-detection
@@ -348,8 +348,85 @@ print("FAR "+FARS)
 wallClockElapseTime(wcStrtFA, "Storm false alarm", 0)
 
 
+basin = "tropics"
+;--------------------------------------------------------
+print("Beginning plot sequence")
+wks  = gsn_open_wks("png","hr_traj")
+map = new(1,graphic)
+  
+res  = True
+res@gsnDraw    = False
+res@gsnFrame   = False
+res@gsnMaximize = True
+res@mpFillOn             = True              ; turn off gray continents
+res@mpLandFillColor = "Tan"
+res@mpOceanFillColor = "LightBlue1"
+res@mpOutlineOn = True
+res@mpInlandWaterFillColor = res@mpOceanFillColor
+res@mpGreatCircleLinesOn = True
+ 
+if (basin .eq. "atlantic")  
+  res@mpMinLatF             = 5
+  res@mpMaxLatF             = 45
+  res@mpMinLonF             = 260
+  res@mpMaxLonF             = 355
+end if
+if (basin .eq. "wpac")  
+  res@mpMinLatF             = 5
+  res@mpMaxLatF             = 45
+  res@mpMinLonF             = 115
+  res@mpMaxLonF             = 180
+end if
+if (basin .eq. "refine")
+  res@mpMinLatF             = 3
+  res@mpMaxLatF             = 60
+  res@mpMinLonF             = 90
+  res@mpMaxLonF             = 359
+end if
+if (basin .eq. "tropics")
+  res@mpMinLatF             = -65
+  res@mpMaxLatF             = 65
+  res@mpCenterLonF = 200.
+end if
+ 
+map = gsn_csm_map_ce(wks,res)
 
+gsn_define_colormap(wks,"rainbow+white+gray")
+  polyres               = True          ; poly marker mods desired 
+  polyres@gsMarkerIndex = 1            ; choose circle as polymarker
+  lineres = True
 
+linethicknesses = (/0.1,0.25,0.9,1.3,1.6,2.2/)
+linethicknesses = 4.0*linethicknesses
+
+dum = new((/ynstorms,yntimes/),graphic)
+text = new((/ynstorms/),graphic)
+
+lineres@gsLineThicknessF = linethicknesses(1)
+
+do i = 0,ynstorms-1
+
+print("Doing "+i+" of "+(ynstorms-1))
+  if .not.ismissing(yFalseAlarmArray(i)) then
+
+  ;  polyres@gsMarkerSizeF = 2.0           ; select size to avoid streaking
+  if (yFalseAlarmArray(i) .eq. True)
+    lineres@gsLineColor = (/"blue"/)
+  else
+    lineres@gsLineColor = (/"red"/)
+  end if
+
+  dum(i,:) = gsn_add_polyline(wks,map,ylon(i,:),ylat(i,:),lineres)
+
+  end if
+end do
+
+print("Drawing plot")
+
+resP = True
+resP@amJust           = "TopRight"
+resP@gsnPanelFigureStringsFontHeightF = 0.027
+gsn_panel(wks,map,(/1,1/),resP)
 
  
 end
