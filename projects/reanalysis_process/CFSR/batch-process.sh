@@ -17,7 +17,7 @@ NUMCORES=4
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
-for DATA_YEAR in {2017..2019}
+for DATA_YEAR in {2011..2019}
 do
   LINECOMMAND="/bin/bash ./driver-CFS.sh ${DATA_YEAR}"
   echo ${LINECOMMAND} >> ${COMMANDFILE}
