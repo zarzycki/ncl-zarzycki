@@ -20,7 +20,7 @@ windcorrs = df.loc[ : , 5 ]
 for ii in range(len(files)):
   print(files[ii])
 
-  trajfile='trajs/'+files[ii]
+  trajfile='TRAJ_FINAL/'+files[ii]
   isUnstruc=isUnstructStr[ii]
   nVars=-1
   headerStr='start'

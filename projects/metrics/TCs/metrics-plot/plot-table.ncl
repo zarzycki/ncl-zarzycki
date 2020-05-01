@@ -52,19 +52,30 @@ begin
   do jj = 0,nvars-1
     header(jj) = str_get_field(lines(0),jj+2,delim)
 
-    if (header(jj) .eq. "SLP") then
-      header(jj) = "r~B~xy,SLP~N~"
-    end if
-    if (header(jj) .eq. "U10") then
-      header(jj) = "r~B~xy,u10~N~"
-    end if
-    if (header(jj) .eq. "Genesis") then
-      header(jj) = "r~B~xy,gen~N~"
-    end if
-    if (header(jj) .eq. "Track") then
-      header(jj) = "r~B~xy,track~N~"
-    end if
+    
+    ;if (header(jj) .eq. "SLP") then
+    ;  header(jj) = "r~B~xy,SLP~N~"
+    ;end if
+    ;if (header(jj) .eq. "U10") then
+    ;  header(jj) = "r~B~xy,u10~N~"
+    ;end if
+    ;if (header(jj) .eq. "Genesis") then
+    ;  header(jj) = "r~B~xy,gen~N~"
+    ;end if
+    ;if (header(jj) .eq. "Track") then
+    ;  header(jj) = "r~B~xy,track~N~"
+    ;end if
 
+    header(jj) = header(jj)+"~N~"
+    ; 
+    header(jj) = str_sub_str(header(jj),"rxy","r~B~xy")
+    header(jj) = str_sub_str(header(jj),"rp","r~B~p")
+    header(jj) = str_sub_str(header(jj),"rs","r~B~s")
+    header(jj) = str_sub_str(header(jj),"rmsexy","rmse~B~xy")
+    header(jj) = str_sub_str(header(jj),"utc","u~B~tc")
+    header(jj) = str_sub_str(header(jj),"uclim","u~B~clim")
+    header(jj) = str_sub_str(header(jj),"_",",")
+   
   end do
 
   name_var  =           str_get_field(lines(stloadix:),1,delim)
@@ -95,6 +106,7 @@ begin
       var(ii,:) = var(ii,:) - varref(ii)
     end do
     var(:,0) = varref(:)
+    header = str_sub_str(header,"u~B~","b~B~")
   end if
 
   ; NDC math...

@@ -21,7 +21,7 @@ tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
 thedir="./TRAJ_FINAL/"
 ;thefile="trajectories.txt.theta.20190910.branch_noCNT.n438b.unc03.A_WCYCL1950S_CMIP6_HR.ne120_oRRS18v3_ICG"
-thefile="trajectories.txt.MERRA2"
+thefile="trajectories.txt.JRA"
 ncols = -1                    ; assign number of columns
 maxLines = -1
 headerDelimStr = "start"
@@ -46,7 +46,7 @@ ntimes = ndims(1)
 
 if (0 .eq. 0) then
   do ii = 0,nstorms-1
-    if (yyyy(ii,0) .ne. 1991) then
+    if (yyyy(ii,0) .ne. 2017) then
       lat(ii,:)=lat@_FillValue
       lon(ii,:)=lon@_FillValue
       wind(ii,:)=wind@_FillValue

@@ -14,19 +14,38 @@ begin
 
 out_type = "pdf"
 prescut = 99999.0   ; only storms with pres LOWER than this are included. set to 99999.0 for all storms
+basin=-1
+;basin=(/1,2,3,4/)
+;basin=1
+SEARCHRADIUS=2.0
 
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
+;======================= Masking ================================
+
+basin=-1
+if (any(basin.gt.0)) then
+  if (dimsizes(basin) .eq. 1) then
+    basinstr=getbasinmaskstr(basin)
+  else
+    basinstr="NHEMI"
+  end if
+  maskspacing=1.0
+  tcMask = mask_tc(0,-999,-999,maskspacing,360)
+else
+  basinstr="GLOB"
+end if
+
+
+;======================= Masking ================================
+
 dq       = str_get_dq()
 date_cmd = "date +" + dq + "%a %b %d %H:%M:%S %Z %Y" + dq
 
-
 styr=1980
-enyr=2016
+enyr=2015
 nyears=enyr-styr+1
-
-
 
 thefile:="TRAJ_FINAL/ibtracs-1980-2019-GLOB.v4.txt"
 ;thefile:="dev/ibtracs-1998-2008-GLOB.txt"
@@ -57,7 +76,7 @@ xntimes=xdims(1)
 ; =====
 
 ;thefile:="dev/trajectories.txt.JRA"
-thefile:="TRAJ_FINAL/trajectories.txt.JRA"
+thefile:="TRAJ_FINAL/trajectories.txt.MERRA"
 ;thefile:="e3sm/trajectories.txt.ERA5.T400.DEFAULT"
 
 ncols := 11 ; number of columns in non-header rows of trajectory file
@@ -136,7 +155,7 @@ do j = 0,dimsizes(jndices)-1
       ix = indices(i)
       tklat = tracklat(ix)
       tklon = tracklon(ix)
-      if(gc_latlon(obslat,obslon,tklat,tklon,2,2) .le. 2.0)
+      if(gc_latlon(obslat,obslon,tklat,tklon,2,2) .le. SEARCHRADIUS)
         FAarr(ix)=FAarr@_FillValue
       end if
     end do
@@ -185,7 +204,7 @@ do j = 0,dimsizes(jndices)-1
       ix = indices(i)
       tklat = tracklat(ix)
       tklon = tracklon(ix)
-      if(gc_latlon(obslat,obslon,tklat,tklon,2,2) .le. 2.0)
+      if(gc_latlon(obslat,obslon,tklat,tklon,2,2) .le. SEARCHRADIUS)
         hit = hit+1
         tcfound=True
         ;print("+++++"+onedname(jx)+" "+obslat+" "+obslon+" "+tklat+" "+tklon+" "+trackyear(ix)+" "+trackmonth(ix)+" "+trackday(ix)+" "+trackhour(ix))
@@ -223,7 +242,6 @@ analyzeObsStorm=True
 
 ; filter by intensity
 xmwind=dim_max_n_Wrap(xwind,1)
-analyzeObsStorm=where(xmwind.gt.17.0,analyzeObsStorm,False)
 
 ;filter by year
 xgyear=xyear(:,0)
@@ -234,53 +252,68 @@ analyzeObsStorm=where(xgyear.ge.styr .and. xgyear.le.enyr, analyzeObsStorm, Fals
 
 
 ; HIT RATE
-
 wcStrtHR = systemfunc(date_cmd)
 
-xhitRateArray = new(xnstorms,"logical")
-do ii = 0,xnstorms-1
-  if (analyzeObsStorm(ii)) then
-    isHit=False
-    do jj = 0,xntimes-1
-      ;print(ii+" "+jj)
-      if (.not.isHit .and. .not.ismissing(xtime(ii,jj)) ) then
-        matchedTimes = where(ytime.eq.xtime(ii,jj),ytime,ytime@_FillValue)
-        if (any(matchedTimes.ne.matchedTimes@_FillValue)) then
-          ;print("possible match? storm "+ii)
-          ; find non-zero indices
+windHRlevs=(/0.0,17.0,33.0,51.0/)
+;windHRlevs=(/51.0/)
 
-          matchedTimes1D = ndtooned(matchedTimes)     ; only do this once
-          indMax := ind_resolve(ind(matchedTimes1D.ne.matchedTimes1D@_FillValue),dimsizes(matchedTimes))  ; locations of max
-          delete (matchedTimes1D)
-          potentialMatchDims = dimsizes(indMax)
-          potentialStormsNum = potentialMatchDims(0)
-          if (.not.ismissing(potentialStormsNum)) then
-            xlatSingle = xlat(ii,jj)
-            xlonSingle = xlon(ii,jj)
-            do zz = 0,potentialStormsNum-1
-              ylatSingle=ylat(indMax(zz,0),indMax(zz,1))
-              ylonSingle=ylon(indMax(zz,0),indMax(zz,1))
-              if (gc_latlon(xlatSingle,xlonSingle,ylatSingle,ylonSingle,2,2) .le. 2.0) then
-                ;print("Found match to: "+xlatSingle+" "+xlonSingle+"   at "+ylatSingle+" "+ylonSingle+" on "+cd_calendar(xtime(ii,jj),-3))
-                isHit=True
-                break
-              end if
-            end do
+numhits=new(dimsizes(windHRlevs),"float")
+nummisses=new(dimsizes(windHRlevs),"float")
+
+do cc = 0,dimsizes(windHRlevs)-1
+  print("doing "+windHRlevs(cc))
+  analyzeObsStorm=where(xmwind.gt.windHRlevs(cc),analyzeObsStorm,False)
+  xhitRateArray = new(xnstorms,"logical")
+  do ii = 0,xnstorms-1
+    if (analyzeObsStorm(ii)) then
+      isHit=False
+      do jj = 0,xntimes-1
+        ;print(ii+" "+jj)
+        if (.not.isHit .and. .not.ismissing(xtime(ii,jj)) ) then
+          matchedTimes = where(ytime.eq.xtime(ii,jj),ytime,ytime@_FillValue)
+          if (any(matchedTimes.ne.matchedTimes@_FillValue)) then
+            ;print("possible match? storm "+ii)
+            ; find non-zero indices
+
+            matchedTimes1D = ndtooned(matchedTimes)     ; only do this once
+            indMax := ind_resolve(ind(matchedTimes1D.ne.matchedTimes1D@_FillValue),dimsizes(matchedTimes))  ; locations of max
+            delete (matchedTimes1D)
+            potentialMatchDims = dimsizes(indMax)
+            potentialStormsNum = potentialMatchDims(0)
+            if (.not.ismissing(potentialStormsNum)) then
+              xlatSingle = xlat(ii,jj)
+              xlonSingle = xlon(ii,jj)
+              do zz = 0,potentialStormsNum-1
+                ylatSingle=ylat(indMax(zz,0),indMax(zz,1))
+                ylonSingle=ylon(indMax(zz,0),indMax(zz,1))
+                if (gc_latlon(xlatSingle,xlonSingle,ylatSingle,ylonSingle,2,2) .le. SEARCHRADIUS) then
+                  ;print("Found match to: "+xlatSingle+" "+xlonSingle+"   at "+ylatSingle+" "+ylonSingle+" on "+cd_calendar(xtime(ii,jj),-3))
+                  isHit=True
+                  break
+                end if
+              end do
+            end if
+          else
+            continue
           end if
         else
-          continue
+          break
         end if
-      else
-        break
-      end if
-    end do
-    xhitRateArray(ii) = isHit
-  end if
+      end do
+      xhitRateArray(ii) = isHit
+    end if
+  end do
+  ;missix=ind(xhitRateArray.eq.False)
+  ;print(missix)
+  ;do yy = 0,dimsizes(missix)-1
+  ;  print(xlat(missix(yy),:)+" "+xlon(missix(yy),:)+"    "+xpres(missix(yy),:)+" "+xwind(missix(yy),:)+"    "+xyear(missix(yy),:)+" "+xmonth(missix(yy),:)+" "+xday(missix(yy),:)+" "+xhour(missix(yy),:)  )
+  ;end do
+  numhits(cc)=tofloat(num(xhitRateArray.eq.True))
+  nummisses(cc)=tofloat(num(xhitRateArray.eq.False))
 end do
 
-numhits=tofloat(num(xhitRateArray.eq.True))
-nummisses=tofloat(num(xhitRateArray.eq.False))
-print("numhits: "+numhits+"   nummisses: "+nummisses)
+print("wind thresh: "+windHRlevs+"   numhits: "+numhits+"   nummisses: "+nummisses)
+
 
 wallClockElapseTime(wcStrtHR, "Storm hit rate", 0)
 
@@ -325,7 +358,7 @@ do ii = 0,ynstorms-1
             do zz = 0,potentialStormsNum-1
               xlatSingle=xlat(indMax(zz,0),indMax(zz,1))
               xlonSingle=xlon(indMax(zz,0),indMax(zz,1))
-              if (gc_latlon(ylatSingle,ylonSingle,xlatSingle,xlonSingle,2,2) .le. 2.0) then
+              if (gc_latlon(ylatSingle,ylonSingle,xlatSingle,xlonSingle,2,2) .le. SEARCHRADIUS) then
                 ;print("Found match to: "+ylatSingle+" "+ylonSingle+"   at "+xlatSingle+" "+xlonSingle+" on "+cd_calendar(ytime(ii,jj),-3))
                 isFA=False
                 break
@@ -358,8 +391,26 @@ print("FAR "+FARS)
 CSI = nummatches/(nummatches+numhits+numalarms)
 print("CSI "+CSI)
 
+;--------------------------------------------------------
 
-basin = "tropics"
+quote = inttochar(34)
+CSVOUTFILE="./rates.txt"
+do h = 0,dimsizes(HR)-1
+  if (h .eq. 0) then
+    HRstr=tostring(HR(h))
+    CSIstr=tostring(CSI(h))
+  else
+    HRstr=HRstr+","+tostring(HR(h))
+    CSIstr=CSIstr+","+tostring(CSI(h))
+  end if
+end do
+system("echo "+quote+ thefile+","+HRstr+","+FARS+","+CSIstr+quote+" >> "+CSVOUTFILE)
+
+
+;--------------------------------------------------------
+
+
+plotbasin = "tropics"
 plotstride=1
 ;--------------------------------------------------------
 print("Beginning plot sequence")
@@ -378,25 +429,25 @@ res@mpOutlineOn = True
 res@mpInlandWaterFillColor = res@mpOceanFillColor
 res@mpGreatCircleLinesOn = True
  
-if (basin .eq. "atlantic")  
+if (plotbasin .eq. "atlantic")  
   res@mpMinLatF             = 5
   res@mpMaxLatF             = 45
   res@mpMinLonF             = 260
   res@mpMaxLonF             = 355
 end if
-if (basin .eq. "wpac")  
+if (plotbasin .eq. "wpac")  
   res@mpMinLatF             = 5
   res@mpMaxLatF             = 45
   res@mpMinLonF             = 115
   res@mpMaxLonF             = 180
 end if
-if (basin .eq. "refine")
+if (plotbasin .eq. "refine")
   res@mpMinLatF             = 3
   res@mpMaxLatF             = 60
   res@mpMinLonF             = 90
   res@mpMaxLonF             = 359
 end if
-if (basin .eq. "tropics")
+if (plotbasin .eq. "tropics")
   res@mpMinLatF             = -65
   res@mpMaxLatF             = 65
   res@mpCenterLonF = 200.
@@ -421,7 +472,7 @@ linecolors=new(ynstorms,"string")
 linecolors=where(yFalseAlarmArray .eq. True,"blue","red")
 
 do i = 0,ynstorms-1
-  print("Doing "+i+" of "+(ynstorms-1))
+  ;print("Doing "+i+" of "+(ynstorms-1))
   if .not.ismissing(yFalseAlarmArray(i)) then
     lineres@gsLineColor=linecolors(i)
     igood := ind(.not.ismissing(ylon(i,:)))

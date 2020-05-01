@@ -17,9 +17,10 @@ prescut = 99999.0   ; only storms with pres LOWER than this are included. set to
 trajDir="./TRAJ_FINAL/"
 csvdir="./csv-files/"
 gridsize = 8.0
+basin=-1
 ;basin=(/1,2,3,4/)
-basin=1
-filename="hyp_configs.csv"
+;basin=1
+filename="rean_configs.csv"
 
 defineMIbypres=False
 
@@ -101,6 +102,10 @@ avgAcePS=new((/nfiles/),"float")
 avgPacePS=new((/nfiles/),"float")
 avgLatgenPS=new((/nfiles/),"float")
 
+;=================== Init any counting ints ================================
+
+lettercount=0
+
 ;=================== Loop over data files ================================
 
 valid_files=new(nfiles,"integer")
@@ -130,8 +135,6 @@ if (str_get_cols(files(zz),0,0).ne."!") then
     ncols = ncols-1
   end if
   traj_data = getTrajectoriesGeneric(thefile,ncols,maxLines,"start","tab",isUnstruct(zz),False)
-
-
 
   ; load in trajectory data (need to be modified if using different tempest output
   xlon  = traj_data(:,2,:)
@@ -168,7 +171,7 @@ if (str_get_cols(files(zz),0,0).ne."!") then
     ; next, when xwind is missing but xpres exists, try to fill in xwind
     xwind=where( xwind .lt. 0. , 15. , xwind)
 
-    windthreshold=17.
+    windthreshold=17.5
     xlon=where(xwind.gt.windthreshold,xlon,xlon@_FillValue)
     xlat=where(xwind.gt.windthreshold,xlat,xlat@_FillValue)
     xpres=where(xwind.gt.windthreshold,xpres,xpres@_FillValue)
@@ -433,19 +436,35 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   fullace(zz,:,:)=acedens(:,:)
   fulltcd(zz,:,:)=tcddens(:,:)
 
-spapltvarsstr=(/"trackdens","minpres","maxwind","gendens","pacedens","acedens","tcddens"/)
-spapltvars=[/ trackdens, minpres, maxwind, gendens, pacedens,acedens,tcddens /] 
-spapltmincontour=(/0.,880.,0.,0.,0.,0.,0./)
-spapltmaxcontour=(/20.,1010.,100.,1.,6.,6.,5./)
+
+  trackbias = trackdens
+  trackbias = trackdens(:,:) - fulldens(0,:,:)
+  genbias = gendens
+  genbias = gendens(:,:) - fullgen(0,:,:)
+
+
+spapltvarsstr=(/"trackdens","minpres","maxwind","gendens","pacedens","acedens","tcddens", "trackbias","genbias"/)
+spapltvars=[/ trackdens, minpres, maxwind, gendens, pacedens,acedens,tcddens, trackbias , genbias /] 
+spapltmincontour=(/0.,880.,0.,0.,0.,0.,0.,-15.,-1.0/)
+spapltmaxcontour=(/30.,1010.,100.,1.,6.,6.,5.,15.,1.0/)
+
+letterstr=(/"a.","b.","c.","d.","e.","f.","g.","h.","i.","j.","k.","l."/)
+
+
 do bb = 0,dimsizes(spapltvarsstr)-1
   print("plotting "+tostring(spapltvarsstr(bb))+"."+basinstr+"_"+files(zz))
   wks = gsn_open_wks("pdf","./pdfs/"+tostring(spapltvarsstr(bb))+"."+basinstr+"_"+files(zz))
   plot = new(1,"graphic")
   ;print(spapltvars[bb])
   toPlot=spapltvars[bb]
-  toPlot = where(toPlot.gt.0.,toPlot,toPlot@_FillValue)
-  colorMap1="WhiteBlueGreenYellowRed"
-  ;colorMap1="prcp_1"
+  if (spapltvarsstr(bb) .eq. "trackbias" .or. spapltvarsstr(bb) .eq. "genbias") then
+    colorMap1="NCV_blu_red"
+    ncontlev = 9
+  else
+    toPlot = where(toPlot.gt.0.,toPlot,toPlot@_FillValue)
+    colorMap1="WhiteBlueGreenYellowRed"
+    ncontlev = 10
+  end if
   res                       = True     ; plot mods desired
   res@gsnDraw = False
   res@gsnFrame = False
@@ -456,27 +475,31 @@ do bb = 0,dimsizes(spapltvarsstr)-1
   res@cnLineLabelsOn  = False
   res@lbLabelStride = 2
   res@gsnCenterString       = ""
-  ;res@mpMinLatF             = 5.
-  ;res@mpMaxLatF             = 55.
-  ;res@mpMinLonF             = 260.
-  ;res@mpMaxLonF             = 350.
-  res@mpMinLatF             = -60.
-  res@mpMaxLatF             = 60.
-  res@mpMinLonF             = 0.
-  res@mpMaxLonF             = 360.
+  if (dimsizes(basin) .eq. 1 .and. basin .eq. 1) then
+    res@mpMinLatF             = 5.
+    res@mpMaxLatF             = 55.
+    res@mpMinLonF             = 260.
+    res@mpMaxLonF             = 350.
+  else
+    res@mpMinLatF             = -60.
+    res@mpMaxLatF             = 60.
+    res@mpMinLonF             = 0.
+    res@mpMaxLonF             = 360.
+  end if
   res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
   res@cnLevelSelectionMode  = "ManualLevels"
   res@cnMinLevelValF        = spapltmincontour(bb)
   ;res@cnMaxLevelValF        = 20.0
   res@cnMaxLevelValF        = spapltmaxcontour(bb)
-  res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 10.
+  res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / tofloat(ncontlev)
   res@cnFillPalette=colorMap1
   plot(0) = gsn_csm_contour_map_ce(wks,toPlot,res)
   resP=True
-  resP@txString           = "Annual TC track density, all storms"
+  ;resP@txString           = "Annual TC track density, all storms"
   resP@amJust           = "TopLeft"
+  resP@gsnPanelFigureStringsFontHeightF = 0.03
+  resP@gsnPanelFigureStrings=letterstr(lettercount)
   gsn_panel(wks,plot,(/1,1/),resP)
-
 end do
 
   ; clean up arrays before returning to start of loop
@@ -485,8 +508,10 @@ end do
   delete([/clon,clat,cpres,cwind,cace,caceall,cpace,cpaceall,ctcd,ctcdpp,clatmi,clonmi,cglon,cglat,cmpres,cmwind,cgyear,cgmonth/])
   delete([/traj_data,maxLines,ncols,thefile/])
   delete([/thisYr/])
-  delete([/trackdens,minpres,maxwind/])
+  delete([/trackdens,minpres,maxwind,trackbias/])
 
+  ; increment anything
+  lettercount = lettercount+1
   print("---------------------------------------------------- DONE")
 
 end if
@@ -574,7 +599,7 @@ end do
 print("... doing un-paired basin-mean statistics")
 outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_climo_mean.csv"
 system("rm "+outputname)
-system("echo Model,Count,TCDays,ACE1,ACE2,LMI >> "+outputname)
+system("echo Model,uclim_count,uclim_tcd,uclim_ace,uclim_pace,uclim_lmi >> "+outputname)
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   OUTSTR=strs(mm)+delim+ \
@@ -589,7 +614,7 @@ end do
 print("... doing un-paired storm-mean statistics")
 outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_storm_mean.csv"
 system("rm "+outputname)
-system("echo Model,TCDays,ACE1,ACE2,LatGen,LMI >> "+outputname)
+system("echo Model,utc_tcd,utc_ace,utc_pace,utc_latgen,utc_lmi >> "+outputname)
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   OUTSTR=strs(mm)+delim+ \
@@ -603,7 +628,7 @@ end do
 
 outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_temporal_pcorr.csv"
 system("rm "+outputname)
-system("echo Model,Count,TCDays,ACE1,ACE2,LMI >> "+outputname)
+system("echo Model,rp_count,rp_tcd,rp_ace,rp_pace,rp_lmi >> "+outputname)
 print("... doing Pearson seasonal cycle correlation.")
 do qq = 0,nfiles-1
   jj = valid_files(qq)
@@ -613,7 +638,7 @@ end do
 
 outputname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_temporal_scorr.csv"
 system("rm "+outputname)
-system("echo Model,Count,TCDays,ACE1,ACE2,LMI >> "+outputname)
+system("echo Model,rs_count,rs_tcd,rs_ace,rs_pace,rs_lmi >> "+outputname)
 print("... doing Spearman seasonal cycle correlation.")
 do qq = 0,nfiles-1
   jj = valid_files(qq)
@@ -639,7 +664,9 @@ quote = inttochar(34)
 delim=","
 OPT=0
 system("rm "+outputname)
-system("echo Model,Track,SLP,WIND,TCD,ACE,PACE,GEN >> "+outputname)
+;system("echo Model,Track,SLP,WIND,TCD,ACE,PACE,GEN >> "+outputname)
+system("echo Model,rxy_track,rxy_slp,rxy_u10,rxy_ace,rxy_gen >> "+outputname)
+
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   tmprefr=fulldens(0,:,:)
@@ -668,9 +695,9 @@ do qq = 0,nfiles-1
     pattern_cor(tmprefr,tmptest,denslatwgt,OPT)+delim+ \
     pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),denslatwgt,OPT)+delim+ \
-    pattern_cor(fulltcd(0,:,:),fulltcd(mm,:,:),denslatwgt,OPT)+delim+ \
+    ;pattern_cor(fulltcd(0,:,:),fulltcd(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(fullace(0,:,:),fullace(mm,:,:),denslatwgt,OPT)+delim+ \
-    pattern_cor(fullpace(0,:,:),fullpace(mm,:,:),denslatwgt,OPT)+delim+ \
+    ;pattern_cor(fullpace(0,:,:),fullpace(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(tm2refr,tm2test,denslatwgt,OPT)
   print(OUTSTR+"")
   system("echo "+OUTSTR+" >> "+outputname)
@@ -685,7 +712,7 @@ dimslatlon=dimsizes(fulldens(0,:,:))
 print("... doing RMSE")
 outrmsname=csvdir+"/"+"metrics_"+basecsv+"_"+basinstr+"_spatial_rmse.csv"
 system("rm "+outrmsname)
-system("echo Model,Track,Genesis,U10,SLP >> "+outrmsname)
+system("echo Model,rmsexy_track,rmsexy_slp,rmsexy_u10,rmsexy_gen >> "+outrmsname)
 do qq = 0,nfiles-1
   mm = valid_files(qq)
   tmprefr=fulldens(0,:,:)
