@@ -6,7 +6,7 @@
 load "../../../functions/getTrajectoriesGeneric.ncl"
 load "../../../functions/trackDensity.ncl"
 load "../../../functions/mask_tc.ncl"
-load "./taylor_diagram_cam.ncl"
+load "./functions/taylor_diagram_cam.ncl"
 
 begin
 
@@ -20,16 +20,18 @@ gridsize = 8.0
 basin=-1
 ;basin=(/1,2,3,4/)
 ;basin=1
+pathtoconfiglists="./config-lists/"
 filename="rean_configs.csv"
-
+plot_tables_only=False
 defineMIbypres=False
+styr=1980
+enyr=2016
 
 ;======================= Constants ================================
 ms_to_kts = 1.94384449
 
-; this is really only for correlations
-styr=1980
-enyr=2016
+;======================= Calendar logic ================================
+
 nyears=enyr-styr+1
 yearArr=ispan(styr,enyr,1)
 
@@ -52,8 +54,8 @@ end if
 maskspacing=1.0
 tcMask = mask_tc(0,-999,-999,maskspacing,360)
 
-;=================== Get traj data ================================
-lines = asciiread(filename,-1,"string")
+;=================== Get namelist data ================================
+lines = asciiread(pathtoconfiglists+"/"+filename,-1,"string")
 delim = ","
 files  =           str_get_field(lines,1,delim)
 strs = str_get_field(lines,2,delim)
@@ -63,6 +65,7 @@ yearspermember= toint(str_get_field(lines,5,delim))
 windcorrs = tofloat(str_get_field(lines,6,delim))
 linecolors = str_get_field(lines,7,delim)
 
+; convert string to logical
 isUnstruct = where(isUnstructStr.eq."True",True,False)
 
 ;=================== Internal logic ================================
@@ -70,9 +73,11 @@ isUnstruct = where(isUnstructStr.eq."True",True,False)
 namesplit = get_file_suffix(filename,0)
 basecsv = namesplit@fBase
 
-;=================== Init arrays ================================
-
 nfiles=dimsizes(files)
+
+valid_files=new(nfiles,"integer")
+
+;=================== Init arrays ================================
 
 ; Init PAIRED per year arrays
 stormsByYear=new((/nfiles,nyears/),"float")
@@ -102,13 +107,10 @@ avgAcePS=new((/nfiles/),"float")
 avgPacePS=new((/nfiles/),"float")
 avgLatgenPS=new((/nfiles/),"float")
 
-;=================== Init any counting ints ================================
-
-lettercount=0
 
 ;=================== Loop over data files ================================
 
-valid_files=new(nfiles,"integer")
+if (.not.plot_tables_only) then
 
 do zz = 0,nfiles-1
 if (str_get_cols(files(zz),0,0).ne."!") then
@@ -275,6 +277,7 @@ if (str_get_cols(files(zz),0,0).ne."!") then
       polyn = 3
       xprestmp = where(xpres.lt.1010,xpres,1010.)
       quad_a = lspoly(ndtooned(xpres), ndtooned(xwind) , 1, polyn)
+      print(quad_a)
     end if
     xwindtmp = quad_a(0) + quad_a(1)*xpres + quad_a(2)*xpres^2
     xpaceall = 1e-4*(ms_to_kts*xwindtmp)^2.
@@ -424,6 +427,8 @@ if (str_get_cols(files(zz),0,0).ne."!") then
     fullpace=fulldens
     fullace=fulldens
     fulltcd=fulldens
+    fulltrackbias=fulldens
+    fullgenbias=fulldens
 
     delete(tmpdims)
   end if
@@ -436,26 +441,55 @@ if (str_get_cols(files(zz),0,0).ne."!") then
   fullace(zz,:,:)=acedens(:,:)
   fulltcd(zz,:,:)=tcddens(:,:)
 
+  ; calculate biases
 
   trackbias = trackdens
   trackbias = trackdens(:,:) - fulldens(0,:,:)
   genbias = gendens
   genbias = gendens(:,:) - fullgen(0,:,:)
 
+  fulltrackbias(zz,:,:)=trackbias(:,:)
+  fullgenbias(zz,:,:)=genbias(:,:)
 
+  ; clean up arrays before returning to start of loop
+  delete([/xyear,xmonth,xhour,xday/])
+  delete([/xlon,xlat,xpres,xwind,xace,xaceall,xpace,xpaceall,xtcd,xtcdpp,xlatmi,xlonmi,xglon,xglat,xmpres,xmwind,xgyear,xgmonth/])
+  delete([/clon,clat,cpres,cwind,cace,caceall,cpace,cpaceall,ctcd,ctcdpp,clatmi,clonmi,cglon,cglat,cmpres,cmwind,cgyear,cgmonth/])
+  delete([/traj_data,maxLines,ncols,thefile/])
+  delete([/thisYr/])
+  delete([/trackdens,minpres,maxwind,trackbias/])
+
+  print("---------------------------------------------------- DONE")
+
+end if
+end do
+
+; Eliminate files that were not valid for some reason
+iz = ind(.not.ismissing(valid_files)) 
+valid_files := valid_files(iz)
+valid_strs := strs(iz)
+nfiles=dimsizes(valid_files)
+
+
+
+lettercount=0
 spapltvarsstr=(/"trackdens","minpres","maxwind","gendens","pacedens","acedens","tcddens", "trackbias","genbias"/)
-spapltvars=[/ trackdens, minpres, maxwind, gendens, pacedens,acedens,tcddens, trackbias , genbias /] 
-spapltmincontour=(/0.,880.,0.,0.,0.,0.,0.,-15.,-1.0/)
-spapltmaxcontour=(/30.,1010.,100.,1.,6.,6.,5.,15.,1.0/)
-
+spapltvars=[/ fulldens, fullpres, fullwind, fullgen, fullpace,fullace,fulltcd, fulltrackbias , fullgenbias /] 
+spapltmincontour=(/0.,880.,0.,0.,0.,0.,0.,-20.,-1.0/)
+spapltmaxcontour=(/30.,1010.,100.,1.,6.,6.,5.,20.,1.0/)
 letterstr=(/"a.","b.","c.","d.","e.","f.","g.","h.","i.","j.","k.","l."/)
 
 
+
+
+
+; do plotting
 do bb = 0,dimsizes(spapltvarsstr)-1
-  print("plotting "+tostring(spapltvarsstr(bb))+"."+basinstr+"_"+files(zz))
-  wks = gsn_open_wks("pdf","./pdfs/"+tostring(spapltvarsstr(bb))+"."+basinstr+"_"+files(zz))
-  plot = new(1,"graphic")
-  ;print(spapltvars[bb])
+  thisDir="./fig/spatial/"
+  system("mkdir -p "+thisDir)
+  wks = gsn_open_wks("pdf",thisDir+"/"+tostring(spapltvarsstr(bb))+"."+basinstr+"_"+filename)
+  plot = new(nfiles,"graphic")
+
   toPlot=spapltvars[bb]
   if (spapltvarsstr(bb) .eq. "trackbias" .or. spapltvarsstr(bb) .eq. "genbias") then
     colorMap1="NCV_blu_red"
@@ -473,7 +507,7 @@ do bb = 0,dimsizes(spapltvarsstr)-1
   res@cnFillMode            = "RasterFill"       ; Raster Mode
   res@cnLinesOn             = False    ; turn of contour lines
   res@cnLineLabelsOn  = False
-  res@lbLabelStride = 2
+
   res@gsnCenterString       = ""
   if (dimsizes(basin) .eq. 1 .and. basin .eq. 1) then
     res@mpMinLatF             = 5.
@@ -489,39 +523,44 @@ do bb = 0,dimsizes(spapltvarsstr)-1
   res@mpCenterLonF          = (res@mpMinLonF + res@mpMaxLonF)/2
   res@cnLevelSelectionMode  = "ManualLevels"
   res@cnMinLevelValF        = spapltmincontour(bb)
-  ;res@cnMaxLevelValF        = 20.0
   res@cnMaxLevelValF        = spapltmaxcontour(bb)
   res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / tofloat(ncontlev)
   res@cnFillPalette=colorMap1
-  plot(0) = gsn_csm_contour_map_ce(wks,toPlot,res)
+
+  res@lbLabelStride = 2
+  res@lbLabelBarOn        = False           ; turn off individual cb's
+
+  do zz = 0,nfiles-1
+    plot(zz) = gsn_csm_contour_map_ce(wks,toPlot(valid_files(zz),:,:),res)
+  end do
+
   resP=True
   ;resP@txString           = "Annual TC track density, all storms"
   resP@amJust           = "TopLeft"
-  resP@gsnPanelFigureStringsFontHeightF = 0.03
-  resP@gsnPanelFigureStrings=letterstr(lettercount)
-  gsn_panel(wks,plot,(/1,1/),resP)
+  resP@gsnPanelFigureStringsFontHeightF = 0.015
+  resP@gsnPanelFigureStrings=valid_strs
+
+  resP@gsnPanelLabelBar    = True                ; add common colorbar
+  resP@lbLabelFontHeightF  = 0.012               ; make labels smaller
+
+  if (nfiles .le. 4) then
+    gsn_panel(wks,plot,(/4,1/),resP)
+  else if (nfiles .gt. 4 .and. nfiles .le. 8) then
+    gsn_panel(wks,plot,(/4,2/),resP)
+  else
+    gsn_panel(wks,plot,(/4,3/),resP)
+  end if
+  end if
+
+  delete(res)
+  delete(plot)
+  delete(wks)
 end do
 
-  ; clean up arrays before returning to start of loop
-  delete([/xyear,xmonth,xhour,xday/])
-  delete([/xlon,xlat,xpres,xwind,xace,xaceall,xpace,xpaceall,xtcd,xtcdpp,xlatmi,xlonmi,xglon,xglat,xmpres,xmwind,xgyear,xgmonth/])
-  delete([/clon,clat,cpres,cwind,cace,caceall,cpace,cpaceall,ctcd,ctcdpp,clatmi,clonmi,cglon,cglat,cmpres,cmwind,cgyear,cgmonth/])
-  delete([/traj_data,maxLines,ncols,thefile/])
-  delete([/thisYr/])
-  delete([/trackdens,minpres,maxwind,trackbias/])
 
-  ; increment anything
-  lettercount = lettercount+1
-  print("---------------------------------------------------- DONE")
 
-end if
-end do
 
-; Eliminate files that were not valid for some reason
-iz = ind(.not.ismissing(valid_files)) 
-valid_files := valid_files(iz)
-valid_strs := strs(iz)
-nfiles=dimsizes(valid_files)
+
 
 ; if we don't have any storms, assume we didn't have data for year...
 stormsByYear=where(stormsByYear.eq.0,stormsByYear@_FillValue,stormsByYear)
@@ -758,14 +797,34 @@ do qq = 1,nfiles-1
 end do
 
 ; plot Taylor diagram
-wks   = gsn_open_wks("pdf","./pdfs/taylor_"+basecsv+"_"+basinstr)      ; send graphics to PNG file
+thisDir="./fig/taylor/"
+system("mkdir -p "+thisDir)
+wks   = gsn_open_wks("pdf",thisDir+"/taylor_"+basecsv+"_"+basinstr)      ; send graphics to PNG file
 res   = True
 res@txFontHeightF = 0.02
 res@markerTxYOffset = 0.03
 res@Colors = (/"blue","red"/)
 res@varLabels = valid_strs(1:nfiles-1)  ; don't include obs
+res@drawCorLabel=False
 plot  = taylor_diagram_cam(wks, taylor_rat, taylor_cco, taylor_bia2, res)
 
 print(res@varLabels+" ")
 print(taylor_rat+" "+taylor_cco+" "+taylor_bia+" "+taylor_bia2)
+
+; Generate tables
+
+end if  ; plot_tables_only
+
+quote = inttochar(34) 
+system("./driver-table.sh "+basecsv+" "+basinstr)
+;system("ncl plot-table.ncl plot_bias=False relative_performance=True invert_stoplight=False calc_deltas=False 'csvfilename="+quote+"metrics_"+basecsv+"_'"+basinstr+"'_spatial_corr.csv"+quote+"' "+quote+"plot_title="+quote+"Reanalysis spatial correlation"+quote+"'")
+;system("ncl plot-table.ncl plot_bias=False relative_performance=True invert_stoplight=True calc_deltas=False 'csvfilename="+quote+"metrics_"+basecsv+"_'"+basinstr+"'_spatial_rmse.csv"+quote+"' "+quote+"plot_title="+quote+"Reanalysis spatial RMSE"+quote+"'")
+;ncl plot-table.ncl plot_bias=False relative_performance=True invert_stoplight=True calc_deltas=False 'csvfilename="metrics_'${THECSVFILE}'_'${BASIN}'_spatial_rmse.csv"' 'plot_title="Reanalysis spatial RMSE"'
+;ncl plot-table.ncl plot_bias=True relative_performance=False invert_stoplight=False calc_deltas=True 'csvfilename="metrics_'${THECSVFILE}'_'${BASIN}'_climo_mean.csv"' 'plot_title="Reanalysis climatological bias"'
+;ncl plot-table.ncl plot_bias=True relative_performance=False invert_stoplight=False calc_deltas=True 'csvfilename="metrics_'${THECSVFILE}'_'${BASIN}'_storm_mean.csv"' 'plot_title="Reanalysis storm mean bias"'
+;ncl plot-table.ncl plot_bias=False relative_performance=True invert_stoplight=False calc_deltas=False 'csvfilename="metrics_'${THECSVFILE}'_'${BASIN}'_temporal_scorr.csv"' 'plot_title="Reanalysis seasonal correlation"'
+
+
+
+
 end

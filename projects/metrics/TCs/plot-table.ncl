@@ -20,7 +20,7 @@ begin
   ;relative_performance=False
   ;invert_stoplight=False
   ;calc_deltas=False
-  filepath = "../csv-files/"
+  filepath = "./csv-files/"
   ;csvfilename=
   filename = filepath+"/"+csvfilename
 
@@ -144,7 +144,11 @@ begin
   x3    = (/0.0,total_width/)       ; Start and end X
   y3    = (/bottom_of_table,bottom_of_header/)       ; Start and end Y
 
-  vartext = sprintf("%5.2f", var)
+  if ( .not.ismissing(str_match_ic(csvfilename,"_mean.csv"))) then
+    vartext = sprintf("%5.1f", var)
+  else
+    vartext = sprintf("%5.2f", var)
+  end if
   vartext = where(ismissing(var)," ",vartext)
 
 
@@ -160,15 +164,17 @@ begin
 
   print(text3)
 
-  wks = gsn_open_wks("pdf","table."+csvfilename)  ; send graphics to PNG file
+  thisDir="./fig/tables/"
+  system("mkdir -p "+thisDir)
+  wks = gsn_open_wks("pdf",thisDir+"/table."+csvfilename)  ; send graphics to PNG file
 
   if (plot_bias) then
     cmap = read_colormap_file("hotcold_18lev")
   else
     if (invert_stoplight) then
-      cmap = read_colormap_file("excel_greentored.rgb")
+      cmap = read_colormap_file("./functions/excel_greentored.rgb")
     else
-      cmap = read_colormap_file("excel_redtogreen.rgb")
+      cmap = read_colormap_file("./functions/excel_redtogreen.rgb")
     end if
   end if
   gsn_define_colormap(wks,cmap(:,0:2))
@@ -187,7 +193,7 @@ begin
 ;
   res2               = True
   res2@txFontHeightF = 0.022
-
+  res2@txFont   = "helvetica-bold"
 
 
   print(x2)
@@ -260,7 +266,7 @@ begin
 
   ;draw_color_palette(wks,cmap,False)  
 
-
+  res3@txFont   = "helvetica"
 
   gsn_table(wks,ncr3,x3,y3,text3,res3)
 
@@ -294,6 +300,8 @@ begin
   ; x and y are UL corner
   gsn_labelbar_ndc(wks,nboxes,labels,labelbarwidthdelta/2.,top_of_label_bar,lbres)
 
+
+  ; label bar text
   txres               = True
   txres@txFontHeightF = 0.018
 

@@ -79,7 +79,7 @@ begin
 
   xyMin                 = 0.  
   xyOne                 = 1.00
-  xyMax                 = 1.65
+  xyMax                 = 1.85
   xyMax_Panel           = xyMax+ 0.10            ; paneling purposes
  
   if (rOpts .and. isatt(rOpts,"txFontHeightF"))  then 
@@ -125,13 +125,13 @@ begin
   rxy@tiYAxisFontHeightF= FontHeightF                        ; default=0.025 
   
   rxy@tmXBMode          = "Explicit" 
-  rxy@tmXBValues        = (/0.0,0.25,0.50,0.75,1.00,1.25,1.5/)    ; major tm
+  rxy@tmXBValues        = (/0.0,0.25,0.50,0.75,1.00,1.25,1.5,1.75/)    ; major tm
                                                                   ; default  "OBS" or "REF"
  ;rxy@tmXBLabels        = (/"0.00","0.25","0.50","0.75","REF" ,"1.25","1.50"/)
-  rxy@tmXBLabels        = (/"    ","0.25","0.50","0.75","REF" ,"1.25","1.50"/)
+  rxy@tmXBLabels        = (/"    ","0.25","0.50","0.75","REF" ,"1.25","1.50","1.75"/)
   if (rOpts .and. isatt(rOpts,"OneX") )  then                     ; eg: rOpts@OneX="1.00" 
      ;rxy@tmXBLabels        = (/"0.00","0.25","0.50","0.75",rOpts@OneX,"1.25","1.50"/)
-      rxy@tmXBLabels        = (/"    ","0.25","0.50","0.75",rOpts@OneX,"1.25","1.50"/)
+      rxy@tmXBLabels        = (/"    ","0.25","0.50","0.75",rOpts@OneX,"1.25","1.50","1.75"/)
   end if
 
   rxy@tmXBMajorLengthF  = 0.015      ; default=0.02 for a vpHeightF=0.6
