@@ -17,11 +17,11 @@ prescut = 99999.0   ; only storms with pres LOWER than this are included. set to
 trajDir="./TRAJ_FINAL/"
 csvdir="./csv-files/"
 gridsize = 8.0
-basin=-1
+basin=1
 ;basin=(/1,2,3,4/)
 ;basin=1
 pathtoconfiglists="./config-lists/"
-filename="rean_configs.csv"
+filename="hybrid_configs.csv"
 plot_tables_only=False
 defineMIbypres=False
 styr=1980
@@ -704,7 +704,7 @@ delim=","
 OPT=0
 system("rm "+outputname)
 ;system("echo Model,Track,SLP,WIND,TCD,ACE,PACE,GEN >> "+outputname)
-system("echo Model,rxy_track,rxy_slp,rxy_u10,rxy_ace,rxy_gen >> "+outputname)
+system("echo Model,rxy_track,rxy_gen,rxy_slp,rxy_u10,rxy_ace >> "+outputname)
 
 do qq = 0,nfiles-1
   mm = valid_files(qq)
@@ -732,12 +732,12 @@ do qq = 0,nfiles-1
 
   OUTSTR=strs(mm)+delim+ \
     pattern_cor(tmprefr,tmptest,denslatwgt,OPT)+delim+ \
+    pattern_cor(tm2refr,tm2test,denslatwgt,OPT)+delim+ \
     pattern_cor(fullpres(0,:,:),fullpres(mm,:,:),denslatwgt,OPT)+delim+ \
     pattern_cor(fullwind(0,:,:),fullwind(mm,:,:),denslatwgt,OPT)+delim+ \
     ;pattern_cor(fulltcd(0,:,:),fulltcd(mm,:,:),denslatwgt,OPT)+delim+ \
-    pattern_cor(fullace(0,:,:),fullace(mm,:,:),denslatwgt,OPT)+delim+ \
     ;pattern_cor(fullpace(0,:,:),fullpace(mm,:,:),denslatwgt,OPT)+delim+ \
-    pattern_cor(tm2refr,tm2test,denslatwgt,OPT)
+    pattern_cor(fullace(0,:,:),fullace(mm,:,:),denslatwgt,OPT)
   print(OUTSTR+"")
   system("echo "+OUTSTR+" >> "+outputname)
 
