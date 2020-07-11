@@ -4,9 +4,9 @@ load "../../../functions/surfaceWindCorrFactor.ncl"
 
 begin
 
-out_type="x11"
+out_type="png"
 
-config="RCE.QPC6.ne0np4tcfplane.ne15x8.exp799"
+config="RCE.QPC5.ne0np4tcfplane.ne15x16.exp698"
 
 ; load data
 ncdf=addfile("./netcdf/"+config+".001_09.nc","r")

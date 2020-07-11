@@ -14,9 +14,16 @@ begin
 ;  "3.0-LscaleBlackadar-1500m","0.3-Lscalex3.0","0.3-L120"/)
 ;grid=(/"x4","x4","x8","x8","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4","x4"/)
 
-configs=(/"exp997","exp997","exp997","exp998","exp998","exp998","exp999","exp999","exp999"/)
-grid=(/"001","002","003","001","002","003","001","002","003"/)
-pointcolors=(/"red","red","red","green","green","green","blue","blue","blue"/)
+;configs=(/"exp799","exp997","exp997","exp998","exp998","exp998","exp999","exp999","exp999"/)
+;grid=(/"001","002","003","001","002","003","001","002","003"/)
+;pointcolors=(/"red","red","red","green","green","green","blue","blue","blue"/)
+
+comps=(/"QPC6","QPC5","QPC5","QPC6","QPC5"/)
+configs=(/"exp799","exp699","exp599","exp798","exp698"/)
+grid=(/"001","001","001","001","001"/)
+resol=(/"x8","x8","x8","x16","x16"/)
+
+pointcolors=(/"red","green","blue","red","green"/)
 
 printVarSummary(configs)
 printVarSummary(grid)
@@ -38,13 +45,13 @@ ms_to_kts = 1.94384449
 ; get data
 do ii = 0,nruns-1
 
-day="10"
+day="09"
 
-config="RCE.QPC6.ne0np4tcfplane.ne15x8."+configs(ii)+"."+grid(ii)
-filedir="/glade/u/home/zarzycki/scratch/TC_PBL/"+config+"/run/"
+config="RCE."+comps(ii)+".ne0np4tcfplane.ne15"+resol(ii)+"."+configs(ii)+"."+grid(ii)
+filedir="/glade/u/home/zarzycki/scratch/"+config+"/run/"
 
-filename = filedir+"/"+config+".cam.h1.0001-01-10-00000.nc"
-f2= filedir+"/"+config+".cam.h3.0001-01-10-00000.nc"
+filename = filedir+"/"+config+".cam.h1.0001-01-"+day+"-00000.nc"
+f2= filedir+"/"+config+".cam.h3.0001-01-"+day+"-00000.nc"
 
 k10 = 0.5
 
@@ -67,9 +74,9 @@ PS1 = thefile->PS(timeStep,:)
 PS1 = PS1/100.
 U10 = tf2->U10(timeStep,:)
 
-UBOT = U(29,:)
-UBOT = sqrt(U(29,:)^2 + V(29,:)^2)
-UBOT = UBOT * .85
+UBOT = U(55,:)
+UBOT = sqrt(U(55,:)^2 + V(55,:)^2)
+UBOT = UBOT*.9414
 
 U850 = U({850},:)
 U850 = sqrt(U({850},:)^2 + V({850},:)^2)
