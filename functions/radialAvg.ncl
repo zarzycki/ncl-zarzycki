@@ -19,17 +19,20 @@ local None
 
 begin
 
-deltaLat = lat(1)-lat(0)
-deltaLon = lon(1)-lon(0)
-deltaMax = max((/deltaLon, deltaLat/))
-deltaMin = min((/deltaLon, deltaLat/))
-kmInDeg = 111.32
-kmGrid = kmInDeg * deltaMax
-print("The max lat/lon km grid spacing at equator is "+kmGrid+" km")
-
 nlat = dimsizes(lat)
 nlon = dimsizes(lon)
 nlev = dimsizes(lev)
+
+deltaLat = abs(lat(0:nlat-2)-lat(1:nlat-1))
+deltaLon = abs(lon(0:nlon-2)-lat(1:nlon-1))
+deltaLatMax = max(deltaLat)
+deltaLatMin = min(deltaLat)
+deltaLonMax = max(deltaLon)
+deltaLonMin = min(deltaLon)
+kmInDeg = 111.32
+kmGrid = kmInDeg * deltaLatMax
+print("The max lat/lon km grid spacing at equator is "+kmGrid+" km")
+print("The min lat/lon km grid spacing at equator is "+kmInDeg * deltaLatMin+" km")
 
 pi = 3.14159
 d2r = pi/180.
@@ -44,7 +47,30 @@ psminLocX = ind_nearest_coord(psminlon,lon,0)
 
 ;;;;; DO RADIAL AVERAGES
 
-loopWidth = toint(ceil((outerRad*1.10) / (kmInDeg * deltaMin)))
+loopWidthW = toint(ceil((outerRad*1.10) / (kmInDeg * deltaLonMin)))
+loopWidthE = loopWidthW
+loopWidthN = toint(ceil((outerRad*1.10) / (kmInDeg * deltaLatMin)))
+loopWidthS = loopWidthN
+
+; loopWidth checks
+if (psminLocY-loopWidthS .lt. 0) then
+  print("Correcting loopWidthS")
+  loopWidthS = psminLocY
+end if
+if (psminLocY+loopWidthN .ge. nlat) then
+  print("Correcting loopWidthN")
+  loopWidthN = nlat - 1 - psminLocY
+end if
+if (psminLocX-loopWidthW .lt. 0) then
+  print("Correcting loopWidthW")
+  loopWidthW = 0
+end if
+if (psminLocX+loopWidthE .ge. nlon) then
+  print("Correcting loopWidthE")
+  loopWidthE = nlon - 1 - psminLocX
+end if
+
+print("nlat "+nlat+"  nlon "+nlon+"  nlev "+nlev)
 ; for standard lat/lon grid
 ;1.25 gives n ~= 5 in inner grid if numMerge = 2
 ;1.4 gives n ~= 9 in inner grid if numMerge = 2
@@ -93,18 +119,25 @@ rad_thevar_cum = 0
 
 ; NEED TO CORRECT NLEV
 print("Starting loop")
-do i = psminLocY-loopWidth,psminLocY+loopWidth
-  print("Doing outer loop #: "+(i-psminLocY+loopWidth)+" of "+(loopWidth*2)+"   ("+((tofloat(i-psminLocY+loopWidth)/tofloat(loopWidth*2))*100.)+"%)")
-  do j = psminLocX-loopWidth,psminLocX+loopWidth
-    do k = 0,dimsizes(lev)-1
-      gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(j),2,4))
-      if (gcdist .le. outerRad)
-        rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1 
-        rad_thevar_cum(k,{gcdist}) = rad_thevar_cum(k,{gcdist}) + data(k,i,j)
-      end if
-    end do
+do i = psminLocY-loopWidthS,psminLocY+loopWidthN
+  print("Doing outer loop #: "+(i-psminLocY+loopWidthS)+" of "+(loopWidthS*2)+"   ("+((tofloat(i-psminLocY+loopWidthS)/tofloat(loopWidthS*2))*100.)+"%)")
+  do j = psminLocX-loopWidthW,psminLocX+loopWidthE
+    gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(j),2,4))
+    if (gcdist .le. outerRad)
+      ;do k = 0,dimsizes(lev)-1
+      ;  rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1 
+      ;  rad_thevar_cum(k,{gcdist}) = rad_thevar_cum(k,{gcdist}) + data(k,i,j)
+      ;end do
+      ;if (.not. any(ismissing(data(:,i,j)))) then
+        rad_thevar_hit(:,{gcdist}) = rad_thevar_hit(:,{gcdist}) + 1 
+        rad_thevar_cum(:,{gcdist}) = rad_thevar_cum(:,{gcdist}) + data(:,i,j)
+      ;end if
+    end if
   end do
 end do
+
+; check for points where there were no hits
+rad_thevar_hit = where(rad_thevar_hit.eq.0,rad_thevar_hit@_FillValue,rad_thevar_hit)
 
 print("Minimum number of hits per gridbox: "+min(rad_thevar_hit))
 print("Maximum number of hits per gridbox: "+max(rad_thevar_hit))
@@ -115,6 +148,7 @@ copy_VarCoords(rad_thevar_hit,rad_thevar)
 rad_thevar@units = data@units
 rad_thevar@long_name=data@long_name
 
+;rad_thevar_hit&radius=rad_thevar_hit&radius*1000.
 return(rad_thevar)
 
 end

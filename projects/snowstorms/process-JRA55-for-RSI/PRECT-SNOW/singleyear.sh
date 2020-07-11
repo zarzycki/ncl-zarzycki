@@ -1,6 +1,6 @@
 #!/bin/bash
 
-JRABASEDIR=/gpfs/fs1/collections/rda/data/ds628.0/
+JRABASEDIR=~/rda/ds628.0/
 SYMDIR=/glade/u/home/zarzycki/scratch/JRAsym/
 OUTBASE=/glade/scratch/zarzycki/j1files/JRA/
 
@@ -19,13 +19,13 @@ echo $YYYY
   for i in "${prect_arr[@]}"
   do
     if [ "${i}" == "snwe" ]; then
-      FILES=${JRABASEDIR}/fcst_land/${YYYY}/*_${i}.reg_tl319.*
+      FILES=${JRABASEDIR}/anl_land/${YYYY}/*_${i}.reg_tl319.*
     elif [ "${i}" == "rof" ]; then
       FILES=${JRABASEDIR}/fcst_phyland/${YYYY}/*_${i}.reg_tl319.*
     elif [ "${i}" == "tmp" ]; then
       FILES=${JRABASEDIR}/anl_surf/${YYYY}/*_${i}.reg_tl319.*
     else
-      FILES=${JRABASEDIR}/fcst_surf/${YYYY}/*_${i}.reg_tl319.*
+      FILES=${JRABASEDIR}/fcst_phy2m/${YYYY}/*_${i}.reg_tl319.*
     fi
     
     for f in $FILES
@@ -37,10 +37,10 @@ echo $YYYY
     done
   done
 
+  ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="snwe"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="srweq"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="tprat"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="rof"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
-  ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="snwe"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="tmp"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
 
 #fi

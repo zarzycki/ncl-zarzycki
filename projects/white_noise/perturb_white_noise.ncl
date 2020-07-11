@@ -7,7 +7,7 @@ begin
 
 pertMag=0.001
 
-basFile = addfile("BC_ne30_CAM5_climo.cam.r.0003-01-01-00000.nc","w")
+basFile = addfile("/glade/u/home/zarzycki/scratch/archive/FHIST.f09.PROGMOM/rest/1985-01-01-00000/FHIST.f09.PROGMOM.cam.i.1985-01-01-00000.nc","w")
 
 pertMagPerc=pertMag*100.
 print("We are using perturbation magnitude of: "+pertMagPerc+"%")

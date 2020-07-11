@@ -1,3 +1,4 @@
+*.nc
 _*.nc
 *.so
 tmp.nc

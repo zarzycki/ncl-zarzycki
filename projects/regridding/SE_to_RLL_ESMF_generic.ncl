@@ -5,7 +5,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 ;---Data file containing source grid
-srcGridName="ne0np4tcfplane.ne15x8"
+srcGridName="ne0np4natlanticref.ne30x4"
 outDir="/glade/scratch/zarzycki/"
 outRes="0.25"
 do_regional=True
@@ -20,21 +20,27 @@ do_regional=True
 ;maxLat=60.0
 ;minLon=-105.0
 ;maxLon=15.0
-mapNameTag="REG"
-minLat=-20.0
-maxLat=20.0
-minLon=-20.0
-maxLon=20.0
+mapNameTag="TROPNATL"
+minLat=5.0
+maxLat=35.0
+minLon=-90.0
+maxLon=-15.0
+;mapNameTag="REG"
+;minLat=-20.0
+;maxLat=20.0
+;minLon=-20.0
+;maxLon=20.0
 
-;src_file = "/glade/u/home/zarzycki/work/unigridFiles/"+srcGridName+"/topo/topo_"+srcGridName+"_smooth.nc"
-;var_name = "PHIS"
-src_file = "/glade/scratch/zarzycki/ne0np4tcplane15x8_INIC_L30.nc"
-var_name = "PS"
+src_file = "/glade/u/home/zarzycki/work/unigridFiles/"+srcGridName+"/topo/topo_"+srcGridName+"_smooth.nc"
+var_name = "PHIS"
+;src_file = "/glade/scratch/zarzycki/ne0np4tcplane15x8_INIC_L30.nc"
+;src_file = "/glade/u/home/zarzycki/work/initial/tc_testcase/ne0np4tcplanene15x16_INIC_L30.001.nc"
+;var_name = "PS"
 ;src_file = "/glade/u/home/zarzycki/scratch/archive/CHEY.111.GLOB.CAM5.4CLM5.0.dtime1800/atm/hist/CHEY.111.GLOB.CAM5.4CLM5.0.dtime1800.cam.h0.1984-01.nc"
 ;var_name = "PS"
 
 sfile    = addfile(src_file,"r")
-var      = sfile->$var_name$(0,:)
+var      = sfile->$var_name$(:)
 src_lat  = sfile->lat
 src_lon  = sfile->lon
 

@@ -8,9 +8,13 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 ;========================================================
 begin
 
+<<<<<<< HEAD
 whatData="GISS-E2-1-G"
+=======
+whatData="MIROC6"
+>>>>>>> fe22650efda8bdfa4b37cc80a61b357cdd208471
 write_output=True
-isglobal=False
+isglobal=True
 isStoN=False
 keepStoN=False
 
@@ -27,7 +31,12 @@ outFileName = whatData+".topo.nc"
 ;trackerFileName="~/scratch/nhemi_30_x4_slab/run/1001/nhemi_30_x4_slab.cam.h4.1001-05-01-00000.nc_regrid.nc"
 ;trackerFileName="/glade/u/home/zarzycki/scratch/ERAI-ETC/2017/ERAI.h1.2017111700.nc"
 ;trackerFileName="/glade/u/home/zarzycki/scratch/h1files/ERA5/1980/ERA5.h1.19800101.nc"
+<<<<<<< HEAD
 trackerFileName="/Users/cmz5202/NetCDF/CMIP6/psl_6hrPlevPt_GISS-E2-1-G_historical_r1i1p1f1_gn_195001010600-197501010000.nc"
+=======
+;trackerFileName="/glade/u/home/zarzycki/scratch/h1files/NARR/2005/NARR.h1.20050821.nc"
+trackerFileName="/glade/collections/cmip/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/6hrPlevPt/psl/gn/v20191204/psl/psl_6hrPlevPt_MIROC6_historical_r1i1p1f1_gn_201401010600-201501010000.nc"
+>>>>>>> fe22650efda8bdfa4b37cc80a61b357cdd208471
 ;trackerFileName="/glade/u/home/zarzycki/scratch/ERA5/CAT.ERA5.U850.201701.nc"
 
 topoFile=addfile(topoFileName,"r")
