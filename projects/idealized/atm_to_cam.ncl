@@ -1,7 +1,7 @@
 begin
 
 ENS="001"
-res="ne15x8"
+res="ne15x16"
 numlevels=56
 
 ; perturbation values
@@ -22,7 +22,7 @@ wcStrt = systemfunc("date")
 
 print("---------------------------------------------------------")
 
-fC   = addfile ("/storage/home/cmz5202/ncl/projects/idealized/L"+tostring(numlevels)+"template.nc", "r")
+fC   = addfile ("./L"+tostring(numlevels)+"template.nc", "r")
 
 hya  = fC->hyam
 hyb  = fC->hybm
@@ -33,7 +33,7 @@ ilev = fC->ilev
 
 nlev=dimsizes(lev)
 
-fH = addfile("/storage/work/cmz5202/grids/latlon/ne0np4tcfplane."+res+"_template.nc","r")
+fH = addfile("/glade/work/zarzycki/grids/latlon/ne0np4tcfplane."+res+"_template.nc","r")
 
 selat = fH->lat
 selon = fH->lon
@@ -265,7 +265,7 @@ Q_!2 = "ncol"
 selat!0 = "ncol"
 selon!0 = "ncol"
 
-se_inic="/storage/work/"+logname+"/inic/ne0np4tcplane"+res+"_INIC_L"+numlevels+"."+ENS+".nc"
+se_inic="/glade/u/home/zarzycki/work/initial/tc_testcase/ne0np4tcplane"+res+"_INIC_L"+numlevels+"."+ENS+".nc"
 print("Writing output file "+se_inic)
 system("/bin/rm -f "+se_inic)   ; remove any pre-existing file
 in2 = addfile(se_inic,"c")  ; open output netCDF file

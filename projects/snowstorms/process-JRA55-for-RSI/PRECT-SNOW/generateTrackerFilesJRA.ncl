@@ -19,7 +19,7 @@ if (VAR .eq. "prmsl")
 else if (VAR .eq. "srweq" .or. VAR .eq. "tprat")
   FILES = systemfunc ("ls "+SYMDIR+"/fcst_phy2m.*"+VAR+".reg_tl319*.grb2")
 else if (VAR .eq. "snwe")
-  FILES = systemfunc ("ls "+SYMDIR+"/fcst_land.*"+VAR+".reg_tl319*.grb2")
+  FILES = systemfunc ("ls "+SYMDIR+"/anl_land.*"+VAR+".reg_tl319*.grb2")
 else if (VAR .eq. "rof")
   FILES = systemfunc ("ls "+SYMDIR+"/fcst_phyland.*"+VAR+".reg_tl319*.grb2")
 else if (VAR .eq. "tmp")
@@ -85,17 +85,17 @@ else
 end if
 
 timeix = ispan(0,ntim-1,1)
-if (VAR .eq. "snwe") then
-  numrecspfile = ntim/4
-  nfiles=dimsizes(FILES)
-  print(nfiles)
-  do ii = 0,nfiles-1
-    badix=ii*numrecspfile
-    timeix=where(timeix.eq.badix,timeix@_FillValue,timeix)
-  end do
-  goodix = ind(.not.ismissing(timeix))
-  timeix := timeix(goodix)
-end if
+;if (VAR .eq. "snwe") then
+;  numrecspfile = ntim/4
+;  nfiles=dimsizes(FILES)
+;  print(nfiles)
+;  do ii = 0,nfiles-1
+;    badix=ii*numrecspfile
+;    timeix=where(timeix.eq.badix,timeix@_FillValue,timeix)
+;  end do
+;  goodix = ind(.not.ismissing(timeix))
+;  timeix := timeix(goodix)
+;end if
 
 year_time=FILE[:]->initial_time0_hours(timeix)
 JRAunits=year_time@units

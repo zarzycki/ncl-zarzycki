@@ -39,7 +39,7 @@ do
     echo ${yyyy}${mm}${dd}
 
     # CHECK IF OUTPUT FILE EXISTS
-	  FILETOTEST=${OUTPUTDIR}"/MERRA2.h1.${yyyy}${mm}${dd}.nc"
+    FILETOTEST=${OUTPUTDIR}"/MERRA2.h1.${yyyy}${mm}${dd}.nc"
     if [ ! -f ${FILETOTEST} ]; then
       echo "FILE ${FILETOTEST} DOES NOT EXIST, CREATING..."
       cd ${OUTDIR}
