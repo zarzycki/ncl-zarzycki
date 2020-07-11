@@ -8,16 +8,23 @@ begin
 
 ; Pick region for indexing -- for global domain, input:
 ; -90 -> 90 and 0 -> 360
-minlat=10.
-maxlat=25.
-minlon=-60.
-maxlon=-20.
+minlat=5.
+maxlat=35.
+minlon=-65.
+maxlon=-15.
+;minlat=-90.
+;maxlat=90.
+;minlon=-180.
+;maxlon=360.
 
 ; if conserve_remap is true, NCL will re-bin values from native grid to a lat-lon grid of uniform
 ; dx/dy spacing defined by gridsize. Typically gridsize is 5.0 in Williamson papers, but can also
 ; be set to 2.0 or 1.0 for "higher-res" simulations
 conserve_remap = False
 gridsize = 2.0
+
+nbins=100
+nbins10=20
 
 ;nlfile="./nl.precip.mp120a"
 
@@ -27,11 +34,15 @@ gridsize = 2.0
 variable = namelist_extract( nlfile, "variable", "string")
 scale = namelist_extract( nlfile, "scale", "float")
 offset = namelist_extract( nlfile, "offset", "float")
+bin_min = namelist_extract( nlfile, "bin_min", "float")
+bin_max = namelist_extract( nlfile, "bin_max", "float")
 gridname = namelist_extract( nlfile, "gridname", "string")
 needs_regrid = namelist_extract( nlfile, "needs_regrid", "logical")
 fdir1 = namelist_extract( nlfile, "fdir1", "string")
 fnampattern = namelist_extract( nlfile, "fnampattern", "string")
 wgt_file = namelist_extract( nlfile, "wgt_file", "string")
+
+fdir1 = str_sub_str(fdir1,"_GRIDNAME",gridname)
 
 print("Variable: "+variable)
 print("Doing grid: "+gridname)
@@ -39,7 +50,8 @@ print("Doing grid: "+gridname)
 ;-------------lookup table------------------------------
 ; Here we build a "lookup" table to find what times are on what files...
 ;filelist = systemfunc ("find "+fdir1+" -name '"+fnampattern+"' | grep -E '.20(0[3-9]|1[0-2])' | sort -n")
-filelist = systemfunc ("find "+fdir1+" -name '"+fnampattern+"' | grep -E '.1984' | sort -n")
+;filelist = systemfunc ("find "+fdir1+" -name '"+fnampattern+"' | sort -n")
+filelist = systemfunc ("find "+fdir1+" -name '"+fnampattern+"' | grep -v 1984 | grep -v 1994 | sort -n")
 
 print("Files....")
 print(filelist)
@@ -53,11 +65,12 @@ onedtime = timeArr1D(igood)
 ; if false, timestart and timestop specify the DIRECT indices in the input[:]
 ; array we want to extract
 alltimes=True
-timestart=0
-timestop=3
 if (alltimes) then
   timestart = 0
   timestop = dimsizes(onedtime)-1
+else
+  timestart=0
+  timestop=3
 end if
 
 print("Using grid: "+gridname+"      minlon="+minlon+" maxlon="+maxlon)
@@ -157,11 +170,9 @@ end if
 
 print("max: "+max(var_reshape)+"   min: "+min(var_reshape))
 
-nbins=100
-nbins10=20
 opt=True
-opt@bin_min=-15
-opt@bin_max=3
+opt@bin_min=bin_min
+opt@bin_max=bin_max
 hist   = pdfx(var_reshape, nbins, opt)   ; default is 25
 hist10 = pdfx(var_reshape, nbins10, opt)   ; default is 25
 hist10!0="x10"
@@ -170,7 +181,7 @@ printVarSummary(hist)
 printVarSummary(hist10)
 
 ; Debug output netcdf
-ncdfname="OUT_"+gridname+".nc"
+ncdfname="OUT_"+gridname+"_"+variable+".nc"
 system("/bin/rm -f "+ncdfname)   ; remove any pre-existing file
 ncdf = addfile(ncdfname ,"c")  ; open output netCDF file
 fAtt               = True            ; assign file attributes
