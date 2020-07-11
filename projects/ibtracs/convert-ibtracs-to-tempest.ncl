@@ -120,6 +120,8 @@ iblon  = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,iblon@_
 ibtime = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibtime@_FillValue,ibtime)
 ;ibname = where(mod(ibtime,0.25) .ge. eps .or. mod(ibtime,0.25) .le. -eps,ibname@_FillValue,ibname)
 
+printVarSummary(ibtime)
+printVarSummary(iblat)
 ;=============================================================================
 ; Load optional PHIS file
 ;=============================================================================
@@ -138,6 +140,8 @@ delim="	"
 filename="./test.txt"
 system("rm -rf "+filename)
 
+DURTHRESH=10
+
 do ii = 0,ibstormcount-1
   ;print(ibname(ii,0)+" "+toint(ibbasin(ii,0)))
   ;if (toint(ibbasin(ii,0)) .eq. 0 .or. toint(ibbasin(ii,0)) .eq. 12 .or. toint(ibbasin(ii,0)) .eq. 13) then
@@ -145,7 +149,7 @@ do ii = 0,ibstormcount-1
     numentries=num(.not.ismissing(iblat(ii,:)))
 
     ;if (.not.ismissing(ibname(ii,0))) then
-    if (numentries .gt. 0) then
+    if (numentries .gt. DURTHRESH) then
 
       ; find first non missing index
       do zz = 0,ibntimes-1
