@@ -259,6 +259,21 @@ else
 end if
 
 
+netcdf_name="simple.nc"
+if (zz .eq. 0) then
+  system("/bin/rm -f "+netcdf_name)   ; remove any pre-existing file
+  ncdf = addfile(netcdf_name ,"c")  ; open output netCDF file
+
+  fAtt               = True            ; assign file attributes
+  fAtt@creation_date = systemfunc ("date")
+  fileattdef( ncdf, fAtt )            ; copy file attributes
+else
+  ncdf = addfile(netcdf_name,"w")
+end if
+
+varArray!0="config"
+ncdf->$thisvar$  = varArray(:,{plotMinLatF:plotMaxLatF},{plotMinLonF:plotMaxLonF})
+
 end do
 
 
