@@ -139,13 +139,16 @@ do timeix = 0,ntimes-1
        ; ab = vhagC(var(0,:,:),var2(0,:,:));   ; GAuss grid
   print ("... done. ")
   print (dimsizes(ab))
+  ; ab is a 2 x nlat-1 x nlat-1 var
+;N = minimum(nlat, (nlon+2)/2) if nlon is even
+;N = minimum(nlat, (nlon+1)/2) if nlon is odd 
 
   cr = ab(0,:,:)                ; real coef  (nlat,nlat)
   ci = ab(1,:,:)                ; imaginary  (nlat,nlat)
   pwr = (cr^2 + ci^2)/2.        ; (nlat,nlat)  array
   ab=0
   printVarSummary(pwr)
-  print(""+nlat)
+  ; power is nlat-1 x nlat-1
 
   if (do_regional) then
     latminix=2
