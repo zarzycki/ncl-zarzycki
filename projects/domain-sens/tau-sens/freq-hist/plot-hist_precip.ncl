@@ -12,33 +12,45 @@ begin
 
 
 out_format = "x11"
-var="OMEGA500_MASKI"
+var="PRECC_MASKI"
 
 if (var .eq. "OMEGA500_MASKI")
-  xmin = (/-12.0/)
+  xmin = (/-14.0/)
   xmax = (/0.0/)          ; x axis maximums
   ymin = (/2e-6/)                ; y minimum (both panels)
   ymax = (/2e0/)                ; y maximum (both panels)
+  var_units="mb sec~S~-1~N~"
+  panel_frac="c."
+  panel_corner="TopLeft"  ; TopLeft, TopRight
+  plot_leg=False
 end if
 if (var .eq. "PRECL_MASKI")
   xmin = (/0./)
-  xmax = (/900./)          ; x axis maximums
+  xmax = (/1000./)          ; x axis maximums
   ymin = (/2e-6/)                ; y minimum (both panels)
   ymax = (/2e0/)                ; y maximum (both panels)
+  var_units="mm day~S~-1~N~"
+  panel_frac="b."
+  panel_corner="TopRight"  ; TopLeft, TopRight
+  plot_leg=False
 end if
 if (var .eq. "PRECC_MASKI")
   xmin = (/0./)
-  xmax = (/200./)          ; x axis maximums
+  xmax = (/1000./)          ; x axis maximums
   ymin = (/2e-6/)                ; y minimum (both panels)
   ymax = (/2e0/)                ; y maximum (both panels)
+  var_units="mm day~S~-1~N~"
+  panel_frac="a."
+  panel_corner="TopRight"  ; TopLeft, TopRight
+  plot_leg=True
 end if
 
 titles = (/" "," "/)           ; titles
 axis_labels = (/"fraction"," "/)               ; y axis labels
 colorAll = (/"red3","blue3","green4","pink2","skyblue2","darkseagreen2"/)      ; line colors
 
-gridlist = (/"tau3600_"+var,"dtime900_"+var,"dtime1800_"+var,"tau900_"+var,"tau3600_lowdmpdz2_"+var/)
-;gridlist = (/"tau3600_PRECL_MASKI","dtime900_PRECL_MASKI","dtime1800_PRECL_MASKI","tau3600_PRECC_MASKI","dtime900_PRECC_MASKI","dtime1800_PRECC_MASKI"/)
+gridlist = (/"tau3600_"+var,"dtime900_"+var,"dtime1800_"+var/)
+;gridlist = (/"tau3600_"+var,"dtime900_"+var,"dtime1800_"+var,"tau900_"+var,"tau3600_lowdmpdz2_"+var/)
 physpkg = "CAM6"
 nfiles = dimsizes(gridlist)
 dycore_labelsAll = gridlist
@@ -161,7 +173,7 @@ print("10 bin sum of "+gridlist(0)+" is: "+(sum(var01)/2))
   res = True
   res@tiMainString = titles(0)
   res@tiYAxisString = axis_labels(0)
-  res@tiXAxisString = "mm day:S:-1:N:"
+  res@tiXAxisString = var_units
   res@gsnDraw = False
   res@gsnFrame = False
   res@trYLog = True
@@ -170,8 +182,8 @@ print("10 bin sum of "+gridlist(0)+" is: "+(sum(var01)/2))
   res@trXMinF = xmin(0)
   res@trXMaxF = xmax(0)
   ;res@xyLineThicknessF = 2.0
-  res@xyMonoLineThickness = False
-  res@xyLineThicknesses = (/2.0,2.0,2.0,5.0,5.0,5.0/)
+  res@xyMonoLineThickness = True
+  res@xyLineThicknessF = 6.0
 
   res@gsnXYBarChart            = True              ; Create bar plot
   res@gsnXYBarChartOutlineOnly = True
@@ -185,34 +197,53 @@ do ii = 1,nfiles-1
   overlay(plot(0),plot(ii))
 end do
 
-  panels1(0) = plot(0)
+panels1(0) = plot(0)
 
 ; Attach a legend ------------------
 
+if (plot_leg) then
   lgres                    = True
   lgres@lgLineColors       = color(::-1)    ; reverse color order in legend
   lgres@lgDashIndexes      = (/0,0,0,0,0,0/)    ; all solid lines
-  lgres@lgLineThicknesses   = res@xyLineThicknesses
-  lgres@lgLabelFontHeightF = .40            ; legend label font thickness
-  lgres@lgBoxMinorExtentF  = 0.60          ; adjust legend size
-  lgres@vpWidthF           = 0.13           ; width of legend (NDC)
-  lgres@vpHeightF          = 0.10           ; height of legend (NDC)
+  lgres@lgLineThicknessF   = res@xyLineThicknessF
+  lgres@lgLabelFontHeightF = .06           ; legend label font thickness
+  lgres@lgLineDashSegLenF = 0.06
+  lgres@lgItemType         = "Lines"        ; show lines only (default)
+  lgres@vpWidthF           = 0.25           ; width of legend (NDC)
+  lgres@vpHeightF          = 0.125           ; height of legend (NDC)
   lgres@lgPerimThicknessF  = 2.0            ; thicken the box perimeter
-
+  lgres@lgLabelOffsetF = 0.1
   labels = dycore_labels(::-1)              ; reverse dycore order in legend
+
   legend = gsn_create_legend (wks, nfiles, labels,lgres)
+
+getvalues legend
+"lgLabelFontHeightF" : cmz_font
+"lgLineDashSegLenF" : cmz_length
+
+end getvalues 
+print(cmz_font)
+print(cmz_length)
 
   amres                  = True
   amres@amJust           = "BottomRight"    ; Use bottom right corner of box
                                             ; for determining its location.
-  amres@amParallelPosF   = 0.5              ; Move legend to right
-  amres@amOrthogonalPosF = -0.334              ; Move legend down.
+  amres@amParallelPosF   = 0.48              ; Move legend to right -0.5 left, 0.5 right
+  amres@amOrthogonalPosF = 0.48              ; Move legend vertically: -0.5 top, 0.5 bottom
 
   annoid = gsn_add_annotation(plot(0),legend,amres)  ; add legend to plot
+end if
 
-  resP = True
-  resP@gsnMaximize = True
-  resP@gsnPanelXF = (/-1,0.59/)
-  gsn_panel(wks,panels1,(/1,1/),resP)
+resP = True
+resP@gsnMaximize = True
 
-  end
+resP@gsnPanelFigureStringsFontHeightF = 0.06
+resP@gsnPanelFigureStrings=panel_frac
+resP@amJust           = panel_corner
+
+
+
+
+gsn_panel(wks,panels1,(/1,1/),resP)
+
+end

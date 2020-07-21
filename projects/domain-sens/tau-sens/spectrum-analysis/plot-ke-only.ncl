@@ -10,13 +10,17 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 
 begin
 
-plottitle="ne0conus60x4_200mb_KE"
+plottitle="TITLE"
 ; filelist = *.nc outputs from calc-ke-colin-regglob.ncl
 ; filelabs = labels for plot
 do_normalize=True
-plot_ref_lines=True
+plot_ref_lines=False
 
-filelist=(/"spectrum_VORT850_MASKI_F_tau3600_lowdmpdz2.nc","spectrum_VORT850_MASKI_F_dtime1800.nc","spectrum_VORT850_MASKI_F_tau3600.nc","spectrum_VORT850_MASKI_F_dtime900.nc"/)
+filelist=(/"spectrum_VORT850_MASKI_F_dtime1800.nc","spectrum_VORT850_MASKI_F_tau3600.nc","spectrum_VORT850_MASKI_F_dtime900.nc"/)
+;filelist=(/"spectrum_VORT850_MASKI_F_tau3600_lowdmpdz2.nc","spectrum_VORT850_MASKI_F_tau3600.nc","spectrum_VORT850_MASKI_F_tau900.nc"/)
+
+
+
 ;filelabs=(/"reduced HV","control","spectrum_hindcast_conus_30_x8_CAM5_L30.nc"/)
 filelabs=filelist
 
@@ -73,7 +77,7 @@ spc(:,119) = spc@_FillValue
 wks = gsn_open_wks("x11",plottitle)
 
 
-  lthick = 3.0
+  lthick = 6.0
 
   res=True
   res@gsnDraw=False
@@ -93,7 +97,7 @@ wks = gsn_open_wks("x11",plottitle)
 
   res@tiMainString           = plottitle
   res@tiXAxisString          = "Wavenumber (k)"
-  res@tiYAxisString          = "Kinetic energy, Power (m^2/s^2)"
+  res@tiYAxisString          = "Norm. 850mb cyclonic ~F33~z~F~ power"
   res@xyLineThicknessF = lthick
 
   colors = (/"white","black","OrangeRed4","Red3",\
@@ -106,16 +110,18 @@ wks = gsn_open_wks("x11",plottitle)
   /)
   gsn_define_colormap(wks, colors)
     
-  res@trXMinF = 5      
+  res@trXMinF = 6      
   res@trXMaxF = 120      
   res@trYMinF = 4e-3     
   res@trYMaxF = 8e-1 
-  
+  ;res@trYMinF = 4e-13     
+  ;res@trYMaxF = 8e-11 
+
   res@xyDashPattern = 0
 
   res@pmLegendDisplayMode    = "Always"   ; Display a legend
 
-  res@xyLineColors = (/"turquoise","red","green","blue"/)
+  res@xyLineColors = (/"goldenrod","red","green","blue"/)
   ;do ii = 0,nfiles-1
   ;   = colors(ii)
   ;  plot  = gsn_xy (wks,k(ii,:),spc(ii,:),res) ; create plot
@@ -125,13 +131,18 @@ wks = gsn_open_wks("x11",plottitle)
 
   res@xyExplicitLegendLabels = filelabs
 
-  res@lgJustification        = "TopRight"
-  res@pmLegendOrthogonalPosF = -1.18    ; Move into plot
-  res@pmLegendParallelPosF   = 0.99       ; Move to right
+  res@lgJustification        = "BottomLeft"
+  res@pmLegendOrthogonalPosF = -0.5    ; Move into plot
+  res@pmLegendParallelPosF   = 0.05       ; Move to right
+
   res@pmLegendWidthF         = 0.15       ; Decrease width
   res@pmLegendHeightF        = 0.10       ; Decrease height
   res@lgBoxMinorExtentF      = 0.15       ; Shorten the legend lines
   res@lgLabelFontHeightF     = 0.010     ; Change the font size
+
+  res@tmXBMode          = "Explicit"              ; explicit labels
+  res@tmXBValues        = (/6,25,100/)                       ; location of labels 
+  res@tmXBLabels        = (/"~F34~*~F~1000km","~F34~*~F~240km","~F34~*~F~60km"/)                ; labels themselves
 
   plot  = gsn_csm_xy (wks,k,spc,res) ; create plot
 
