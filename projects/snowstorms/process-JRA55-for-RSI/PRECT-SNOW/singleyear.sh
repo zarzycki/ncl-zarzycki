@@ -15,7 +15,7 @@ echo $YYYY
   mkdir -p ${SYMDIR}/${YYYY}
 
   #declare -a prect_arr=("tmp")
-  declare -a prect_arr=("rof" "srweq" "tprat" "snwe" "tmp")
+  declare -a prect_arr=("rof" "srweq" "tprat" "snwe" "tmp" "pwat")
   for i in "${prect_arr[@]}"
   do
     if [ "${i}" == "snwe" ]; then
@@ -24,6 +24,8 @@ echo $YYYY
       FILES=${JRABASEDIR}/fcst_phyland/${YYYY}/*_${i}.reg_tl319.*
     elif [ "${i}" == "tmp" ]; then
       FILES=${JRABASEDIR}/anl_surf/${YYYY}/*_${i}.reg_tl319.*
+    elif [ "${i}" == "pwat" ]; then
+      FILES=${JRABASEDIR}/anl_column/${YYYY}/*_${i}.reg_tl319.*
     else
       FILES=${JRABASEDIR}/fcst_phy2m/${YYYY}/*_${i}.reg_tl319.*
     fi
@@ -37,6 +39,7 @@ echo $YYYY
     done
   done
 
+  ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="pwat"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="snwe"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="srweq"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
   ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="tprat"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'

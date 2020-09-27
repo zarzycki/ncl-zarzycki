@@ -24,9 +24,12 @@ else if (VAR .eq. "rof")
   FILES = systemfunc ("ls "+SYMDIR+"/fcst_phyland.*"+VAR+".reg_tl319*.grb2")
 else if (VAR .eq. "tmp")
   FILES = systemfunc ("ls "+SYMDIR+"/anl_surf.*"+VAR+".reg_tl319*.grb2")
+else if (VAR .eq. "pwat")
+  FILES = systemfunc ("ls "+SYMDIR+"/anl_column.*"+VAR+".reg_tl319*.grb2")
 else
   print("bad var")
   exit
+end if
 end if
 end if
 end if
@@ -57,9 +60,13 @@ else if (VAR .eq. "rof") then
 else if (VAR .eq. "tmp") then
   PRECVAR="TMP_GDS4_HTGL"
   OUTVAR="T2M"
+else if (VAR .eq. "pwat") then
+  PRECVAR="PWAT_GDS4_EATM"
+  OUTVAR="TPW"
 else
   print("incorrect VAR... exiting...")
   exit
+end if
 end if
 end if
 end if
@@ -140,6 +147,10 @@ print("Writing file...")
 fileName=OUTDIR+"/JRA.h1."+YYYY+"."+OUTVAR+".nc"
 system("mkdir -p "+OUTDIR)   ; remove any pre-existing file
 system("/bin/rm -f "+fileName)   ; remove any pre-existing file
+
+setfileoption("nc","Format","NetCDF4")
+setfileoption("nc","CompressionLevel",1)
+
 ncdf = addfile(fileName ,"c")  ; open output netCDF file
 print("Writing output file:  "+fileName)
 
@@ -164,6 +175,10 @@ filedimdef(ncdf,"time",-1,True)
 ;===================================================================
 
 ncdf->$OUTVAR$ = PRECSN_SUM      
+
+;print("Compressing file")
+;system("ncks -4 -L 1 -O "+fileName+" "+fileName)   ; remove any pre-existing file
+;print("... done compressing file with NCO")
 
 exit
 
@@ -790,6 +805,10 @@ ncdf->VR200_T63 = VR200_T63
 ncdf->VR850_T42 = VR850_T42
 
 print("... done writing file")
+
+print("Compressing file")
+system("ncks -4 -L 1 -O "+fileName+" "+fileName)   ; remove any pre-existing file
+print("... done compressing file with NCO")
 
 delete([/U850,V850,U700,V700,U500,V500,U200,V200,UBOT,VBOT,T200,T300,T400,T500,T700,T850,PSL,PS,Z200,Z300,Z400,Z500,Z1000,ZBOT/])
 delete([/U850_,V850_,U700_,V700_,U500_,V500_,U200_,V200_,UBOT_,VBOT_,T200_,T300_,T400_,T500_,T700_,T850_,PSL_,PS_,Z200_,Z300_,Z400_,Z500_,Z1000_,ZBOT_/])
