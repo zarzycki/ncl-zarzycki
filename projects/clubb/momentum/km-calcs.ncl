@@ -1,48 +1,73 @@
 begin
 
-CASE="RCE.QPC6.ne0np4tcfplane.ne15x8.exp703.001"
-f3=addfile(CASE+".cam.h3.0001-01-09-00000.nc_regrid.nc","r")
-f2=addfile(CASE+".cam.h2.0001-01-09-00000.nc_regrid.nc","r")
-f1=addfile(CASE+".cam.h1.0001-01-09-00000.nc_regrid.nc","r")
+CASE="RCE.QPC6.ne0np4tcfplane.ne15x8.exp290.001"
+dir="~/scratch/"+CASE+"/run/"
 
-CK10=0.5
+f3=addfile(dir+"/"+CASE+".cam.h3.0001-01-08-00000.nc_regrid.nc","r")
+f2=addfile(dir+"/"+CASE+".cam.h2.0001-01-08-00000.nc_regrid.nc","r")
+f1=addfile(dir+"/"+CASE+".cam.h1.0001-01-08-00000.nc_regrid.nc","r")
+
+print(dir+"/"+CASE+".cam.h3.0001-01-08-00000.nc_regrid.nc")
+
+CK10=0.6
 C_K =0.2
 
-LSCALE = f3->LSCALE_CLUBB(0,:,:,:)
-;LSCALE = LSCALE * 0.2 ; Ck!
-TKE = f3->TKE_CLUBB(0,:,:,:)
-K3 = LSCALE
-K3 = C_K * CK10 * LSCALE * sqrt(TKE)
-
-KVH_CLUBB = f3->KVH_CLUBB(0,:,:,:)
+; METHOD 1
+; Calculate Km directly from CLUBB (Kh_zm * c_k10)
+KVH_CLUBB = f3->Kh_zt(0,:,:,:)
 K1 = KVH_CLUBB
 K1 = CK10 * K1
 
+; METHOD 2
+; Calculate Km from L and TKE - Eqn 35 in Golaz et al 2002
+LSCALE = f3->Lscale(0,:,:,:)
+TKE = f3->em(0,:,:,:)
+K2 = LSCALE
+K2 = C_K * CK10 * LSCALE * sqrt(TKE)
+
+; Back out Lscale
 LSCALE2 = LSCALE
 LSCALE2 = KVH_CLUBB * CK10 / CK10 / sqrt(TKE)/ C_K
 
-U = f1->U(0,:,:,:)
-V = f1->V(0,:,:,:)
-Z = f1->Z3(0,:,:,:)
-nlev = dimsizes(f1->lev)
+; METHOD 3
+; Km indirectly via Km = - u'w' / dudz
+U = f3->um(0,:,:,:)
+V = f3->vm(0,:,:,:)
+Z = f3->ZT_CLUBB(0,:,:,:)
+nlev = dimsizes(f3->lev)
 U = sqrt(U^2 + V^2)
 
-UPWP = f3->UPWP_CLUBB(0,:,:,:)
-VPWP = f3->VPWP_CLUBB(0,:,:,:)
+UPWP = f3->upwp(0,:,:,:)
+VPWP = f3->vpwp(0,:,:,:)
 UPWP = sqrt(UPWP^2 + VPWP^2)
-eps=1e-8
+eps=1.0e-12
 
 DUDZ = UPWP
 DUDZ(1:nlev-1,:,:) = (U(0:nlev-2,:,:) - U(1:nlev-1,:,:)) / (Z(0:nlev-2,:,:) - Z(1:nlev-1,:,:))
 DUDZ(0,:,:) = DUDZ(1,:,:)
 DUDZ(nlev,:,:) = DUDZ(nlev-1,:,:)
 
-;DUDZ := center_finite_diff_n (U,Z,False,0,0)
+DUDZ := center_finite_diff_n (U,Z,False,0,0)
 ;linlog=-2
 ;DUDZ := int2p_n_Wrap (U&lev,DUDZ,UPWP&ilev,linlog,0)
 
-K2 = UPWP
-K2 = UPWP/(DUDZ+eps)
+K3 = UPWP
+K3 = UPWP/(DUDZ+eps)
+;K3 = where(abs(K3) .gt. 1500.,K3@FillValue,K3)
+printVarSummary(K3)
+
+;************************************************
+; plotting parameters
+;************************************************
+; wks   = gsn_open_wks ("x11","xy")               ; send graphics to PNG file
+; res                  = True                     ; plot mods desired
+; res@tiMainString     = "Basic XY plot"          ; add title
+; plot  = gsn_csm_xy (wks,K3(:,{-0.25},{-1.5}),K1&ilev,res) ; create plot
+
+
+; 1115 HEIGHT                           m                  57 A  geopotential height above surface at interfaces (m)
+;  2082 um                               m/s                57 A  East-west (u) wind [m/s]
+; 2083 vm                               m/s                57 A  North-south (v) wind [m/s]
 
 
 ;==================================================================================================

@@ -8,11 +8,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 ;========================================================
 begin
 
-<<<<<<< HEAD
-whatData="GISS-E2-1-G"
-=======
-whatData="MIROC6"
->>>>>>> fe22650efda8bdfa4b37cc80a61b357cdd208471
+whatData="MRI-ESM2-0"
 write_output=True
 isglobal=True
 isStoN=False
@@ -23,20 +19,19 @@ keepStoN=False
 ;else
   doLonShift=False ; True for MERRA, False for JRA
 ;end if
-topoFileName="/Users/cmz5202/Software/cam_tools/hires-topo/2deg_cesm_topo_latlon.nc"
-outDir="/Users/cmz5202/NetCDF/topo_files/"
+topoFileName="/glade/work/zarzycki/cam_tools/hires-topo/2deg_cesm_topo_latlon.nc"
+outDir="./"
 outFileName = whatData+".topo.nc"
 
 ;trackerFileName="/glade/scratch/zarzycki/h1files/"+whatData+"/2000/"+whatData+".h1.20000901.nc"
 ;trackerFileName="~/scratch/nhemi_30_x4_slab/run/1001/nhemi_30_x4_slab.cam.h4.1001-05-01-00000.nc_regrid.nc"
 ;trackerFileName="/glade/u/home/zarzycki/scratch/ERAI-ETC/2017/ERAI.h1.2017111700.nc"
 ;trackerFileName="/glade/u/home/zarzycki/scratch/h1files/ERA5/1980/ERA5.h1.19800101.nc"
-<<<<<<< HEAD
-trackerFileName="/Users/cmz5202/NetCDF/CMIP6/psl_6hrPlevPt_GISS-E2-1-G_historical_r1i1p1f1_gn_195001010600-197501010000.nc"
-=======
 ;trackerFileName="/glade/u/home/zarzycki/scratch/h1files/NARR/2005/NARR.h1.20050821.nc"
-trackerFileName="/glade/collections/cmip/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/6hrPlevPt/psl/gn/v20191204/psl/psl_6hrPlevPt_MIROC6_historical_r1i1p1f1_gn_201401010600-201501010000.nc"
->>>>>>> fe22650efda8bdfa4b37cc80a61b357cdd208471
+trackerFileName="/glade/collections/cmip/CMIP6/CMIP/MRI/MRI-ESM2-0/historical/r1i1p1f1/6hrPlevPt/psl/gn/v20190722/psl/psl_6hrPlevPt_MRI-ESM2-0_historical_r1i1p1f1_gn_195001010000-195912311800.nc"
+;trackerFileName="/glade/collections/cmip/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/6hrPlevPt/psl/gn/v20191115/psl/psl_6hrPlevPt_ACCESS-ESM1-5_historical_r1i1p1f1_gn_195001010600-196001010000.nc"
+;trackerFileName="/glade/collections/cmip/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/historical/r1i1p1f1/6hrPlevPt/psl/gn/v20190815/psl/psl_6hrPlevPt_MPI-ESM1-2-LR_historical_r1i1p1f1_gn_185001010600-187001010000.nc"
+;trackerFileName="/glade/collections/cmip/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/6hrPlevPt/psl/gn/v20191204/psl/psl_6hrPlevPt_MIROC6_historical_r1i1p1f1_gn_201401010600-201501010000.nc"
 ;trackerFileName="/glade/u/home/zarzycki/scratch/ERA5/CAT.ERA5.U850.201701.nc"
 
 topoFile=addfile(topoFileName,"r")

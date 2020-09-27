@@ -5,10 +5,10 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 begin
 ;---Data file containing source grid
-srcGridName="ne0np4natlanticref.ne30x4"
+srcGridName="ne0np4tcfplane.ne15x8"
 outDir="/glade/scratch/zarzycki/"
-outRes="0.25"
-do_regional=True
+outRes="1.0"
+do_regional=False
 
 ;mapNameTag="CONUS"
 ;minLat=20.0
@@ -31,8 +31,11 @@ maxLon=-15.0
 ;minLon=-20.0
 ;maxLon=20.0
 
-src_file = "/glade/u/home/zarzycki/work/unigridFiles/"+srcGridName+"/topo/topo_"+srcGridName+"_smooth.nc"
-var_name = "PHIS"
+src_file = "/glade/u/home/zarzycki/scratch/BOMEX.QPC6.ne0np4tcfplane.ne15x8.exp290.001/run/BOMEX.QPC6.ne0np4tcfplane.ne15x8.exp290.001.cam.h1.0001-01-02-00000.nc"
+var_name = "PS"
+
+;src_file = "/glade/u/home/zarzycki/work/unigridFiles/"+srcGridName+"/topo/topo_"+srcGridName+"_smooth.nc"
+;var_name = "PHIS"
 ;src_file = "/glade/scratch/zarzycki/ne0np4tcplane15x8_INIC_L30.nc"
 ;src_file = "/glade/u/home/zarzycki/work/initial/tc_testcase/ne0np4tcplanene15x16_INIC_L30.001.nc"
 ;var_name = "PS"
@@ -40,7 +43,7 @@ var_name = "PHIS"
 ;var_name = "PS"
 
 sfile    = addfile(src_file,"r")
-var      = sfile->$var_name$(:)
+var      = sfile->$var_name$(0,:)
 src_lat  = sfile->lat
 src_lon  = sfile->lon
 
