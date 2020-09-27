@@ -1,7 +1,7 @@
 configs=(/"dtime1800","dtime900","tau3600","tau900","dtime450tau1800","tau3600_lowdmpdz2"/)
 nconfig=dimsizes(configs)
 
-varlist=(/"PRECT","PRECC","PRECL","SHFLX","LHFLX","TMQ","GPI","Chi_m","vort_r","MPI","shear"/)
+varlist=(/"PRECT","PRECC","PRECL","OMEGA500","SHFLX","LHFLX","TMQ","GPI","Chi_m","vort_r","MPI","shear"/)
 nvars = dimsizes(varlist)
 
 plotMinLatF             = 2.
@@ -16,7 +16,7 @@ do zz = 0,nvars-1
 
   do ii = 0,nconfig-1
 
-    if (thisvar .eq. "PRECL" .or. thisvar .eq. "PRECC" .or. thisvar .eq. "PRECT" .or. thisvar .eq. "SHFLX" .or. thisvar .eq. "TMQ" .or. thisvar .eq. "LHFLX") then
+    if (thisvar .eq. "PRECL" .or. thisvar .eq. "PRECC" .or. thisvar .eq. "PRECT" .or. thisvar .eq. "SHFLX" .or. thisvar .eq. "TMQ" .or. thisvar .eq. "LHFLX" .or. thisvar .eq. "OMEGA500") then
       fdir1:="/glade/scratch/zarzycki/archive/CHEY.VR28.NATL.REF.CAM5.4CLM5.0."+configs(ii)+"/atm/hist/"
       fnampattern:="*cam.h0.19??-[0-1][890]*.nc"
       wgt_file:="/glade/u/home/zarzycki/work/maps/hyperion/map_ne0np4natlanticref.ne30x4_to_1.0x1.0_GLOB.nc"
@@ -31,9 +31,15 @@ do zz = 0,nvars-1
         tmp2:=f[:]->PRECL
         PRECC=tmp1
         PRECC=tmp1+tmp2
+      else if (thisvar .eq. "OMEGA500") then
+        PRECC=f[:]->OMEGA(:,{500.},:)
       else
         PRECC=f[:]->$thisvar$
       end if
+      end if
+
+      MASK=f[:]->LANDFRAC
+      PRECC=where(MASK .eq. 0, PRECC, PRECC@_FillValue)
 
       if (thisvar .eq. "PRECL" .or. thisvar .eq. "PRECC" .or. thisvar .eq. "PRECT") then
         PRECC=PRECC*8.64e7

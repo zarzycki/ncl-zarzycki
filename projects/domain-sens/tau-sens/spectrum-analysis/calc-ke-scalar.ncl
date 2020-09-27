@@ -32,7 +32,7 @@ deldeg=0.25           ; horizontal grid spacing in degrees (for wavenumber trunc
 cenLat=20.             ; latitude of center of region -- roughly for scaling wavenumber with cos(lat)
 
 minlat=5.
-maxlat=35.
+maxlat=25.
 minlon=-70.
 maxlon=-10.
 ;==============================================================================================

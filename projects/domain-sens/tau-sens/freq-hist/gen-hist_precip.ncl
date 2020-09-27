@@ -9,8 +9,8 @@ begin
 ; Pick region for indexing -- for global domain, input:
 ; -90 -> 90 and 0 -> 360
 minlat=5.
-maxlat=35.
-minlon=-65.
+maxlat=25.
+minlon=-70.
 maxlon=-15.
 ;minlat=-90.
 ;maxlat=90.
@@ -109,10 +109,10 @@ do ii = 0,timestop
     end if
   end if
 
-  if (any(ismissing(vartmp))) then
-    print("WARNING: missing values in input array, being set to zero")
-    vartmp = where(ismissing(vartmp),0.,vartmp)
-  end if
+  ;if (any(ismissing(vartmp))) then
+  ;  print("WARNING: missing values in input array, being set to zero")
+  ;  vartmp = where(ismissing(vartmp),0.,vartmp)
+  ;end if
 
   ; if conserve remap, remap vartmp to new grid, otherwise save RLL grid in array
   if (conserve_remap) then
@@ -170,6 +170,11 @@ end if
 
 print("max: "+max(var_reshape)+"   min: "+min(var_reshape))
 
+opt = True
+opt@PrintStat = True
+statb = stat_dispersion(var_reshape, opt )
+print(statb)
+
 opt=True
 opt@bin_min=bin_min
 opt@bin_max=bin_max
@@ -194,6 +199,7 @@ ncdf->hvar_small  = hist
 ncdf->hvar_large  = hist10
 ncdf->xval_small  = hist@bin_center
 ncdf->xval_large  = hist10@bin_center
+ncdf->stats = statb
 
 exit
 
