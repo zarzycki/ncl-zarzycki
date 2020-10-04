@@ -83,4 +83,4 @@ for jj, config in enumerate(configlist):
 #host.yaxis.label.set_color(p1.get_color())
 #prcp1.yaxis.label.set_color(p2.get_color())
 
-plt.savefig("pyplot_multiple_y-axis.pdf", bbox_inches='tight')
+plt.savefig("xy-prob-corr.pdf", bbox_inches='tight')
