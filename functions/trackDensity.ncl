@@ -62,6 +62,7 @@ do n=0,npts-1
    if (il .gt. mlon-1) then
      print("mlon needs correcting at: "+il)
      il = 0
+     ;il = mlon-1
    end if
    count(jl,il) = count(jl,il) + 1
    end if
