@@ -10,15 +10,21 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 
 begin
 
-plottitle="TITLE"
+plottitle=""
 ; filelist = *.nc outputs from calc-ke-colin-regglob.ncl
 ; filelabs = labels for plot
 do_normalize=True
 plot_ref_lines=False
 
-filelist=(/"spectrum_VORT850_MASKI_F_dtime1800.nc","spectrum_VORT850_MASKI_F_tau3600.nc","spectrum_VORT850_MASKI_F_dtime900.nc"/)
-;filelist=(/"spectrum_VORT850_MASKI_F_tau3600_lowdmpdz2.nc","spectrum_VORT850_MASKI_F_tau3600.nc","spectrum_VORT850_MASKI_F_tau900.nc"/)
+single_line_thick=True
+namesuff="def"
+filelist=(/"spectrum_VORT850_MASKI_F_dtime1800.nc","spectrum_VORT850_MASKI_F_dtime900.nc","spectrum_VORT850_MASKI_F_tau3600.nc"/)
+configs_pretty=(/"dt~B~1800~N~","dt~B~900~N~","dt~B~450~N~"/)
 
+;single_line_thick=False
+;namesuff="sens"
+;filelist=(/"spectrum_VORT850_MASKI_F_tau3600_lowdmpdz2.nc","spectrum_VORT850_MASKI_F_tau900.nc","spectrum_VORT850_MASKI_F_tau3600.nc"/)
+;configs_pretty=(/"dt~B~450,lowdmpdz~N~","tau~B~900~N~","dt~B~450~N~"/)
 
 
 ;filelabs=(/"reduced HV","control","spectrum_hindcast_conus_30_x8_CAM5_L30.nc"/)
@@ -74,10 +80,9 @@ spc(:,119) = spc@_FillValue
 
 ;-------------------------------------------------------------------------------
 
-wks = gsn_open_wks("x11",plottitle)
+wks = gsn_open_wks("pdf","spectra_"+namesuff)
 
 
-  lthick = 6.0
 
   res=True
   res@gsnDraw=False
@@ -98,7 +103,14 @@ wks = gsn_open_wks("x11",plottitle)
   res@tiMainString           = plottitle
   res@tiXAxisString          = "Wavenumber (k)"
   res@tiYAxisString          = "Norm. 850mb cyclonic ~F33~z~F~ power"
-  res@xyLineThicknessF = lthick
+  
+  if (single_line_thick) then
+    lthick = 6.0
+    res@xyLineThicknessF = lthick
+  else
+    res@xyMonoLineThickness=False
+    res@xyLineThicknesses=(/6.0,2.0,7.0/)
+  end if
 
   colors = (/"white","black","OrangeRed4","Red3",\
   "red1","Red3","Red4","Blue",\
@@ -129,16 +141,16 @@ wks = gsn_open_wks("x11",plottitle)
 
   ;res@trYMinF                = -3.5      ; Leave space at bottom for legend
 
-  res@xyExplicitLegendLabels = filelabs
+  res@xyExplicitLegendLabels = configs_pretty
 
   res@lgJustification        = "BottomLeft"
   res@pmLegendOrthogonalPosF = -0.5    ; Move into plot
   res@pmLegendParallelPosF   = 0.05       ; Move to right
 
-  res@pmLegendWidthF         = 0.15       ; Decrease width
-  res@pmLegendHeightF        = 0.10       ; Decrease height
+  res@pmLegendWidthF         = 0.13       ; Decrease width
+  res@pmLegendHeightF        = 0.13       ; Decrease height
   res@lgBoxMinorExtentF      = 0.15       ; Shorten the legend lines
-  res@lgLabelFontHeightF     = 0.010     ; Change the font size
+  res@lgLabelFontHeightF     = 0.02    ; Change the font size
 
   res@tmXBMode          = "Explicit"              ; explicit labels
   res@tmXBValues        = (/6,25,100/)                       ; location of labels 
