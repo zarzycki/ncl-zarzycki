@@ -9,17 +9,23 @@ begin
 ; open file and read in data
 ;=================================================;
 
+out_format = "pdf"
+var="OMEGA500_MASKI"
 
+namesuff="def"
+gridlist = (/"tau3600_"+var,"dtime900_"+var,"dtime1800_"+var/)
+configs_pretty=(/"dt~B~1800~N~","dt~B~900~N~","dt~B~450~N~"/)
 
-out_format = "x11"
-var="PRECC_MASKI"
+;namesuff="sens"
+;gridlist = (/"tau3600_"+var,"tau900_"+var,"tau3600_lowdmpdz2_"+var/)
+;configs_pretty=(/"dt~B~450","tau~B~900~N~","dt~B~450~N~,lowdmpdz~N~"/)
 
 if (var .eq. "OMEGA500_MASKI")
   xmin = (/-14.0/)
   xmax = (/0.0/)          ; x axis maximums
   ymin = (/2e-6/)                ; y minimum (both panels)
   ymax = (/2e0/)                ; y maximum (both panels)
-  var_units="mb sec~S~-1~N~"
+  var_units="Pa s~S~-1~N~"
   panel_frac="c."
   panel_corner="TopLeft"  ; TopLeft, TopRight
   plot_leg=False
@@ -49,9 +55,9 @@ titles = (/" "," "/)           ; titles
 axis_labels = (/"fraction"," "/)               ; y axis labels
 colorAll = (/"red3","blue3","green4","pink2","skyblue2","darkseagreen2"/)      ; line colors
 
-gridlist = (/"tau3600_"+var,"dtime900_"+var,"dtime1800_"+var/)
-;gridlist = (/"tau3600_"+var,"dtime900_"+var,"dtime1800_"+var,"tau900_"+var,"tau3600_lowdmpdz2_"+var/)
-physpkg = "CAM6"
+
+
+
 nfiles = dimsizes(gridlist)
 dycore_labelsAll = gridlist
 needs_regrid=True
@@ -162,7 +168,7 @@ print("1 bin sum of "+gridlist(0)+" is: "+(sum(var0)/2))
 print("-------------")
 print("10 bin sum of "+gridlist(0)+" is: "+(sum(var01)/2))
 
-   wks  = gsn_open_wks(out_format,"precip_hist_all")
+   wks  = gsn_open_wks(out_format,"histfreq_"+var+"_"+namesuff)
 
 ; First Panel ---------------------------------
 
@@ -207,20 +213,19 @@ if (plot_leg) then
   lgres@lgDashIndexes      = (/0,0,0,0,0,0/)    ; all solid lines
   lgres@lgLineThicknessF   = res@xyLineThicknessF
   lgres@lgLabelFontHeightF = .06           ; legend label font thickness
-  lgres@lgLineDashSegLenF = 0.06
+  lgres@lgLineDashSegLenF = 0.2
   lgres@lgItemType         = "Lines"        ; show lines only (default)
-  lgres@vpWidthF           = 0.25           ; width of legend (NDC)
+  lgres@vpWidthF           = 0.16          ; width of legend (NDC)
   lgres@vpHeightF          = 0.125           ; height of legend (NDC)
   lgres@lgPerimThicknessF  = 2.0            ; thicken the box perimeter
   lgres@lgLabelOffsetF = 0.1
-  labels = dycore_labels(::-1)              ; reverse dycore order in legend
+  labels = configs_pretty(::-1)              ; reverse dycore order in legend
 
   legend = gsn_create_legend (wks, nfiles, labels,lgres)
 
 getvalues legend
 "lgLabelFontHeightF" : cmz_font
 "lgLineDashSegLenF" : cmz_length
-
 end getvalues 
 print(cmz_font)
 print(cmz_length)
