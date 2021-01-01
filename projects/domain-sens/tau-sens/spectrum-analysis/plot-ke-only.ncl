@@ -16,15 +16,15 @@ plottitle=""
 do_normalize=True
 plot_ref_lines=False
 
-single_line_thick=True
-namesuff="def"
-filelist=(/"spectrum_VORT850_MASKI_F_dtime1800.nc","spectrum_VORT850_MASKI_F_dtime900.nc","spectrum_VORT850_MASKI_F_tau3600.nc"/)
-configs_pretty=(/"dt~B~1800~N~","dt~B~900~N~","dt~B~450~N~"/)
+;single_line_thick=True
+;namesuff="def"
+;filelist=(/"spectrum_VORT850_MASKI_F_dtime1800.nc","spectrum_VORT850_MASKI_F_dtime900.nc","spectrum_VORT850_MASKI_F_tau3600.nc"/)
+;configs_pretty=(/"dt~B~1800~N~","dt~B~900~N~","dt~B~450~N~"/)
 
-;single_line_thick=False
-;namesuff="sens"
-;filelist=(/"spectrum_VORT850_MASKI_F_tau3600_lowdmpdz2.nc","spectrum_VORT850_MASKI_F_tau900.nc","spectrum_VORT850_MASKI_F_tau3600.nc"/)
-;configs_pretty=(/"dt~B~450,lowdmpdz~N~","tau~B~900~N~","dt~B~450~N~"/)
+single_line_thick=False
+namesuff="sens"
+filelist=(/"spectrum_VORT850_MASKI_F_tau3600_lowdmpdz2.nc","spectrum_VORT850_MASKI_F_tau900.nc","spectrum_VORT850_MASKI_F_tau3600.nc"/)
+configs_pretty=(/"dt~B~450,lowdmpdz~N~","tau~B~900~N~","dt~B~450~N~"/)
 
 
 ;filelabs=(/"reduced HV","control","spectrum_hindcast_conus_30_x8_CAM5_L30.nc"/)

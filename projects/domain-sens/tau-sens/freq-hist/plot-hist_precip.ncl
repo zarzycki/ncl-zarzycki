@@ -9,16 +9,18 @@ begin
 ; open file and read in data
 ;=================================================;
 
-out_format = "pdf"
-var="OMEGA500_MASKI"
+out_format = "x11"
+var="PRECC_MASKI"
 
-namesuff="def"
-gridlist = (/"tau3600_"+var,"dtime900_"+var,"dtime1800_"+var/)
-configs_pretty=(/"dt~B~1800~N~","dt~B~900~N~","dt~B~450~N~"/)
+;namesuff="def"
+;gridlist = (/"tau3600_"+var,"dtime900_"+var,"dtime1800_"+var/)
+;configs_pretty=(/"dt~B~450~N~","dt~B~900~N~","dt~B~1800~N~"/)
+;color_ix = (/0,2,4/)
 
-;namesuff="sens"
-;gridlist = (/"tau3600_"+var,"tau900_"+var,"tau3600_lowdmpdz2_"+var/)
-;configs_pretty=(/"dt~B~450","tau~B~900~N~","dt~B~450~N~,lowdmpdz~N~"/)
+namesuff="sens"
+gridlist = (/"tau3600_"+var,"tau900_"+var,"tau3600_lowdmpdz2_"+var/)
+configs_pretty=(/"dt~B~450","dt~B~450,~F8~t~F~-~N~","dt~B~450,dmpdz~N~"/)
+color_ix = (/0,1,3/)
 
 if (var .eq. "OMEGA500_MASKI")
   xmin = (/-14.0/)
@@ -53,11 +55,13 @@ end if
 
 titles = (/" "," "/)           ; titles
 axis_labels = (/"fraction"," "/)               ; y axis labels
-colorAll = (/"red3","blue3","green4","pink2","skyblue2","darkseagreen2"/)      ; line colors
-
-
-
-
+;colorAll = (/"red3","blue3","green4","pink2","skyblue2","darkseagreen2"/)      ; line colors
+colorAll = (/  "(/0.9453125, 0.65234375,  0/)", \    ; orange
+               "(/0.9453125, 	0.359375, 0/)", \     ; red
+               "(/0.83203125, 0.14453125, 0.48046875/)", \    ; violet
+               "(/0.453125, 0.35546875, 0.90625/)", \    ; slate
+               "(/0.375, 0.5390625, 0.9609375/)"  /) ;blue
+             
 nfiles = dimsizes(gridlist)
 dycore_labelsAll = gridlist
 needs_regrid=True
@@ -173,7 +177,8 @@ print("10 bin sum of "+gridlist(0)+" is: "+(sum(var01)/2))
 ; First Panel ---------------------------------
 
   ; Truncate colors and labels arrays
-  color = colorAll(0:nfiles-1)
+  color = colorAll(color_ix)
+  
   dycore_labels = dycore_labelsAll(0:nfiles-1)
   
   res = True
@@ -189,7 +194,7 @@ print("10 bin sum of "+gridlist(0)+" is: "+(sum(var01)/2))
   res@trXMaxF = xmax(0)
   ;res@xyLineThicknessF = 2.0
   res@xyMonoLineThickness = True
-  res@xyLineThicknessF = 6.0
+  res@xyLineThicknessF = 10.0
 
   res@gsnXYBarChart            = True              ; Create bar plot
   res@gsnXYBarChartOutlineOnly = True
@@ -212,11 +217,11 @@ if (plot_leg) then
   lgres@lgLineColors       = color(::-1)    ; reverse color order in legend
   lgres@lgDashIndexes      = (/0,0,0,0,0,0/)    ; all solid lines
   lgres@lgLineThicknessF   = res@xyLineThicknessF
-  lgres@lgLabelFontHeightF = .06           ; legend label font thickness
-  lgres@lgLineDashSegLenF = 0.2
+  lgres@lgLabelFontHeightF = .08           ; legend label font thickness
+  lgres@lgLineDashSegLenF = 0.5
   lgres@lgItemType         = "Lines"        ; show lines only (default)
-  lgres@vpWidthF           = 0.16          ; width of legend (NDC)
-  lgres@vpHeightF          = 0.125           ; height of legend (NDC)
+  lgres@vpWidthF           = 0.25          ; width of legend (NDC)
+  lgres@vpHeightF          = 0.15           ; height of legend (NDC)
   lgres@lgPerimThicknessF  = 2.0            ; thicken the box perimeter
   lgres@lgLabelOffsetF = 0.1
   labels = configs_pretty(::-1)              ; reverse dycore order in legend

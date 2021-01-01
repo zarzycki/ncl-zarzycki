@@ -58,9 +58,9 @@ prcp1.set_ylabel("Precipitation rate (mm/day)")
 #color1 = plt.cm.viridis(0)
 #color2 = plt.cm.viridis(0.5)
 #color3 = plt.cm.viridis(.9)
-color1 = 'c'
-color2 = 'm'
-color3 = 'y'
+color1 = (0.375, 0.5390625, 0.9609375)
+color3 = (0.83203125, 0.14453125, 0.48046875)
+color2 = (0.9453125, 0.65234375,  0)
 
 ## Plot each line
 p1, = host.plot(tcfreqarr, ourvals[0,:], 's:', color=color1,label=varprettynames[varslist[0]])
