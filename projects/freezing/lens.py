@@ -5,6 +5,30 @@ import metpy.calc as mpcalc
 from metpy.units import units
 import calpreciptype
 from tqdm import tqdm
+import numba
+
+### This function calculates ptype based on bourgoin
+# ptype = ntim x nlat   x nlon
+# T     = ntim x nlev   x nlat x nlon
+# Q     = ntim x nlat   x nlon
+# pmid  = ntim x nlev   x nlat x nlon 
+# pint  = ntim x nlev+1 x nlat x nlon
+# zint2 = ntim x nlev+1 x nlat x nlon
+# ntim (int)
+# nlon (int)
+# nlat (int)
+#@numba.jit
+def calc_ptype(ptype,T,Q,pmid,pint,zint2,ntim,nlon,nlat):
+
+  for zz in range(ntim):
+    for jj in tqdm(range(nlon)):
+      for ii in range(nlat):
+        ptype[zz,ii,jj] = calpreciptype.calwxt_bourg(np.random.rand(2),9.80665,T[zz,:,ii,jj],Q[zz,:,ii,jj],pmid[zz,:,ii,jj],pint[zz,:,ii,jj],zint2[zz,:,ii,jj])
+  
+  return ptype 
+  
+
+
 
 #python -m numpy.f2py -c calpreciptype.f90 -m calpreciptype
 print(calpreciptype.calwxt_ramer.__doc__)
@@ -18,18 +42,18 @@ rog=287.04/grav
 h1=1.0
 d00=0.0
 
-FINIX=3
+FINIX=24
 
 #--  data file name
-fname  = "T.nc"
+fname  = "_T.nc"
 ds = xr.open_dataset(fname)
 T = ds.T[0:FINIX,:,:,:]
 
-fname  = "Q.nc"
+fname  = "_Q.nc"
 ds = xr.open_dataset(fname)
 Q = ds.Q[0:FINIX,:,:,:]
 
-fname  = "PS.nc"
+fname  = "_PS.nc"
 ds = xr.open_dataset(fname)
 PS=ds.PS[0:FINIX,:,:]
 
@@ -70,44 +94,23 @@ ptypec.name="PTYPEC"
 ptyped = xr.DataArray(0, dims=('time', 'lat', 'lon'), coords=PS.coords)
 ptyped.name="PTYPED"
 print("LOOP")
-for zz in range(FINIX):
-  for ii in tqdm(range(191)):
-    for jj in range(287):
-      #tt = T[zz,:,ii,jj]
-      #qq = Q[zz,:,ii,jj]
-      #pp = pmid[zz,:,ii,jj]
-      #pi = pint[zz,:,ii,jj]
-      #zi = mpcalc.pressure_to_height_std(pint[zz,:,ii,jj]).to('m')
-      #rr = rharr[zz,:,ii,jj]
-      #dd = tdarr[zz,:,ii,jj]
-      #tw = TWET[zz,:,ii,jj]
 
-      #if jj == 0:
-        #print(grav)
-        #print(tt)
-        #print(qq)
-        #print(pp)
-        #print(pi)
-        #print(zi)
-      
-      # everything needs to be arranged top to bottom
-      #ptypea[zz,ii,jj] = calpreciptype.calwxt_ramer(tt,pp,rr,dd)
-      #ptypeb[zz,ii,jj] = calpreciptype.calwxt_bourg(np.random.rand(2),grav,tt,qq,pp,pi,zi)
-      #ptypec[zz,ii,jj] = calpreciptype.calwxt(tt,qq,pp,pi,d608,rog,1.0E-10,zi,tw)
-      #ptyped[zz,ii,jj] = calpreciptype.calwxt_revised(tt,qq,pp,pi,d608,rog,1.0E-10,zi,tw)
+print("Calculating virtual temperature")
+tq = mpcalc.virtual_temperature(T, Q)
+print(type(tq))
+testarr = np.array(tq)
+print(type(tq))
 
-      ptypea[zz,ii,jj] = calpreciptype.calwxt_ramer(T[zz,:,ii,jj],pmid[zz,:,ii,jj],rharr[zz,:,ii,jj],tdarr[zz,:,ii,jj])
-      ptypeb[zz,ii,jj] = calpreciptype.calwxt_bourg(np.random.rand(2),grav,T[zz,:,ii,jj],Q[zz,:,ii,jj],pmid[zz,:,ii,jj],pint[zz,:,ii,jj],mpcalc.pressure_to_height_std(pint[zz,:,ii,jj]).to('m'))
-      #ptypec[zz,ii,jj] = calpreciptype.calwxt(T[zz,:,ii,jj],Q[zz,:,ii,jj],pmid[zz,:,ii,jj],pint[zz,:,ii,jj],d608,rog,1.0E-10,mpcalc.pressure_to_height_std(pint[zz,:,ii,jj]).to('m'),TWET[zz,:,ii,jj])
-      ptyped[zz,ii,jj] = calpreciptype.calwxt_revised(T[zz,:,ii,jj],Q[zz,:,ii,jj],pmid[zz,:,ii,jj],pint[zz,:,ii,jj],d608,rog,1.0E-10,mpcalc.pressure_to_height_std(pint[zz,:,ii,jj]).to('m'),TWET[zz,:,ii,jj])
+#zint2 = calc_zint(pint.values,PHIS.values,TKV.values,p1dims,LOOPIX,nlevp1,doFlip=True)
+zint2 = mpcalc.pressure_to_height_std(pint).to('m')
 
-      #print(ptype[zz,ii,jj])
+calc_ptype(ptypeb.values,T.values,Q.values,pmid.values,pint.values,zint2,T.sizes['time'],T.sizes['lon'],T.sizes['lat'])
 
 #rh.transpose('time', 'lev', 'lat', 'lon')
 
 #ptype = calpreciptype.calwxt_ramer(t,pmid,rh,td)
 
-sum = xr.merge([ptypea,ptypeb,ptypec,ptyped,T,TWET,tdarr,rharr])
+sum = xr.merge([ptypeb,T,TWET,tdarr,rharr])
 
 sum.to_netcdf('saved_on_disk.nc')
 

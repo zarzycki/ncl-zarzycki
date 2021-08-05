@@ -1,3 +1,4 @@
+sub_genfsurdat.o*
 *.nc
 _*.nc
 *.so

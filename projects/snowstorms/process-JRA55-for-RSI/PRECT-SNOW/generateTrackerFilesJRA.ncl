@@ -14,9 +14,14 @@ begin
 ;SYMDIR="/glade/u/home/zarzycki/scratch/JRAsym/"+YYYY+"/"
 ;OUTDIR=SYMDIR
 
+;var_support = (/"prmsl",               "srweq","tprat"/)
+;var_streams = (/"fcst_surf",           "fcst_phy2m","fcst_phy2m"/)
+;var_longnam = (/"TPRAT_GDS4_SFC_ave3h","LHTFL_GDS4_SFC_ave3h"
+;var_outvars = (/"fcst_surf",           "fcst_phy2m","fcst_phy2m"/)
+
 if (VAR .eq. "prmsl")
   FILES = systemfunc ("ls "+SYMDIR+"/fcst_surf.*"+VAR+".reg_tl319*.grb2")
-else if (VAR .eq. "srweq" .or. VAR .eq. "tprat")
+else if (VAR .eq. "srweq" .or. VAR .eq. "tprat" .or.  VAR .eq. "lhtfl" .or.  VAR .eq. "shtfl" .or. VAR .eq. "dlwrf" .or. VAR .eq. "ulwrf" .or. VAR .eq. "dswrf" .or. VAR .eq. "uswrf")
   FILES = systemfunc ("ls "+SYMDIR+"/fcst_phy2m.*"+VAR+".reg_tl319*.grb2")
 else if (VAR .eq. "snwe")
   FILES = systemfunc ("ls "+SYMDIR+"/anl_land.*"+VAR+".reg_tl319*.grb2")
@@ -45,6 +50,24 @@ print(FILE)
 if (VAR .eq. "tprat") then
   PRECVAR="TPRAT_GDS4_SFC_ave3h"
   OUTVAR="PRECT"
+else if (VAR .eq. "lhtfl") then
+  PRECVAR="LHTFL_GDS4_SFC_ave3h"
+  OUTVAR="LHFLX"
+else if (VAR .eq. "shtfl") then
+  PRECVAR="SHTFL_GDS4_SFC_ave3h"
+  OUTVAR="SHFLX"
+else if (VAR .eq. "dlwrf") then
+  PRECVAR="DLWRF_GDS4_SFC_ave3h"
+  OUTVAR="LWdown"
+else if (VAR .eq. "ulwrf") then
+  PRECVAR="ULWRF_GDS4_SFC_ave3h"
+  OUTVAR="LWup"
+else if (VAR .eq. "dswrf") then
+  PRECVAR="DSWRF_GDS4_SFC_ave3h"
+  OUTVAR="SWdown"
+else if (VAR .eq. "uswrf") then
+  PRECVAR="USWRF_GDS4_SFC_ave3h"
+  OUTVAR="SWup"
 else if (VAR .eq. "srweq") then
   PRECVAR="SRWEQ_GDS4_SFC_ave3h"
   OUTVAR="PRECSN"
@@ -66,6 +89,12 @@ else if (VAR .eq. "pwat") then
 else
   print("incorrect VAR... exiting...")
   exit
+end if
+end if
+end if
+end if
+end if
+end if
 end if
 end if
 end if
@@ -118,7 +147,7 @@ ms_to_mmday=8.64e7
 if (dimsizes(sizeDims) .eq. 4) then
   if (VAR .eq. "prmsl")
     PRECSN_SUM=PRECSN(:,1,:,:)
-  else
+  else if (VAR .eq. "snwe" .or. VAR .eq. "tprat" .or. VAR .eq. "srweq")
     if (VAR .eq. "snwe")
       PRECSN_SUM = dim_avg_n_Wrap(PRECSN,1)
     else
@@ -128,6 +157,19 @@ if (dimsizes(sizeDims) .eq. 4) then
       PRECSN_SUM = dim_sum_n_Wrap(PRECSN,1)
       PRECSN_SUM = PRECSN_SUM / 2.0
     end if
+  else
+    PRECSN_SUM=PRECSN(:,0,:,:)    ; use only this if not doing back diff!
+    ; backward difference?
+    ; calculate dVAR/dt between +3 and +6 forecast
+    DELPRECSN =PRECSN(:,0,:,:)
+    DELPRECSN =PRECSN(:,1,:,:) - PRECSN(:,0,:,:)
+    ; remove dVAR/dt from +3 forecast to get +0 forecast
+    PRECSN_SUM=PRECSN_SUM-DELPRECSN
+    ; if any of the up/down fluxes becomes negative due to interpolation, set to 0.
+    if ( VAR .eq. "dlwrf" .or. VAR .eq. "ulwrf" .or. VAR .eq. "dswrf" .or. VAR .eq. "uswrf" ) then
+      PRECSN_SUM = where(PRECSN_SUM .le. 0.0,0.0,PRECSN_SUM)
+    end if
+  end if
   end if
 else
   PRECSN_SUM=PRECSN
@@ -148,8 +190,8 @@ fileName=OUTDIR+"/JRA.h1."+YYYY+"."+OUTVAR+".nc"
 system("mkdir -p "+OUTDIR)   ; remove any pre-existing file
 system("/bin/rm -f "+fileName)   ; remove any pre-existing file
 
-setfileoption("nc","Format","NetCDF4")
-setfileoption("nc","CompressionLevel",1)
+;setfileoption("nc","Format","NetCDF4")
+;setfileoption("nc","CompressionLevel",1)
 
 ncdf = addfile(fileName ,"c")  ; open output netCDF file
 print("Writing output file:  "+fileName)

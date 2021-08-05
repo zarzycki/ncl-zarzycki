@@ -1,7 +1,7 @@
 begin
 
 ENS="001"
-res="ne15x16"
+res="ne15x8"
 numlevels=56
 
 ; perturbation values
