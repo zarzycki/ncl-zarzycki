@@ -2,7 +2,7 @@
 
 module load ncl
 
-NCLDIR=/glade/u/home/zarzycki/ncl/projects/domain-sens/tau-sens
+NCLDIR=/glade/u/home/zarzycki/ncl/projects/domain-sens/tau-sens/data-process
 
 WGTFILE=/glade/u/home/zarzycki/work/maps/hyperion/map_ne0np4natlanticref.ne30x4_to_0.25x0.25_NATL.nc
 CONFIG=${1}

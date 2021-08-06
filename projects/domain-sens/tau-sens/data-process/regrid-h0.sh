@@ -15,7 +15,7 @@ do
   ncremap -i $f -o `basename $f`_regrid.nc -m $WGTFILE
 done
 
-cd /glade/u/home/zarzycki/ncl/projects/domain-sens/tau-sens/
+cd /glade/u/home/zarzycki/ncl/projects/domain-sens/tau-sens/data-process/
 ncl CAM5_BAM_var_GPI_chi_comps_h0.ncl 'OUTSTRING="'${CONFIG}'"'
 
 cd ~/scratch/
