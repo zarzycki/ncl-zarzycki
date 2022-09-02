@@ -24,7 +24,7 @@ nlon = dimsizes(lon)
 nlev = dimsizes(lev)
 
 deltaLat = abs(lat(0:nlat-2)-lat(1:nlat-1))
-deltaLon = abs(lon(0:nlon-2)-lat(1:nlon-1))
+deltaLon = abs(lon(0:nlon-2)-lon(1:nlon-1))
 deltaLatMax = max(deltaLat)
 deltaLatMin = min(deltaLat)
 deltaLonMax = max(deltaLon)
