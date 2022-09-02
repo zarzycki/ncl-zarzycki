@@ -4,38 +4,28 @@ load "../../../functions/radialAvg.ncl"
 
 begin
 
-config="RCE.QPC5.ne0np4tcfplane.ne15x16.exp698.001"
+config="RCE.QPC6.ne0np4tcfplane.ne15x8.expS1002.L51.001"
 dayofsim="09"
-cam5=True
+cam5=False
 
 k10=0.5
 
-plot_vickery=True
-plot_blackadar=True
-plot_log_ref=True
-plot_10m=True
-plot_K_ref=True
-
-;if(cam5) then
-;  config="newcyclone30x8_CAM5"
-;end if
-
 if(cam5) then
-  FILEDIR="/glade/u/home/zarzycki/scratch//"+config+"/run/"
+  FILEDIR="/gpfs/scratch/kmn182/output/"+config+"/run/"
   filename = FILEDIR+"/"+config+".cam.h1.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   f2= FILEDIR+"/"+config+".cam.h3.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   kvmvar="UW_kvm"
   tkevar="UW_tke"
   lengthvar="UW_leng"
 else
-  FILEDIR="/glade/u/home/zarzycki/scratch//"+config+"/run/"
+  FILEDIR="/gpfs/scratch/kmn182/output/"+config+"/run/"
   filename = FILEDIR+"/"+config+".cam.h1.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
   f2= FILEDIR+"/"+config+".cam.h3.0001-01-"+dayofsim+"-00000.nc_regrid.nc"
-  kvmvar="KVH_CLUBB"
+  kvmvar="KVH"
 ;  kvmvar="DTCOND"
-  tkevar="TKE_CLUBB"
+  tkevar="em"
 ;  tkevar="DTCOND"
-  lengthvar="LSCALE_CLUBB"
+  lengthvar="Lscale"
 ;  lengthvar="DTCOND"
 end if
 
@@ -83,6 +73,10 @@ Q = thefile->Q(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
 OMEGA = thefile->OMEGA(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
 CLDLIQ = thefile->CLDLIQ(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
 
+; +++ new code
+U10 = tf2->U10(timeStep,{maxLat:minLat:stride},::stride)
+; --- new code
+
 KVM_CLUBB_int = tf2->$kvmvar$(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
 if (.not.cam5) then
   KVM_CLUBB_int = KVM_CLUBB_int*k10
@@ -98,6 +92,7 @@ LSCALE_CLUBB = hyi2hyo_Wrap(P0,hyai,hybi,PS1,LSCALE_CLUBB_int,hyam,hybm,1)
 CME = tf2->CME(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
 
 DTCOND = tf2->DTCOND(timeStep,{topLev:botLev},{maxLat:minLat:stride},::stride)
+
 
 PRES = pres_hybrid_ccm(PS1,P0,hyam,hybm)
 
@@ -170,6 +165,13 @@ rad_CLDLIQ      = radialAvg3D(CLDLIQ_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
 rad_CME      = radialAvg3D(CME_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
 rad_DTCOND      = radialAvg3D(DTCOND_Z,lat,lon,Zlev,psminlat,psminlon,500.,True)
 
+; +++ new code
+tmp = radialAvg2D(U10(:,:),lat,lon,psminlat,psminlon,500.,True)
+;tmp = radialAvg2D(v_theta(0,:,:),lat,lon,psminlat,psminlon,500.,True)
+rad_v_theta_bot = tmp(0,:)
+var_v_theta_bot = tmp(1,:)
+; --- new code
+
 rad_dims=dimsizes(rad_v_theta)
 nlev_rad=rad_dims(0)
 nrad_rad=rad_dims(1)
@@ -181,6 +183,22 @@ g = 9.81
 ; q is kg/kg, 
 rad_MSE = rad_T
 rad_MSE = c_p * rad_T + g * conform(rad_MSE,Zlev,0) + L_v * rad_Q
+
+; +++ new code
+; find RMW
+rad_sfc_v_theta=rad_v_theta({70.},:)
+inds = maxind(rad_sfc_v_theta)
+rad_max = rad_sfc_v_theta&radius(inds)   ; insert the longitude index into the lon coordinate variable
+print("Maximum value located at, "+rad_max)
+
+; calc inner core variance
+ix = ind_nearest_coord(rad_max,rad_sfc_v_theta&radius,0)
+if (ix .eq. 0) then
+  ix = ix + 1
+end if
+var_core = avg(var_v_theta_bot(ix-1:ix+1)) / max(rad_v_theta_bot)
+print(var_core)
+; --- new code
 
 ;==================================================================================================
 outDir="./netcdf/"
@@ -210,7 +228,6 @@ filedimdef(ncdf,"time",-1,True)
 ;===================================================================
 ncdf->rad_v_theta  =rad_v_theta  
 ncdf->rad_v_rad  =rad_v_rad   
-ncdf->rad_v_rad  =rad_v_rad
 ncdf->rad_W  =rad_W    
 ncdf->rad_KVM  =rad_KVM  
 ncdf->rad_TKE  =rad_TKE     
@@ -222,6 +239,13 @@ ncdf->rad_CLDLIQ  =rad_CLDLIQ
 ncdf->rad_CME  =rad_CME   
 ncdf->rad_DTCOND  =rad_DTCOND   
 ncdf->rad_MSE = rad_MSE
+; +++ new code
+ncdf->rad_v_theta_bot = rad_v_theta_bot
+ncdf->var_v_theta_bot = var_v_theta_bot
+ncdf->rad_max = rad_max
+ncdf->var_core = var_core
+; --- new code
+
 ;==================================================================================================
 
 end

@@ -200,6 +200,7 @@ psminLocX = ind_nearest_coord(psminlon,lon,0)
 ;;;;; DO RADIAL AVERAGES
 
 loopWidth = toint(ceil((outerRad*1.10) / (kmInDeg * deltaMin)))
+print("loopWidth "+loopWidth)
 ; for standard lat/lon grid
 ;1.25 gives n ~= 5 in inner grid if numMerge = 2
 ;1.4 gives n ~= 9 in inner grid if numMerge = 2
@@ -231,17 +232,22 @@ numRadBins = dimsizes(radiusArr)
 
 rad_thevar_hit  = new((/numRadBins/),integer)
 rad_thevar_cum  = new((/numRadBins/),double)
+nsizeloop = (2*loopWidth+1)*(2*loopWidth+1)
+rad_thevar_all  = new((/numRadBins,nsizeloop/),double)
 
 ; NEEDS to be 1 or 0
 rad_thevar_hit!0 = "radius"
 rad_thevar_cum!0 = "radius"
+rad_thevar_all!0 = "radius"
 rad_thevar_hit&radius = radiusArr
 rad_thevar_cum&radius = radiusArr
+rad_thevar_all&radius = radiusArr
 
 rad_thevar_hit = 0
 rad_thevar_cum = 0
 
 ; NEED TO CORRECT NLEV
+counter=0
 print("Starting loop")
 do i = psminLocY-loopWidth,psminLocY+loopWidth
   print("Doing outer loop #: "+(i-psminLocY+loopWidth)+" of "+(loopWidth*2)+"   ("+((tofloat(i-psminLocY+loopWidth)/tofloat(loopWidth*2))*100.)+"%)")
@@ -250,6 +256,10 @@ do i = psminLocY-loopWidth,psminLocY+loopWidth
       if (gcdist .le. outerRad)
         rad_thevar_hit({gcdist}) = rad_thevar_hit({gcdist}) + 1 
         rad_thevar_cum({gcdist}) = rad_thevar_cum({gcdist}) + data(i,j)
+        ; run counter
+        ix = ind_nearest_coord(gcdist,radiusArr,0)
+        rad_thevar_all(ix,counter) = todouble(data(i,j))
+        counter = counter + 1
       end if
   end do
 end do
@@ -263,7 +273,18 @@ copy_VarCoords(rad_thevar_hit,rad_thevar)
 rad_thevar@units = data@units
 rad_thevar@long_name=data@long_name
 
-return(rad_thevar)
+var_thevar = dim_variance_n_Wrap(rad_thevar_all,1)
+copy_VarCoords(rad_thevar_hit,var_thevar)
+
+rad_output = new((/2,numRadBins/),"double")
+rad_output!1 = "radius"
+rad_output&radius = radiusArr
+rad_output(0,:) = rad_thevar
+rad_output(1,:) = var_thevar
+rad_output@units = data@units
+rad_output@long_name=data@long_name
+
+return(rad_output)
 
 end
 
