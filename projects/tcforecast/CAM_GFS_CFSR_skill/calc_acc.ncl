@@ -4,8 +4,8 @@ function calc_acc (forecast:numeric, analysis:numeric, minLat:numeric, maxLat:nu
 ; Calculate anomaly correlation coefficient between two fields
 ;
 ; INPUTS
-; forecast       : potential temperature (K)
-; analysis       : zonal wind (m/s)
+; forecast       : 2-D field 
+; analysis       : 2-D field 
 ; minLat         : minimum latitude for calculation (deg_N)
 ; maxLat         : maximum latitude for calculation (deg_N)
 ; minLon         : minimum longitude for calculation (deg_E)

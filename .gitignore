@@ -1,3 +1,4 @@
+bin/
 sub_genfsurdat.o*
 *.nc
 _*.nc
