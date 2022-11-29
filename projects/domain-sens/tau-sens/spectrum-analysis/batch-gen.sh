@@ -17,3 +17,4 @@ do
   ncl calc-ke-scalar.ncl 'UVARNAME="'${VAR}'"' 'anlconfig="'${CONFIG}'"' 'DATE="1986-09-17"'
   ncl calc-ke-scalar.ncl 'UVARNAME="'${VAR}'"' 'anlconfig="'${CONFIG}'"' 'DATE="1986-10-17"'
 done
+

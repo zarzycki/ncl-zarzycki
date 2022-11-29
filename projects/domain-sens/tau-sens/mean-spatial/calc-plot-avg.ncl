@@ -8,10 +8,19 @@ plotMaxLatF             = 32.
 plotMinLonF             = -95.
 plotMaxLonF             = -12.
 
+;MinLatF=5.
+;MaxLatF=25.
+;MinLonF=-70.
+;MaxLonF=-15.
+
+plotMinLatF             = 2.
+plotMaxLatF             = 32.
+plotMinLonF             = -10.
+plotMaxLonF             = -50.
 MinLatF=5.
 MaxLatF=25.
-MinLonF=-70.
-MaxLonF=-15.
+MinLonF=0.
+MaxLonF=40.
 
 varlist=(/"PRECT","PRECC","PRECL","OMEGA500","SHFLX","LHFLX","TMQ","GPI","Chi_m","vort_r","MPI","shear"/)
 panelrow = new(dimsizes(varlist),integer)

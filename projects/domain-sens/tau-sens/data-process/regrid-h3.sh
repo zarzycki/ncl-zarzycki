@@ -17,6 +17,10 @@ for f in $FILES
 do
   NEWFILE=`basename $f`_regrid.nc
   echo $f ${NEWFILE}
+  
+  # Added 1/6/22 --> if file is compressed, need to uncompress for NCL to handle appropriately...
+  nccopy -k nc3 $f tmp.nc
+  mv tmp.nc $f
 
   # Extract relevant vars
   ncremap -v PSL,PRECL,PRECC,PRECT,TMQ,U850,V850,OMEGA500 -i $f -o ${NEWFILE} -m $WGTFILE
