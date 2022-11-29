@@ -1,3 +1,4 @@
+*.tmp
 bin/
 sub_genfsurdat.o*
 *.nc
