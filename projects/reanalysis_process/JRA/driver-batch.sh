@@ -1,12 +1,11 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=JRA_mpi
-#SBATCH --account=P05010048
-#SBATCH --ntasks=4
-#SBATCH --ntasks-per-node=4
-#SBATCH --time=18:00:00
-#SBATCH --partition=dav
-#SBATCH --output=JRA_mpi.out.%j
+#PBS -N JRA_mpi.out
+#PBS -A UPSU0032
+#PBS -l select=1:ncpus=4:mpiprocs=4:mem=80GB
+#PBS -l walltime=24:00:00
+#PBS -q casper
+#PBS -j oe
 
 module load parallel
 module load ncl
@@ -17,7 +16,7 @@ TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 rm ${COMMANDFILE}
 
-for YYYY in `seq 2015 2015`; do
+for YYYY in `seq 2020 2021`; do
   LINECOMMAND="./singleyear.sh ${YYYY}   "
   echo ${LINECOMMAND} >> ${COMMANDFILE}
 done
