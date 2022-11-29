@@ -1,46 +1,18 @@
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
-
 begin
-;---Data file containing source grid
-srcGridName="ne0np4tcfplane.ne15x8"
-outDir="/glade/scratch/zarzycki/"
-outRes="1.0"
-do_regional=False
 
-;mapNameTag="CONUS"
-;minLat=20.0
-;maxLat=55.0
-;minLon=-130.0
-;maxLon=-60.0
-;mapNameTag="NATL"
-;minLat=0.0
-;maxLat=60.0
-;minLon=-105.0
-;maxLon=15.0
+srcGridName="ne0natlantic30x4"
+outDir="/glade/scratch/$LOGNAME/"
+outRes="0.25"
+do_regional=True
+
 mapNameTag="TROPNATL"
 minLat=5.0
 maxLat=35.0
 minLon=-90.0
 maxLon=-15.0
-;mapNameTag="REG"
-;minLat=-20.0
-;maxLat=20.0
-;minLon=-20.0
-;maxLon=20.0
 
-src_file = "/glade/u/home/zarzycki/scratch/BOMEX.QPC6.ne0np4tcfplane.ne15x8.exp290.001/run/BOMEX.QPC6.ne0np4tcfplane.ne15x8.exp290.001.cam.h1.0001-01-02-00000.nc"
+src_file = "/glade/u/home/zarzycki/scratch/ne0natlantic30x4-FHIST/run/2003091200/ne0natlantic30x4-FHIST.cam.h0.2003-09-12-00000.nc"
 var_name = "PS"
-
-;src_file = "/glade/u/home/zarzycki/work/unigridFiles/"+srcGridName+"/topo/topo_"+srcGridName+"_smooth.nc"
-;var_name = "PHIS"
-;src_file = "/glade/scratch/zarzycki/ne0np4tcplane15x8_INIC_L30.nc"
-;src_file = "/glade/u/home/zarzycki/work/initial/tc_testcase/ne0np4tcplanene15x16_INIC_L30.001.nc"
-;var_name = "PS"
-;src_file = "/glade/u/home/zarzycki/scratch/archive/CHEY.111.GLOB.CAM5.4CLM5.0.dtime1800/atm/hist/CHEY.111.GLOB.CAM5.4CLM5.0.dtime1800.cam.h0.1984-01.nc"
-;var_name = "PS"
 
 sfile    = addfile(src_file,"r")
 var      = sfile->$var_name$(0,:)
@@ -49,9 +21,7 @@ src_lon  = sfile->lon
 
 ;---Set up regridding options
 Opt                = True
-
-;---"bilinear" is the default. "patch" and "conserve" are other options.
-Opt@InterpMethod     = "bilinear"
+Opt@InterpMethod     = "bilinear" ; "bilinear" is the default. "patch" and "conserve" are other options.
 
 Opt@SrcGridLat       = src_lat
 Opt@SrcGridLon       = src_lon
@@ -59,7 +29,7 @@ Opt@SrcRegional      = False
 Opt@SrcInputFileName = src_file
 
 if (do_regional) then
-  Opt@DstLLCorner      = (/ minLat,  minLon /)      ;lat/lon
+  Opt@DstLLCorner      = (/ minLat, minLon /)      ;lat/lon
   Opt@DstURCorner      = (/ maxLat, maxLon /)      ;lat/lon (-90-90   0-360)
 else
   mapNameTag="GLOB"
@@ -76,5 +46,7 @@ Opt@WgtFileName      = outDir+"/"+outname
 var_regrid = ESMF_regrid(var,Opt)     ; Do the regridding
 
 printVarSummary(var_regrid)
+
+print("Successfully created "+Opt@WgtFileName)
 
 end

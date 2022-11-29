@@ -3,7 +3,8 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 begin
 
 ;src_file = addfile("/glade/u/home/zarzycki/scratch/NARR/2005/merged_AWIP32.2005082100.3D.grb2","r")  
-src_file = addfile("/glade/u/home/zarzycki/scratch/NARR/merged_AWIP32.2005082200.3D.grb2","r")  
+;src_file = addfile("/glade/u/home/zarzycki/scratch/NARR/merged_AWIP32.2005082200.3D.grb2","r")  
+src_file = addfile("/glade/u/home/zarzycki/scratch/NARR/merged_AWIP32.2000010100.3D.grb2","r")
 
 dstDir = "./"
 dstGridName = "NARR_SCRIP.nc"
