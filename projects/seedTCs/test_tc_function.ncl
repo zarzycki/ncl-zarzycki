@@ -1,18 +1,13 @@
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
-load "~/ncl/functions/tctestcase.ncl"
+load "/Users/cmz5202/ncl-zarzycki/functions/tctestcase.ncl"
 
 begin
 
-doplot=False
-;system("rm ~/scratch/iniseed.nc")
-;system("cp /glade/u/home/zarzycki/scratch/cam5_work/varres_seedTCs/camrun.cam.i.0000-10-26-00000.nc ~/scratch/iniseed.nc")
+doplot=True
 
-;system("cp ~/scratch/cam5_work/se30np4.tcSeed/camrun.cam.r.0000-09-06-00000.nc ~/scratch/iniseed.nc")
+system("rm ./testing.nc")
+system("cp ./FHIST-ne30-betacast-ERA5-x001_INIC.nc ./testing.nc")
 
-inputFile = addfile("~/scratch/iniseed.nc","w")
+inputFile = addfile("./testing.nc","w")
 
 lat = inputFile->lat
 lon = inputFile->lon
@@ -23,7 +18,8 @@ hyai = inputFile->hyai
 hybi = inputFile->hyai
 hyam = inputFile->hyam
 hybm = inputFile->hybm
-P0   = inputFile->P0
+;P0   = inputFile->P0
+P0   = 100000.
 
 u = inputFile->U
 v = inputFile->V
@@ -31,17 +27,31 @@ ps = inputFile->PS
 t = inputFile->T
 q = inputFile->Q
 
+;to_delete=(/"_FillValue_original","missing_value_original"/)
+;to_delete=(/"_FillValue","missing_value"/)
+;to_delete=(/"maximum_value","minimum_value"/)
+to_delete=(/"time"/)
+
+delete_VarAtts(u,to_delete)
+delete_VarAtts(v,to_delete)
+delete_VarAtts(t,to_delete)
+delete_VarAtts(q,to_delete)
+delete_VarAtts(ps,to_delete)
+
 srand(tointeger(systemfunc("date +%s")))
 
-minlat=10.
-maxlat=25.
-minlon=0.
-maxlon=360.
+;minlat=10.
+;maxlat=25.
+;minlon=0.
+;maxlon=360.
+;cen_lat = (rand()/32766.)*(maxlat-minlat)+minlat
+;cen_lon = (rand()/32766.)*(maxlon-minlon)+minlon
 
-cen_lat = (rand()/32766.)*(maxlat-minlat)+minlat
-cen_lon = (rand()/32766.)*(maxlon-minlon)+minlon
 lat_bnd = 18.
 lon_bnd = 18.
+
+cen_lat = 30.
+cen_lon = 300.
 
 ; Purpose: Hybrid level definitions: p = a*p0 + b*ps
 ;          interfaces   p(k) = hyai(k)*ps0 + hybi(k)*ps
@@ -116,6 +126,17 @@ res@cnFillOn             = True              ; turn on color
 res@cnLinesOn            = False             ; turn off contour lines
 res@cnLineLabelsOn       = False
 res@lbLabelAutoStride   = True         ; Clean up labelbar labels.
+
+
+res@cnLevelSelectionMode = "ManualLevels"	; manually set the contour levels with the following 3 resources
+res@cnMinLevelValF  = 96000.			; set the minimum contour level
+res@cnMaxLevelValF  = 102000.			; set the maximum contour level
+res@cnLevelSpacingF = 500.			; set the interval between contours
+  
+res@mpMinLatF = cen_lat - 15.
+res@mpMaxLatF = cen_lat + 15.
+res@mpMinLonF = cen_lon - 15.
+res@mpMaxLonF = cen_lon + 15.
 
 ;res@gsnAddCyclic = False
 ;plot = gsn_csm_contour_map(wks,vs,res)

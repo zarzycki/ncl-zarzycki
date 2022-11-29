@@ -44,6 +44,8 @@ T0    = Ts0*(1.+constTv*q0)   ; Surface temp
 Ttrop = T0 - gamma_*ztrop     ; Tropopause temp
 ptrop = p00*(Ttrop/T0)^(1./exponent); Tropopause pressure
 
+dp=5800.
+rp=51250.
 
       
 f  = 2.*omega*sin(cen_lat/convert)           ; Coriolis parameter

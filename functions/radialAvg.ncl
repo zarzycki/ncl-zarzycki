@@ -474,3 +474,237 @@ rmw&lev = lev
 return(rmw)
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+undef ( "radialAvg2D_unstruc" )
+function radialAvg2D_unstruc ( \
+  data[*]          : numeric, \
+  lat[*]           : numeric, \
+  lon[*]           : numeric, \
+  deltaMax         : numeric, \
+  psminlat         : numeric, \
+  psminlon         : numeric, \
+  outerRad         : numeric, \
+  mergeInnerBins   : logical \
+)
+local None
+
+; lat (deg)
+; lon (deg)
+; center_lat(deg)
+; center_lon(deg)
+; outerRad (km)
+
+begin
+
+kmInDeg = 111.32
+kmGrid = kmInDeg * deltaMax
+print("The max lat/lon km grid spacing at equator is "+kmGrid+" km")
+
+ncol = dimsizes(lat)
+
+pi = 3.14159
+d2r = pi/180.
+r2d = 180./pi
+lonr = lon*d2r
+latr = lat*d2r
+copy_VarCoords(lon,lonr)
+copy_VarCoords(lat,latr)
+
+;;;;; DO RADIAL AVERAGES
+
+; for standard lat/lon grid
+;1.25 gives n ~= 5 in inner grid if numMerge = 2
+;1.4 gives n ~= 9 in inner grid if numMerge = 2
+timesGrid = 1.1 ; we want each radius bin to be timeGrid times kmGrid
+
+nx = toint(outerRad/(timesGrid*kmGrid))
+print("Number of bins is equal to "+nx)
+  
+if (mergeInnerBins) then
+;  origRadiusArr = fspan(0,outerRad,nx)
+;  radiusArr = new(dimsizes(origRadiusArr)-1,double)
+;  radiusArr(0) = origRadiusArr(0)
+;  radiusArr(1:dimsizes(radiusArr)-1) = origRadiusArr(2:dimsizes(origRadiusArr)-1)
+  numMerge = 2 ; numMerge is the number of innermost radial bins we want to merge
+  print("Merging innermost "+numMerge+" bins because radial average is so small.")
+  numMergeMinusOne = numMerge-1
+  origRadiusArr = fspan(0,outerRad,nx+numMergeMinusOne)
+  radiusArr = new((dimsizes(origRadiusArr)-numMergeMinusOne),double)
+  radiusArr(0) = origRadiusArr(0)
+  ;printVarSummary(radiusArr)
+  ;printVarSummary(origRadiusArr)
+  radiusArr(1:dimsizes(radiusArr)-1) = origRadiusArr(numMerge:dimsizes(origRadiusArr)-1)
+else
+  print("Not merging any innermost bins -- be careful that your inner bins have > 1 pt.")
+  radiusArr = fspan(0,outerRad,nx)
+end if
+
+numRadBins = dimsizes(radiusArr)
+
+rad_thevar_hit  = new((/numRadBins/),integer)
+rad_thevar_cum  = new((/numRadBins/),double)
+
+; NEEDS to be 1 or 0
+rad_thevar_hit!0 = "radius"
+rad_thevar_cum!0 = "radius"
+rad_thevar_hit&radius = radiusArr
+rad_thevar_cum&radius = radiusArr
+
+rad_thevar_hit = 0
+rad_thevar_cum = 0
+
+; NEED TO CORRECT NLEV
+print("Starting loop")
+do i = 0,ncol-1
+  gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(i),2,4))
+  if (gcdist .le. outerRad)
+    rad_thevar_hit({gcdist}) = rad_thevar_hit({gcdist}) + 1 
+    rad_thevar_cum({gcdist}) = rad_thevar_cum({gcdist}) + data(i)
+  end if
+end do
+
+print("Minimum number of hits per gridbox: "+min(rad_thevar_hit))
+print("Maximum number of hits per gridbox: "+max(rad_thevar_hit))
+rad_thevar = rad_thevar_cum/rad_thevar_hit
+
+copy_VarCoords(rad_thevar_hit,rad_thevar)
+
+rad_thevar@units = data@units
+rad_thevar@long_name=data@long_name
+
+return(rad_thevar)
+
+end
+
+
+
+
+undef ( "radialAvg3D_unstruc" )
+function radialAvg3D_unstruc ( \
+  data[*][*]       : numeric, \
+  lat[*]           : numeric, \
+  lon[*]           : numeric, \
+  lev[*]           : numeric, \
+  deltaMax         : numeric, \
+  psminlat         : numeric, \
+  psminlon         : numeric, \
+  outerRad         : numeric, \
+  mergeInnerBins   : logical \
+)
+local None
+
+; lat (deg)
+; lon (deg)
+; center_lat(deg)
+; center_lon(deg)
+; outerRad (km)
+
+begin
+
+kmInDeg = 111.32
+kmGrid = kmInDeg * deltaMax
+print("The max lat/lon km grid spacing at equator is "+kmGrid+" km")
+
+ncol = dimsizes(lat)
+nlev = dimsizes(lev)
+
+pi = 3.14159
+d2r = pi/180.
+r2d = 180./pi
+lonr = lon*d2r
+latr = lat*d2r
+copy_VarCoords(lon,lonr)
+copy_VarCoords(lat,latr)
+
+print("ncol "+ncol+"  nlev "+nlev)
+; for standard lat/lon grid
+;1.25 gives n ~= 5 in inner grid if numMerge = 2
+;1.4 gives n ~= 9 in inner grid if numMerge = 2
+timesGrid = 1.1 ; we want each radius bin to be timeGrid times kmGrid
+
+nx = toint(outerRad/(timesGrid*kmGrid))
+print("Number of bins is equal to "+nx)
+  
+if (mergeInnerBins) then
+;  origRadiusArr = fspan(0,outerRad,nx)
+;  radiusArr = new(dimsizes(origRadiusArr)-1,double)
+;  radiusArr(0) = origRadiusArr(0)
+;  radiusArr(1:dimsizes(radiusArr)-1) = origRadiusArr(2:dimsizes(origRadiusArr)-1)
+  numMerge = 2 ; numMerge is the number of innermost radial bins we want to merge
+  print("Merging innermost "+numMerge+" bins because radial average is so small.")
+  numMergeMinusOne = numMerge-1
+  origRadiusArr = fspan(0,outerRad,nx+numMergeMinusOne)
+  radiusArr = new((dimsizes(origRadiusArr)-numMergeMinusOne),double)
+  radiusArr(0) = origRadiusArr(0)
+  ;printVarSummary(radiusArr)
+  ;printVarSummary(origRadiusArr)
+  radiusArr(1:dimsizes(radiusArr)-1) = origRadiusArr(numMerge:dimsizes(origRadiusArr)-1)
+else
+  print("Not merging any innermost bins -- be careful that your inner bins have > 1 pt.")
+  radiusArr = fspan(0,outerRad,nx)
+end if
+
+numRadBins = dimsizes(radiusArr)
+
+rad_thevar_hit  = new((/nlev,numRadBins/),integer)
+rad_thevar_cum  = new((/nlev,numRadBins/),double)
+
+; NEEDS to be 1 or 0
+rad_thevar_hit!1 = "radius"
+rad_thevar_cum!1 = "radius"
+rad_thevar_hit&radius = radiusArr
+rad_thevar_cum&radius = radiusArr
+
+rad_thevar_hit!0 = "lev"
+rad_thevar_cum!0 = "lev"
+rad_thevar_hit&lev = lev
+rad_thevar_cum&lev = lev
+
+rad_thevar_hit = 0
+rad_thevar_cum = 0
+
+; NEED TO CORRECT NLEV
+print("Starting loop")
+do i = 0,ncol-1
+  gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(i),2,4))
+  if (gcdist .le. outerRad)
+    ;do k = 0,dimsizes(lev)-1
+    ;  rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1 
+    ;  rad_thevar_cum(k,{gcdist}) = rad_thevar_cum(k,{gcdist}) + data(k,i,j)
+    ;end do
+    ;if (.not. any(ismissing(data(:,i,j)))) then
+      rad_thevar_hit(:,{gcdist}) = rad_thevar_hit(:,{gcdist}) + 1 
+      rad_thevar_cum(:,{gcdist}) = rad_thevar_cum(:,{gcdist}) + data(:,i)
+    ;end if
+  end if
+end do
+
+; check for points where there were no hits
+rad_thevar_hit = where(rad_thevar_hit.eq.0,rad_thevar_hit@_FillValue,rad_thevar_hit)
+
+print("Minimum number of hits per gridbox: "+min(rad_thevar_hit))
+print("Maximum number of hits per gridbox: "+max(rad_thevar_hit))
+rad_thevar = rad_thevar_cum/rad_thevar_hit
+
+copy_VarCoords(rad_thevar_hit,rad_thevar)
+
+rad_thevar@units = data@units
+rad_thevar@long_name=data@long_name
+
+;rad_thevar_hit&radius=rad_thevar_hit&radius*1000.
+return(rad_thevar)
+
+end
