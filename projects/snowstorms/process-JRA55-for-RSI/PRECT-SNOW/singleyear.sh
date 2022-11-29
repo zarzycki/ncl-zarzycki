@@ -9,13 +9,14 @@ echo $YYYY
 
 #if [ ! -f ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc ]; then
 
-  echo ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc" does not exist"
+  #echo ${OUTBASE}/${YYYY}/JRA.h1.${YYYY}.PRECT.nc" does not exist"
 
   ### Symlink JRA files
   mkdir -p ${SYMDIR}/${YYYY}
 
+  declare -a prect_arr=("ugrd" "vgrd" "spfh" "rh")
   #declare -a prect_arr=("dswrf")
-  declare -a prect_arr=("dlwrf" "ulwrf" "dswrf" "uswrf" "lhtfl", "shtfl")
+  #declare -a prect_arr=("dlwrf" "ulwrf" "dswrf" "uswrf" "lhtfl", "shtfl")
   #declare -a prect_arr=("rof" "srweq" "tprat" "snwe" "tmp" "pwat")
   for i in "${prect_arr[@]}"
   do
@@ -23,7 +24,7 @@ echo $YYYY
       FILES=${JRABASEDIR}/anl_land/${YYYY}/*_${i}.reg_tl319.*
     elif [ "${i}" == "rof" ]; then
       FILES=${JRABASEDIR}/fcst_phyland/${YYYY}/*_${i}.reg_tl319.*
-    elif [ "${i}" == "tmp" ]; then
+    elif [ "${i}" == "tmp" ] || [ "${i}" == "ugrd" ] || [ "${i}" == "vgrd" ] || [ "${i}" == "rh" ] || [ "${i}" == "spfh" ] ; then
       FILES=${JRABASEDIR}/anl_surf/${YYYY}/*_${i}.reg_tl319.*
     elif [ "${i}" == "pwat" ]; then
       FILES=${JRABASEDIR}/anl_column/${YYYY}/*_${i}.reg_tl319.*

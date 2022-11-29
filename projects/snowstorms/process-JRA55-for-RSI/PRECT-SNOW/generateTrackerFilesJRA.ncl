@@ -27,7 +27,7 @@ else if (VAR .eq. "snwe")
   FILES = systemfunc ("ls "+SYMDIR+"/anl_land.*"+VAR+".reg_tl319*.grb2")
 else if (VAR .eq. "rof")
   FILES = systemfunc ("ls "+SYMDIR+"/fcst_phyland.*"+VAR+".reg_tl319*.grb2")
-else if (VAR .eq. "tmp")
+else if (VAR .eq. "tmp" .or. VAR .eq. "ugrd" .or. VAR .eq. "vgrd" .or. VAR .eq. "rh" .or. VAR .eq. "spfh")
   FILES = systemfunc ("ls "+SYMDIR+"/anl_surf.*"+VAR+".reg_tl319*.grb2")
 else if (VAR .eq. "pwat")
   FILES = systemfunc ("ls "+SYMDIR+"/anl_column.*"+VAR+".reg_tl319*.grb2")
@@ -86,9 +86,25 @@ else if (VAR .eq. "tmp") then
 else if (VAR .eq. "pwat") then
   PRECVAR="PWAT_GDS4_EATM"
   OUTVAR="TPW"
+else if (VAR .eq. "ugrd") then
+  PRECVAR="UGRD_GDS4_HTGL"
+  OUTVAR="U10"
+else if (VAR .eq. "vgrd") then
+  PRECVAR="VGRD_GDS4_HTGL"
+  OUTVAR="V10"
+else if (VAR .eq. "rh") then
+  PRECVAR="RH_GDS4_HTGL"
+  OUTVAR="RHREFHT"
+else if (VAR .eq. "spfh") then
+  PRECVAR="SPFH_GDS4_HTGL"
+  OUTVAR="QREFHT"
 else
   print("incorrect VAR... exiting...")
   exit
+end if
+end if
+end if
+end if
 end if
 end if
 end if
