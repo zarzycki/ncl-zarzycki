@@ -1,12 +1,11 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=CFSR_mpi
-#SBATCH --account=P05010048
-#SBATCH --ntasks=4
-#SBATCH --ntasks-per-node=4
-#SBATCH --time=18:00:00
-#SBATCH --partition=dav
-#SBATCH --output=CFSR_mpi.out.%j
+#PBS -N CFSR_mpi
+#PBS -A UPSU0032
+#PBS -l select=1:ncpus=4:mpiprocs=4:mem=80GB
+#PBS -l walltime=24:00:00
+#PBS -q casper
+#PBS -j oe
 
 module load parallel
 module load ncl
@@ -17,7 +16,7 @@ NUMCORES=4
 TIMESTAMP=`date +%s%N`
 COMMANDFILE=commands.${TIMESTAMP}.txt
 
-for DATA_YEAR in {2011..2019}
+for DATA_YEAR in {2020..2021}
 do
   LINECOMMAND="/bin/bash ./driver-CFS.sh ${DATA_YEAR}"
   echo ${LINECOMMAND} >> ${COMMANDFILE}
