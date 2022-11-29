@@ -146,7 +146,8 @@ lat&lat=lat
 lon&lon=lon
 
 Opt         = True
-wgt_file="/glade/u/home/zarzycki/scratch/map_nativeNARR_to_0.25x0.25reg_patch.nc"
+wgt_file="/glade/u/home/zarzycki/ncl/projects/reanalysis_process/NARR/map_NARR_to_0.25x0.25reg_patch.nc"
+;wgt_file="/glade/u/home/zarzycki/scratch/map_nativeNARR_to_0.25x0.25reg_patch.nc"
 v850  = ESMF_regrid_with_weights(V850_,wgt_file,Opt)
 u850  = ESMF_regrid_with_weights(U850_,wgt_file,Opt)
 z300  = ESMF_regrid_with_weights(Z300_,wgt_file,Opt)
