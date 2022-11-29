@@ -1,20 +1,27 @@
 #!/bin/bash
 
+WORKDIR=/glade/scratch/zarzycki/ERA5/
+H1DIR=~/scratch/h1files/ERA5v3/
+
 TMPFILE=_tmp.nc
 ## declare an array variable
-declare -a years=`seq 2002 2002`
-declare -a vars=("U850" "V850" "UBOT" "VBOT" "Z300" "Z500" "PSL" "T400")
+declare -a years=`seq 2016 2020`
+#declare -a vars=("U850" "V850" "UBOT" "VBOT" "Z300" "Z500" "PSL" "T400")
+declare -a vars=("UBOT" "VBOT" "Z300" "Z500" "PSL" "Z")
 declare -a months=("01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12")
 
 ## now loop through the above array
 for ii in ${years}
 do
+
+  cd $WORKDIR
+
   for jj in "${months[@]}"
   do
     for zz in "${vars[@]}"
     do
-      ncrcat ERA5.${zz}.${ii}${jj}*.nc CAT.ERA5.${zz}.${ii}${jj}.nc
-      ncatted -O -a time,,d,, CAT.ERA5.${zz}.${ii}${jj}.nc 
+      ncrcat -O ERA5.${zz}.${ii}${jj}*.nc CAT.ERA5.${zz}.${ii}${jj}.nc
+      ncatted -O -a time,,d,, CAT.ERA5.${zz}.${ii}${jj}.nc
       ncks -A CAT.ERA5.${zz}.${ii}${jj}.nc ${TMPFILE}
       ncatted -O -a history,global,d,, -a history_of_appended_files,global,d,, ${TMPFILE} ${TMPFILE}
     done
@@ -52,7 +59,18 @@ do
     ENIX=$((ENIX+4))
   done < ${arrayFileName}
 
-  mkdir -p ~/scratch/h1files/ERA5/$YYYY/
-  mv ERA5.h1.${YYYY}*nc ~/scratch/h1files/ERA5/$YYYY/
+  mkdir -p $H1DIR/$YYYY/
 
+  mv ERA5.h1.${YYYY}*nc $H1DIR/$YYYY/
+
+  # Compression
+  cd $H1DIR/$YYYY/
+  for f in ERA5.h1.${YYYY}*nc
+  do
+    echo "Compressing $f"
+    ncks -4 -L 1 -O $f $f
+  done
+
+  # Return to base working directory
+  cd $WORKDIR
 done

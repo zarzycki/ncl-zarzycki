@@ -13,7 +13,8 @@ outdir="/glade/scratch/zarzycki/ERA5/"
 ;VARIN="Z"
 ;VAROUT="Z"
 
-levels=tofloat((/300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000/))
+;levels=tofloat((/300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000/))
+levels=tofloat((/300,600,900/))
 
 f=addfile(filename,"r")
 
@@ -81,8 +82,8 @@ fAtt@source_file   =  "original-file.nc"
 fAtt@Conventions   = "None"
 fAtt@creation_date = systemfunc ("date")
 fileattdef( ncdf, fAtt )            ; copy file attributes
-filedimdef(ncdf,"time",-1,True) 
+filedimdef(ncdf,"time",-1,True)
 
-ncdf->$VAROUT$  = accumvar           
+ncdf->$VAROUT$  = accumvar
 
 end

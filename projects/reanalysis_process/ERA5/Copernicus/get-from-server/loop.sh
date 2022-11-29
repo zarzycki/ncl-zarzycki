@@ -7,8 +7,8 @@ declare -a vars=("surface_pressure")
 #declare -a vars=("10m_u_component_of_wind")
 #declare -a vars=("10m_v_component_of_wind")
 
-STYR=2010
-ENYR=2016
+STYR=1950
+ENYR=1950
 
 ## now loop through the above array
 for ii in "${vars[@]}"
