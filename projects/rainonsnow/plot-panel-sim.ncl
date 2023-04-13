@@ -1,6 +1,6 @@
 begin
 
-diri = "/global/homes/c/czarzyck/scratch/e3sm_scratch/cori-knl/F-ne120np4-E3SM/run/1996011700/"
+diri = "/global/homes/c/czarzyck/scratch/e3sm_scratch/cori-knl/F-ne120np4-E3SM-F2010C5/run/1996011600/"
 clmfili = systemfunc("ls "+diri+"/*.clm2.h0.*nc")
 camfili = systemfunc("ls "+diri+"/*.cam.h0.*nc")
 camfili := camfili(::2)
@@ -17,21 +17,23 @@ lat1d  = CAMFILES[0]->lat
 lon1d  = CAMFILES[0]->lon
 
 ;wgt_file="/global/homes/c/czarzyck/scratch/maps/forecast/map_ne120np4_to_1x1_bilinear.nc"
-wgt_file="/global/homes/c/czarzyck/scratch/maps/forecast/ne120_to_0.25x0.25_patch.nc"
+wgt_file="/global/homes/c/czarzyck/scratch/maps/forecast/map_ne120_to_0.25x0.25_patch.nc"
 
-wks = gsn_open_wks("pdf","panel")              ; open a png file
 
-do ii = 0,dimsizes(time)-1
 
-  thistime = CAMFILES[ii]->time(0)
+do ii = 0,dimsizes(time)-1,2
 
-  prect := CAMFILES[ii]->PRECT
+  wks = gsn_open_wks("pdf","panel"+time(ii))              ; open a png file
+
+  thistime = CAMFILES[:]->time(ii)
+
+  prect := CAMFILES[:]->PRECT(ii,:)
   prect = prect*86400000.
   prect@long_name="Total precipitation"
   prect@units="mm/day"
-  tbot := CAMFILES[ii]->TBOT
-  h2osno := CLMFILES[ii]->H2OSNO
-  qrunoff  := CLMFILES[ii]->QOVER
+  tbot := CAMFILES[:]->TBOT(ii,:)
+  h2osno := CLMFILES[:]->H2OSNO(ii,:)
+  qrunoff  := CLMFILES[:]->QOVER(ii,:)
   qrunoff=qrunoff*86400.
   qrunoff@units="mm/day"
   print(max(qrunoff))
@@ -39,10 +41,10 @@ do ii = 0,dimsizes(time)-1
   printVarSummary(qrunoff)
 
   Opt         = True
-  prect := ESMF_regrid_with_weights(prect(0,:),wgt_file,Opt)
-  tbot := ESMF_regrid_with_weights(tbot(0,:),wgt_file,Opt)
-  h2osno := ESMF_regrid_with_weights(h2osno(0,:),wgt_file,Opt)
-  qrunoff := ESMF_regrid_with_weights(qrunoff(0,:),wgt_file,Opt)
+  prect := ESMF_regrid_with_weights(prect(:),wgt_file,Opt)
+  tbot := ESMF_regrid_with_weights(tbot(:),wgt_file,Opt)
+  h2osno := ESMF_regrid_with_weights(h2osno(:),wgt_file,Opt)
+  qrunoff := ESMF_regrid_with_weights(qrunoff(:),wgt_file,Opt)
 
 
 
@@ -96,6 +98,7 @@ res@cnMinLevelValF        = 5.
 res@cnMaxLevelValF        = 65.
 res@cnLevelSpacingF       = (res@cnMaxLevelValF - res@cnMinLevelValF) / 12.
 res@cnFillPalette="WhViBlGrYeOrRe"
+res@gsnCenterString=cd_calendar(thistime, -3)  
 
 plot(3) = gsn_csm_contour_map(wks,qrunoff,res)
 
@@ -103,8 +106,10 @@ plot(3) = gsn_csm_contour_map(wks,qrunoff,res)
 ; create panel
 ;************************************************
   resP                    = True                 ; modify the panel plot
-  resP@gsnPanelMainString = cd_calendar(thistime, -3)  
-  gsn_panel(wks,plot,(/2,2/),resP)             ; now draw as one plot
+  ;resP@gsnPanelMainString = cd_calendar(thistime, -3)  
+  gsn_panel(wks,plot,(/1,4/),resP)             ; now draw as one plot
+
+frame(wks)
 
 end do
 
