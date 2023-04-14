@@ -4,7 +4,10 @@ begin
 ; 1030  for f in $FILES; do echo $f; done
 ;find /global/cfs/cdirs/m2702/gsharing/tgw-wrf-conus/historical_1980_2019/three_hourly/ -name "*nc"
 
+;ncl create-freezing-2.ncl 'f="/global/cfs/cdirs/m2702/gsharing/tgw-wrf-conus/historical_1980_2019/three_hourly/tgw_wrf_historical_three_hourly_2019-08-27_00_00_00.nc"'
+
 ;f="/global/cfs/cdirs/m2702/gsharing/tgw-wrf-conus/historical_1980_2019/three_hourly/tgw_wrf_historical_three_hourly_1986-08-20_00_00_00.nc"
+
 basename=systemfunc("basename "+f)
 substrings = str_split(basename,"_")
 thisdate=substrings(5)
@@ -77,16 +80,10 @@ else
   end do
 end if
 
-;ix1=20
-;ix2=15
-;print(pmid(:,ix1,ix2)+"")
-;print("--")
-;print(pint(:,ix1,ix2)+"")
-;printVarSummary(pint)
-
 print("*** writing file")
 
-setfileoption("nc","Format","LargeFile")
+setfileoption("nc","Format","NetCDF4")
+setfileoption("nc","CompressionLevel",1)
 
 outdir="/global/cscratch1/sd/czarzyck/"
 system("mkdir -v -p "+outdir)
@@ -95,62 +92,94 @@ print("Writing file: "+fileoutput)
 system("/bin/rm -v -f "+fileoutput)   ; remove any pre-existing file
 ncdf = addfile(fileoutput ,"c")  ; open output netCDF file
 
+ntim  = dimsizes(xtime)
+klev  = 32
+kilev = 33
+nlat  = 299
+nlon  = 424
+nstr  = 19
+
+setfileoption(ncdf,"DefineMode",True)
+
+;===================================================================
+; create global attributes of the file
+;===================================================================
 fAtt               = True            ; assign file attributes
 fAtt@source_file   = basename
 fAtt@Conventions   = "None"
 fAtt@creation_date = systemfunc ("date")
 fileattdef( ncdf, fAtt )            ; copy file attributes
 
-filedimdef(ncdf,"Time",-1,True)
+;===================================================================
+; predefine the coordinate variables and their dimensionality
+; Note: to get an UNLIMITED record dimension, we set the dimensionality
+; to -1 (or the actual size) and set the dimension name to True.
+;===================================================================
+dimNames = (/"Time", "bottom_top_stag", "south_north", "west_east", "bottom_top", "DateStrLen"/)
+dimSizes = (/ -1   ,  kilev, nlat, nlon, klev, nstr /)
+dimUnlim = (/ True , False, False, False, False, False/)
+filedimdef(ncdf,dimNames,dimSizes,dimUnlim)
 
-; write state arrays
-print("...ZINT")
-ncdf->ZINT  = zint
-print("...PMID")
-ncdf->PMID  = pmid
-;print("...THETA")
-;ncdf->THETA  = theta
-print("...QVAPOR")
-ncdf->QVAPOR = qvapor
-print("...TEMP")
-ncdf->TEMP = temp
-print("...PSFC")
-ncdf->PSFC = psfc
-print("...PINT")
-ncdf->PINT = pint
-print("...ZMID")
-ncdf->ZMID = zmid
+;===================================================================
+; predefine the the dimensionality of the variables to be written out
+;===================================================================
+filevardef(ncdf, "Times"  ,typeof(times),getvardims(times))
+filevardef(ncdf, "XLAT"   ,typeof(xlat),getvardims(xlat) )
+filevardef(ncdf, "XLONG"  ,typeof(xlong),getvardims(xlong))
+filevardef(ncdf, "XTIME"  ,typeof(xtime),getvardims(xtime))
+filevardef(ncdf, "PSFC"   ,typeof(psfc),getvardims(psfc))
+filevardef(ncdf, "PMID"   ,typeof(pmid),getvardims(pmid))
+filevardef(ncdf, "PINT"   ,typeof(pint),getvardims(pint))
+filevardef(ncdf, "ZMID"   ,typeof(pmid),getvardims(zmid))
+filevardef(ncdf, "ZINT"   ,typeof(pint),getvardims(zint))
+filevardef(ncdf, "TEMP"   ,typeof(temp),getvardims(temp))
+filevardef(ncdf, "QVAPOR" ,typeof(qvapor),getvardims(qvapor))
 
-; write coordinate arrays
-print("...XLAT")
-ncdf->XLAT = xlat
-print("...XLONG")
-ncdf->XLONG = xlong
-print("...Times")
-ncdf->Times = times
+;===================================================================
+; Copy attributes associated with each variable to the file
+; All attributes associated with each variable will be copied.
+;====================================================================
+;filevarattdef(ncdf,"Times" ,times)
+filevarattdef(ncdf,"XLAT"  ,xlat)
+filevarattdef(ncdf,"XLONG"  ,xlong)
+filevarattdef(ncdf,"XTIME"  ,xtime)
+filevarattdef(ncdf,"PSFC",psfc)
+filevarattdef(ncdf,"PMID",pmid)
+filevarattdef(ncdf,"PINT",pint)
+filevarattdef(ncdf,"ZMID",pmid)
+filevarattdef(ncdf,"ZINT",pint)
+filevarattdef(ncdf,"TEMP",temp)
+filevarattdef(ncdf,"QVAPOR",qvapor)
 
-;https://mailman.ucar.edu/pipermail/wrf-users/2017/004602.html
-;z = (PH+PHB)/g  where g is 9.81 m/s2
+;===================================================================
+; explicitly exit file definition mode. **NOT REQUIRED**
+;===================================================================
+setfileoption(ncdf,"DefineMode",False)
 
-;https://wiki.openwfm.org/wiki/How_to_interpret_WRF_variables
+;===================================================================
+; output only the data values since the dimensionality and such have
+; been predefined. The "(/", "/)" syntax tells NCL to only output the
+; data values to the predefined locations on the file.
+;====================================================================
+ncdf->Times  = (/times/)
+ncdf->XLAT   = (/xlat/)
+ncdf->XLONG  = (/xlong/)
+ncdf->XTIME  = (/xtime/)
+ncdf->PSFC   = (/psfc/)
+ncdf->PMID   = (/pmid/)
+ncdf->PINT   = (/pint/)
+ncdf->ZMID   = (/zmid/)
+ncdf->ZINT   = (/zint/)
+ncdf->TEMP   = (/temp/)
+ncdf->QVAPOR = (/qvapor/)
 
-; WRF user guide
-;total geopotential PH + PHB
-;total geopotential height in m ( PH + PHB ) / 9.81
-;total potential temperature in K T + 300
-;total pressure in mb ( P + PB ) * 0.01
+print("done writing...")
 
-; https://mailman.ucar.edu/pipermail/wrf-users/2010/001896.html
-; pot. temp. = "normal" temp. * (p_0/p)^kappa
-;
-; From this: "normal" temp. = pot. temp. * (p/p_0)^kappa
-;
-; p_0 = 1000 mbar
-; p is the pressure in mbar
-;
-; kappa is the Poisson constant (kappa = R/c_p), the ratio of the gas
-; constant R to the specific heat at constant pressure c_p. For dry air
-; kappa = 0.2854.
-
+; compress?
+;print("... compressing")
+;systemcall="ncks -4 -L 1 -O "+fileoutput+" "+fileoutput
+;print(" "+systemcall)
+;system(systemcall)
+;print("... success!")
 
 end
