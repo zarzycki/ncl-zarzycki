@@ -1,8 +1,10 @@
 begin
 
+; 1029  FILES=`find /global/cfs/cdirs/m2702/gsharing/tgw-wrf-conus/historical_1980_2019/three_hourly/ -name "*nc" | sort -n`
+; 1030  for f in $FILES; do echo $f; done
 ;find /global/cfs/cdirs/m2702/gsharing/tgw-wrf-conus/historical_1980_2019/three_hourly/ -name "*nc"
 
-f="/global/cfs/cdirs/m2702/gsharing/tgw-wrf-conus/historical_1980_2019/three_hourly/tgw_wrf_historical_three_hourly_1986-08-20_00_00_00.nc"
+;f="/global/cfs/cdirs/m2702/gsharing/tgw-wrf-conus/historical_1980_2019/three_hourly/tgw_wrf_historical_three_hourly_1986-08-20_00_00_00.nc"
 basename=systemfunc("basename "+f)
 substrings = str_split(basename,"_")
 thisdate=substrings(5)
@@ -86,7 +88,7 @@ print("*** writing file")
 
 setfileoption("nc","Format","LargeFile")
 
-outdir="~/scratch/"
+outdir="/global/cscratch1/sd/czarzyck/"
 system("mkdir -v -p "+outdir)
 fileoutput=outdir+"/tgw_"+thisdate+"_00_00_00.nc"
 print("Writing file: "+fileoutput)
