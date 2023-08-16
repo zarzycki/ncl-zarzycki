@@ -1,3 +1,4 @@
+cmip-convert.o*
 *.tmp
 bin/
 sub_genfsurdat.o*
