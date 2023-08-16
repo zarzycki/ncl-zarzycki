@@ -1,6 +1,6 @@
 begin
 
-;filename="/glade/scratch/abolivar/tc_risk/input/HadGEM3-HM/r1i1p1f1/va_day_HadGEM3-GC31-HM_highresSST-present_r1i1p1f1_gn_20120701-20121230.nc"
+;filename="/glade/scratch/abolivar/tc_risk/input/HadGEM3-HM/r1i3p1f1/psl_Amon_HadGEM3-GC31-HM_highresSST-present_r1i3p1f1_gn_197901-197912.nc"
 ;va_day_HadGEM3-GC31-HM_highresSST-present_r1i1p1f1_gn_20120101-20120630.nc
 ;va_day_HadGEM3-GC31-HM_highresSST-present_r1i1p1f1_gn_20120701-20121230.nc
 ;hus_Amon_HadGEM3-GC31-HM_highresSST-present_r1i1p1f1_gn_197901-197912.nc
@@ -21,6 +21,10 @@ old_ntimes = dimsizes(oldtime)
 
 ; load old var into memory
 oldvar = f->$var$
+
+
+
+
 
 ; check to see time frequency
 testtime = cd_convert(oldtime(0:1),"days since 0001-01-01 00:00")
@@ -88,6 +92,7 @@ print(new_ntimes+" "+old_ntimes)
 
 ; what were the original dimensions?
 orig_dims = dimsizes(oldvar)
+numvardims = dimsizes(orig_dims)
 
 ; assume time = firstdim, what is our new size?
 new_dims = orig_dims
@@ -108,11 +113,17 @@ halftime = cd_inv_calendar(yyyy,new_mm,new_dd,zeros,zeros,zeros,oldtime@units,op
 if (pad_start) then
   if (datafreq .eq. "daily")
     print("padding beginning")
-    newvar(2:2+old_ntimes-1,:,:,:) = oldvar(0:old_ntimes-1,:,:,:)
-    newtime(2:2+old_ntimes-1) = halftime(0:old_ntimes-1)
+    if (numvardims .eq. 4) then
+      newvar(2:2+old_ntimes-1,:,:,:) = oldvar(0:old_ntimes-1,:,:,:)
+      newvar(1,:,:,:) = oldvar(0,:,:,:)
+      newvar(0,:,:,:) = oldvar(0,:,:,:)
+    else
+      newvar(2:2+old_ntimes-1,:,:) = oldvar(0:old_ntimes-1,:,:)
+      newvar(1,:,:) = oldvar(0,:,:)
+      newvar(0,:,:) = oldvar(0,:,:)
+    end if
     ; walk backwards
-    newvar(1,:,:,:) = oldvar(0,:,:,:)
-    newvar(0,:,:,:) = oldvar(0,:,:,:)
+    newtime(2:2+old_ntimes-1) = halftime(0:old_ntimes-1)
     newtime(1) = min(newtime) - 1.
     newtime(0) = min(newtime) - 1.
   end if
@@ -121,12 +132,19 @@ if (pad_end) then
   if (datafreq .eq. "daily")
     print("padding end")
     ; plop the "valid" values in the new array up until the padding location
-    newvar(0:new_ntimes-1-3,:,:,:) = oldvar(0:old_ntimes-1,:,:,:)
+    if (numvardims .eq. 4) then
+      newvar(0:new_ntimes-1-3,:,:,:) = oldvar(0:old_ntimes-1,:,:,:)
+      newvar(new_ntimes-3,:,:,:) = oldvar(old_ntimes-1,:,:,:)
+      newvar(new_ntimes-2,:,:,:) = oldvar(old_ntimes-1,:,:,:)
+      newvar(new_ntimes-1,:,:,:) = oldvar(old_ntimes-1,:,:,:)
+    else
+      newvar(0:new_ntimes-1-3,:,:) = oldvar(0:old_ntimes-1,:,:)
+      newvar(new_ntimes-3,:,:) = oldvar(old_ntimes-1,:,:)
+      newvar(new_ntimes-2,:,:) = oldvar(old_ntimes-1,:,:)
+      newvar(new_ntimes-1,:,:) = oldvar(old_ntimes-1,:,:)
+    end if
     newtime(0:new_ntimes-1-3) = halftime(0:old_ntimes-1)
     ; walk forwards
-    newvar(new_ntimes-3,:,:,:) = oldvar(old_ntimes-1,:,:,:)
-    newvar(new_ntimes-2,:,:,:) = oldvar(old_ntimes-1,:,:,:)
-    newvar(new_ntimes-1,:,:,:) = oldvar(old_ntimes-1,:,:,:)
     newtime(new_ntimes-3) = max(newtime) + 1.
     newtime(new_ntimes-2) = max(newtime) + 1.
     newtime(new_ntimes-1) = max(newtime) + 1.
@@ -135,7 +153,7 @@ end if
 
 ; if we pad nothing, we just adopt the shifted doy
 if (.not. pad_end .and. .not. pad_start) then
-  newvar(:,:,:,:) = oldvar(:,:,:,:)
+  newvar = oldvar
   newtime = halftime
 end if
 
@@ -143,11 +161,16 @@ end if
 newtime@calendar="365_day"
 newtime@units=oldtime@units
 newvar!0="time"
-newvar!1="plev"
-newvar!2="lat"
-newvar!3="lon"
+if (numvardims .eq. 4) then
+  newvar!2="lat"
+  newvar!3="lon"
+  newvar!1="plev"
+  newvar&plev=oldvar&plev
+else
+  newvar!1="lat"
+  newvar!2="lon"
+end if
 newvar&time=newtime
-newvar&plev=oldvar&plev
 newvar&lat=oldvar&lat
 newvar&lon=oldvar&lon
 
