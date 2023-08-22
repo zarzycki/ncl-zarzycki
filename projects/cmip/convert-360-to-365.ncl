@@ -1,6 +1,6 @@
 begin
 
-;filename="/glade/scratch/abolivar/tc_risk/input/HadGEM3-HM/r1i3p1f1/psl_Amon_HadGEM3-GC31-HM_highresSST-present_r1i3p1f1_gn_197901-197912.nc"
+;filename="/glade/scratch/abolivar/tc_risk/input/HadGEM3-LM/r1i3p1f1/ua_day_HadGEM3-GC31-LM_highresSST-present_r1i3p1f1_gn_19790101-19791230.nc"
 ;va_day_HadGEM3-GC31-HM_highresSST-present_r1i1p1f1_gn_20120101-20120630.nc
 ;va_day_HadGEM3-GC31-HM_highresSST-present_r1i1p1f1_gn_20120701-20121230.nc
 ;hus_Amon_HadGEM3-GC31-HM_highresSST-present_r1i1p1f1_gn_197901-197912.nc
@@ -109,21 +109,39 @@ zeros = new_dd
 zeros = 0
 halftime = cd_inv_calendar(yyyy,new_mm,new_dd,zeros,zeros,zeros,oldtime@units,opt)
 
+print("newvar "+dimsizes(newvar))
+print("oldvar "+dimsizes(oldvar))
+print("new_ntimes "+new_ntimes+"    old_ntimes "+old_ntimes)
+
+; define a front padded counter. If the data has pad_start *and* pad_end it means we have
+; a full year of 360 day data and need to account for the fact that the time coordinate
+; needs to be shifted +2 days when padding at the end. If pad_start is not tripped, then
+; the end pad assumes we are starting mid-year (e.g., July 1) and there is no need to
+; offset the day since nothing was padded in that file.
+frontpadded=0
+
 ; if pad start, add at beginning
 if (pad_start) then
   if (datafreq .eq. "daily")
     print("padding beginning")
+    stnewix=2
+    ennewix=2+old_ntimes-1
+    stoldix=0
+    enoldix=old_ntimes-1
+    print("stnewix "+stnewix+"   ennewix "+ennewix)
+    print("stoldix "+stoldix+"   enoldix "+enoldix)
+    frontpadded=stnewix  ; update front padded to make sure we shift if end padding, too
     if (numvardims .eq. 4) then
-      newvar(2:2+old_ntimes-1,:,:,:) = oldvar(0:old_ntimes-1,:,:,:)
+      newvar(stnewix:ennewix,:,:,:) = oldvar(stoldix:enoldix,:,:,:)
       newvar(1,:,:,:) = oldvar(0,:,:,:)
       newvar(0,:,:,:) = oldvar(0,:,:,:)
     else
-      newvar(2:2+old_ntimes-1,:,:) = oldvar(0:old_ntimes-1,:,:)
+      newvar(stnewix:ennewix,:,:) = oldvar(stoldix:enoldix,:,:)
       newvar(1,:,:) = oldvar(0,:,:)
       newvar(0,:,:) = oldvar(0,:,:)
     end if
     ; walk backwards
-    newtime(2:2+old_ntimes-1) = halftime(0:old_ntimes-1)
+    newtime(stnewix:ennewix) = halftime(stoldix:enoldix)
     newtime(1) = min(newtime) - 1.
     newtime(0) = min(newtime) - 1.
   end if
@@ -131,19 +149,25 @@ end if
 if (pad_end) then
   if (datafreq .eq. "daily")
     print("padding end")
+    stnewix=0+frontpadded
+    ennewix=new_ntimes-1-3
+    stoldix=0
+    enoldix=old_ntimes-1
+    print("stnewix "+stnewix+"   ennewix "+ennewix)
+    print("stoldix "+stoldix+"   enoldix "+enoldix)
     ; plop the "valid" values in the new array up until the padding location
     if (numvardims .eq. 4) then
-      newvar(0:new_ntimes-1-3,:,:,:) = oldvar(0:old_ntimes-1,:,:,:)
+      newvar(stnewix:ennewix,:,:,:) = oldvar(stoldix:enoldix,:,:,:)
       newvar(new_ntimes-3,:,:,:) = oldvar(old_ntimes-1,:,:,:)
       newvar(new_ntimes-2,:,:,:) = oldvar(old_ntimes-1,:,:,:)
       newvar(new_ntimes-1,:,:,:) = oldvar(old_ntimes-1,:,:,:)
     else
-      newvar(0:new_ntimes-1-3,:,:) = oldvar(0:old_ntimes-1,:,:)
+      newvar(stnewix:ennewix,:,:) = oldvar(stoldix:enoldix,:,:)
       newvar(new_ntimes-3,:,:) = oldvar(old_ntimes-1,:,:)
       newvar(new_ntimes-2,:,:) = oldvar(old_ntimes-1,:,:)
       newvar(new_ntimes-1,:,:) = oldvar(old_ntimes-1,:,:)
     end if
-    newtime(0:new_ntimes-1-3) = halftime(0:old_ntimes-1)
+    newtime(stnewix:ennewix) = halftime(stoldix:enoldix)
     ; walk forwards
     newtime(new_ntimes-3) = max(newtime) + 1.
     newtime(new_ntimes-2) = max(newtime) + 1.
