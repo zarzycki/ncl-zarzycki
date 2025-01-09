@@ -1,8 +1,8 @@
 begin
 
 ENS="001"
-res="ne15x8"
-numlevels=56
+res="ne15x16"
+numlevels=58
 
 ; perturbation values
 rseed1 = toint(systemfunc(" date +%s"))
@@ -100,58 +100,58 @@ do ii=0,ncol-1
       print( ((tofloat(ii) / tofloat(ncol-1) )*100.)+" % done")
     end if
     do k = 0,nlev-1
- 
+
       lat=selat(ii)
       lon=selon(ii)
 
-      
+
       f  = 2.*omega*sin(cen_lat/convert)           ; Coriolis parameter
       gr = a*acos(sin(cen_lat/convert)*sin(lat/convert) + \  ; Great circle radius
            (cos(cen_lat/convert)*cos(lat/convert)*cos(lon/convert-cen_lon/convert)))
-    
+
       ; calculate pressures
-      ps = p00-dp*exp(-1*(gr/rp)^exppr) 
+      ps = p00-dp*exp(-1*(gr/rp)^exppr)
             ;print(lat+" "+lon+" "+ps)
       p = hya(k)*P0 + hyb(k)*ps
-      
+
       height = (T0/gamma_)*(1.-(p/ps)^exponent)
       ;print(height+"")
-      
+
       if (gr .lt. rfpi ) then
         ;print("We need to correct")
           zhere = height
           zherebefore = height
-          
+
           do n = 1,500
-          
+
             fpidFdz =-exppz*zhere*dp*exp(-1*(gr/rp)^exppr)*exp(-1*(zhere/zp)^exppz)/(zp*zp)*((T0-gamma_*zhere)/T0)^(g/(Rd*gamma_)) \
             +g/(Rd*T0)*(p00-dp*exp(-1*(gr/rp)^exppr)*exp(-1*(zhere/zp)^exppz))*((T0-gamma_*zhere)/T0)^(g/(Rd*gamma_)-1.)
-            
+
             fpiF = p-(p00-dp*exp(-1*(gr/rp)^exppr)*exp(-1*(zhere/zp)^exppz)) \
                *((T0-gamma_*zhere)/T0)^(g/(Rd*gamma_))
-               
+
             zn = zhere - fpiF/fpidFdz
-            
+
             if ( abs(zn-zhere)/abs(zn) .lt. deltaz) then
                 ;print("We are done with "+n+" iterations")
                 break
             end if
-            
+
             zhere = zn
-            
+
             if (n .eq. 500) then
               print("FPI did not converge after 500 interations in q & T!!!")
               exit
             end if
           end do
-          
+
           height = zn
 
           ;print("Corrected: "+zherebefore+" to: "+height+"   at "+lat+" "+lon)
-          
+
       end if
 
-      
+
       ;-----------------------------------------------------------------------
       ;    initialize U and V (wind components)
       ;-----------------------------------------------------------------------
@@ -193,53 +193,53 @@ do ii=0,ncol-1
       ;  print(lat+"   "+lon+"    "+d+" "+d1+" "+d2+"   "+u+"    "+v+"    "+vt)
       ;  print("     ")
       ;end if
-      
+
       ;-----------------------------------------------------------------------
       ;    set the vertical velocity to zero (only required for non-hydrostatic models)
       ;-----------------------------------------------------------------------
-      
+
       w = 0.
-      
+
       ;-----------------------------------------------------------------------
       ;    tracer q (specific humidity)
       ;-----------------------------------------------------------------------
-      
+
       if (height .gt. ztrop) then
           q = todouble(qtrop)
       else
           q = q0*exp(-height/zq1)*exp(-1*(height/zq2)^exppz)
       end if
-          
+
       ;-----------------------------------------------------------------------
       ;    initialize T (temperature)
       ;-----------------------------------------------------------------------
-      
+
       if (height .gt. ztrop) then
           t = todouble(Ttrop)
       else
           t = (T0-gamma_*height)/(1.+constTv*q)/(1.+exppz*Rd*(T0-gamma_*height)*height \
               /(g*zp^exppz*(1.-p00/dp*exp((gr/rp)^exppr)*exp((height/zp)^exppz))))
       end if
-      
+
       ;-----------------------------------------------------------------------
       ;    initialize PHIS (surface geopotential)
       ;-----------------------------------------------------------------------
-      
+
       phis = 0.  ; constant
-      
+
       ;-----------------------------------------------------------------------
       ;    initialize RHO (density of moist air)
       ;-----------------------------------------------------------------------
-      
+
       rho = p/(Rd*t*(1.+constTv*q))
-      
-      
+
+
       V_(0,k,ii) = v
       U_(0,k,ii) = u
       Q_(0,k,ii) = q
       T_(0,k,ii) = t
       PD(0,ii) = ps
-          
+
     end do
 end do
 
@@ -283,7 +283,7 @@ fileattdef( in2, fAtt )            ; copy file attributes
 ;===================================================================
 ; make time an UNLIMITED dimension; recommended  for most applications
 ;===================================================================
-filedimdef(in2,"time",-1,True) 
+filedimdef(in2,"time",-1,True)
 
 ;===================================================================
 ; output variables directly; NCL will call appropriate functions
@@ -305,7 +305,7 @@ in2->lat=selat
 in2->lon=selon
 
 status_exit(9)
-  
+
 end
 
 

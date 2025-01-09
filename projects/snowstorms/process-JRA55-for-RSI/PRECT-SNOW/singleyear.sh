@@ -1,8 +1,8 @@
 #!/bin/bash
 
 JRABASEDIR=~/rda/ds628.0/
-SYMDIR=/glade/u/home/zarzycki/scratch/JRAsym/
-OUTBASE=/glade/scratch/zarzycki/j1files/JRA/
+SYMDIR=/glade/derecho/scratch/zarzycki/JRAsym/
+OUTBASE=/glade/derecho/scratch/zarzycki/j1files/JRA/
 
 YYYY=$1
 echo $YYYY
@@ -31,7 +31,7 @@ echo $YYYY
     else
       FILES=${JRABASEDIR}/fcst_phy2m/${YYYY}/*_${i}.reg_tl319.*
     fi
-    
+
     for f in $FILES
     do
       echo "Processing $f file..."
@@ -39,9 +39,9 @@ echo $YYYY
       rm ${SYMDIR}/${YYYY}/${a}.grb2
       ln -s ${f} ${SYMDIR}/${YYYY}/${a}.grb2
     done
-    
+
     ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="'${i}'"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
-    
+
   done
 
   #ncl generateTrackerFilesJRA.ncl 'YYYY="'${YYYY}'"' 'VAR="pwat"' 'SYMDIR="'${SYMDIR}/${YYYY}'"' 'OUTDIR="'${OUTBASE}/${YYYY}'"'
