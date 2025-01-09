@@ -52,7 +52,7 @@ timesGrid = 1.1 ; we want each radius bin to be timeGrid times kmGrid
 
 nx = toint(outerRad/(timesGrid*kmGrid))
 print("Number of bins is equal to "+nx)
-  
+
 if (mergeInnerBins) then
 ;  origRadiusArr = fspan(0,outerRad,nx)
 ;  radiusArr = new(dimsizes(origRadiusArr)-1,double)
@@ -99,7 +99,7 @@ do i = psminLocY-loopWidth,psminLocY+loopWidth
     do k = 0,dimsizes(lev)-1
       gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(j),2,4))
       if (gcdist .le. outerRad)
-        rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1 
+        rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1
         rad_thevar_cum(k,{gcdist}) = rad_thevar_cum(k,{gcdist}) + data(k,i,j)
       end if
     end do
@@ -173,7 +173,7 @@ timesGrid = 1.1 ; we want each radius bin to be timeGrid times kmGrid
 
 nx = toint(outerRad/(timesGrid*kmGrid))
 print("Number of bins is equal to "+nx)
-  
+
 if (mergeInnerBins) then
 ;  origRadiusArr = fspan(0,outerRad,nx)
 ;  radiusArr = new(dimsizes(origRadiusArr)-1,double)
@@ -214,7 +214,7 @@ do i = psminLocY-loopWidth,psminLocY+loopWidth
   do j = psminLocX-loopWidth,psminLocX+loopWidth
       gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(j),2,4))
       if (gcdist .le. outerRad)
-        rad_thevar_hit({gcdist}) = rad_thevar_hit({gcdist}) + 1 
+        rad_thevar_hit({gcdist}) = rad_thevar_hit({gcdist}) + 1
         rad_thevar_cum({gcdist}) = rad_thevar_cum({gcdist}) + data(i,j)
       end if
   end do
@@ -405,5 +405,36 @@ rmw!0 = "lev"
 rmw&lev = lev
 
 return(rmw)
+
+
+
+undef ( "calc_zmax_from_rad" )
+function calc_zmax_from_rad ( \
+  vrad[*][*]       : numeric \
+)
+local None
+
+begin
+
+lev = vrad&lev
+nlev = dimsizes(lev)
+rad = vrad&radius
+nrad = dimsizes(rad)
+
+zmax = new((/nlev/),"float")
+
+do k = 0,nrad-1
+  maxix = maxind(vrad(:,k))
+  zmax(k) = tofloat(lev(maxix))
+end do
+
+zmax!0 = "lev"
+zmax&lev = lev
+
+return(zmax)
+
+
+
+
 
 end

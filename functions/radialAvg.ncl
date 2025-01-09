@@ -78,7 +78,7 @@ timesGrid = 1.1 ; we want each radius bin to be timeGrid times kmGrid
 
 nx = toint(outerRad/(timesGrid*kmGrid))
 print("Number of bins is equal to "+nx)
-  
+
 if (mergeInnerBins) then
 ;  origRadiusArr = fspan(0,outerRad,nx)
 ;  radiusArr = new(dimsizes(origRadiusArr)-1,double)
@@ -125,11 +125,11 @@ do i = psminLocY-loopWidthS,psminLocY+loopWidthN
     gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(j),2,4))
     if (gcdist .le. outerRad)
       ;do k = 0,dimsizes(lev)-1
-      ;  rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1 
+      ;  rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1
       ;  rad_thevar_cum(k,{gcdist}) = rad_thevar_cum(k,{gcdist}) + data(k,i,j)
       ;end do
       ;if (.not. any(ismissing(data(:,i,j)))) then
-        rad_thevar_hit(:,{gcdist}) = rad_thevar_hit(:,{gcdist}) + 1 
+        rad_thevar_hit(:,{gcdist}) = rad_thevar_hit(:,{gcdist}) + 1
         rad_thevar_cum(:,{gcdist}) = rad_thevar_cum(:,{gcdist}) + data(:,i,j)
       ;end if
     end if
@@ -208,7 +208,7 @@ timesGrid = 1.1 ; we want each radius bin to be timeGrid times kmGrid
 
 nx = toint(outerRad/(timesGrid*kmGrid))
 print("Number of bins is equal to "+nx)
-  
+
 if (mergeInnerBins) then
 ;  origRadiusArr = fspan(0,outerRad,nx)
 ;  radiusArr = new(dimsizes(origRadiusArr)-1,double)
@@ -254,7 +254,7 @@ do i = psminLocY-loopWidth,psminLocY+loopWidth
   do j = psminLocX-loopWidth,psminLocX+loopWidth
       gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(j),2,4))
       if (gcdist .le. outerRad)
-        rad_thevar_hit({gcdist}) = rad_thevar_hit({gcdist}) + 1 
+        rad_thevar_hit({gcdist}) = rad_thevar_hit({gcdist}) + 1
         rad_thevar_cum({gcdist}) = rad_thevar_cum({gcdist}) + data(i,j)
         ; run counter
         ix = ind_nearest_coord(gcdist,radiusArr,0)
@@ -357,6 +357,79 @@ v_rad@long_name="Radial wind"
 return( [/ v_rad, v_theta /] )
 
 end
+
+; ====================================================================================================
+
+undef ( "calcWindComponents_unstruct" )
+function calcWindComponents_unstruct ( \
+  U       : numeric, \
+  V       : numeric, \
+  lat[*]           : numeric, \
+  lon[*]           : numeric, \
+  psminlat         : numeric, \
+  psminlon         : numeric, \
+  movespd          : numeric, \
+  movedir          : numeric \
+)
+local None
+begin
+
+; NOTE, MOVESPD is M/S
+; NOTE, MOVEDIR is METEO DEG, 0 = N, 90 = E, 180 = S, 270 = W
+
+pi = 3.14159
+d2r = pi/180.
+r2d = 180./pi
+lonr = lon*d2r
+latr = lat*d2r
+copy_VarCoords(lon,lonr)
+copy_VarCoords(lat,latr)
+
+deltalong = lonr(:)-(psminlon*d2r)
+
+arr1 = conform(U,sin(deltalong),1) * conform(U,cos(latr),1)
+arr2 = cos(psminlat*d2r)*conform(U,sin(latr),1) - sin(psminlat*d2r)*conform(U,cos(latr),1)*conform(U,cos(deltalong),1)
+dir_angle_r = atan2(arr1,arr2)
+; need to conform here
+dir_angle_d = dir_angle_r*r2d
+
+copy_VarCoords(U,dir_angle_r)
+copy_VarCoords(U,dir_angle_d)
+
+eps = 10.e-6
+phi_r = atan2(U,V)
+phi_d = phi_r*r2d
+
+copy_VarCoords(U,phi_r)
+copy_VarCoords(U,phi_d)
+
+; remove forward speed of TC
+if (movespd .gt. 0)
+  print("calcWindComponents: Adjusting U and V fields to remove TC forward motion")
+  U = U - movespd*sin(movedir*d2r)
+  V = V - movespd*cos(movedir*d2r)
+end if
+
+WIND = U
+WIND = sqrt(U^2+V^2)
+
+v_theta = WIND*sin(dir_angle_r - phi_r)
+v_rad = -WIND*cos(dir_angle_r - phi_r)
+
+copy_VarCoords(U,v_theta)
+copy_VarCoords(U,v_rad)
+
+v_theta@units = U@units
+v_theta@long_name="Tangential wind"
+v_rad@units = U@units
+v_rad@long_name="Radial wind"
+
+return( [/ v_rad, v_theta /] )
+
+end
+
+
+
 
 
 undef ( "radialInt3D" )
@@ -477,7 +550,32 @@ end
 
 
 
+undef ( "calc_zmax_from_rad" )
+function calc_zmax_from_rad ( \
+  vrad[*][*]       : numeric \
+)
+local None
 
+begin
+
+lev = vrad&lev
+nlev = dimsizes(lev)
+rad = vrad&radius
+nrad = dimsizes(rad)
+
+zmax = new((/nrad/),"float")
+
+do k = 0,nrad-1
+  maxix = maxind(vrad(:,k))
+  zmax(k) = tofloat(lev(maxix))
+end do
+
+zmax!0 = "rad"
+zmax&rad = rad
+
+return(zmax)
+
+end
 
 
 
@@ -532,7 +630,7 @@ timesGrid = 1.1 ; we want each radius bin to be timeGrid times kmGrid
 
 nx = toint(outerRad/(timesGrid*kmGrid))
 print("Number of bins is equal to "+nx)
-  
+
 if (mergeInnerBins) then
 ;  origRadiusArr = fspan(0,outerRad,nx)
 ;  radiusArr = new(dimsizes(origRadiusArr)-1,double)
@@ -571,7 +669,7 @@ print("Starting loop")
 do i = 0,ncol-1
   gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(i),2,4))
   if (gcdist .le. outerRad)
-    rad_thevar_hit({gcdist}) = rad_thevar_hit({gcdist}) + 1 
+    rad_thevar_hit({gcdist}) = rad_thevar_hit({gcdist}) + 1
     rad_thevar_cum({gcdist}) = rad_thevar_cum({gcdist}) + data(i)
   end if
 end do
@@ -637,7 +735,7 @@ timesGrid = 1.1 ; we want each radius bin to be timeGrid times kmGrid
 
 nx = toint(outerRad/(timesGrid*kmGrid))
 print("Number of bins is equal to "+nx)
-  
+
 if (mergeInnerBins) then
 ;  origRadiusArr = fspan(0,outerRad,nx)
 ;  radiusArr = new(dimsizes(origRadiusArr)-1,double)
@@ -682,11 +780,11 @@ do i = 0,ncol-1
   gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(i),2,4))
   if (gcdist .le. outerRad)
     ;do k = 0,dimsizes(lev)-1
-    ;  rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1 
+    ;  rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1
     ;  rad_thevar_cum(k,{gcdist}) = rad_thevar_cum(k,{gcdist}) + data(k,i,j)
     ;end do
     ;if (.not. any(ismissing(data(:,i,j)))) then
-      rad_thevar_hit(:,{gcdist}) = rad_thevar_hit(:,{gcdist}) + 1 
+      rad_thevar_hit(:,{gcdist}) = rad_thevar_hit(:,{gcdist}) + 1
       rad_thevar_cum(:,{gcdist}) = rad_thevar_cum(:,{gcdist}) + data(:,i)
     ;end if
   end if
