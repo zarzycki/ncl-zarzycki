@@ -9,7 +9,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 begin
 
 ;filename="/glade/u/home/zarzycki/rda/ds630.0/e5.oper.an.pl/201601/e5.oper.an.pl.128_130_t.regn320sc.2016010100_2016010123.nc"
-outdir="/glade/scratch/zarzycki/ERA5/"
+outdir="/glade/derecho/scratch/zarzycki/ERA5/"
 ;VARIN="T"
 ;VAROUT="T400"
 ;LEVIN="400"
@@ -84,8 +84,8 @@ fAtt@source_file   =  "original-file.nc"
 fAtt@Conventions   = "None"
 fAtt@creation_date = systemfunc ("date")
 fileattdef( ncdf, fAtt )            ; copy file attributes
-filedimdef(ncdf,"time",-1,True) 
+filedimdef(ncdf,"time",-1,True)
 
-ncdf->$VAROUT$  = accumvar           
+ncdf->$VAROUT$  = accumvar
 
 end

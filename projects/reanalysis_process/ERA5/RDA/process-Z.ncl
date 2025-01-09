@@ -9,7 +9,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 begin
 
 ;filename="/glade/u/home/zarzycki/rda/ds630.0/e5.oper.an.pl/201601/e5.oper.an.pl.128_129_z.regn320sc.2016012200_2016012223.nc"
-outdir="/glade/scratch/zarzycki/ERA5/"
+outdir="/glade/derecho/scratch/zarzycki/ERA5/"
 ;VARIN="Z"
 ;VAROUT="Z"
 

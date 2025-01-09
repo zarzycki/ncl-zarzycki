@@ -1,25 +1,27 @@
 #!/bin/bash
 
-WORKDIR=/glade/scratch/zarzycki/ERA5/
+WORKDIR=/glade/derecho/scratch/zarzycki/ERA5/
 H1DIR=~/scratch/h1files/ERA5v3/
 
 TMPFILE=_tmp.nc
 ## declare an array variable
-declare -a years=`seq 2016 2020`
-#declare -a vars=("U850" "V850" "UBOT" "VBOT" "Z300" "Z500" "PSL" "T400")
-declare -a vars=("UBOT" "VBOT" "Z300" "Z500" "PSL" "Z")
+declare -a years=`seq 2022 2022`
+declare -a vars=("U850" "V850" "UBOT" "VBOT" "Z300" "Z500" "PSL" "T400")
+#declare -a vars=("UBOT" "VBOT" "Z300" "Z500" "PSL" "Z")
 declare -a months=("01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12")
 
 ## now loop through the above array
 for ii in ${years}
 do
 
-  cd $WORKDIR
+  cd $WORKDIR ; pwd
 
   for jj in "${months[@]}"
   do
+    echo $jj
     for zz in "${vars[@]}"
     do
+      echo $zz
       ncrcat -O ERA5.${zz}.${ii}${jj}*.nc CAT.ERA5.${zz}.${ii}${jj}.nc
       ncatted -O -a time,,d,, CAT.ERA5.${zz}.${ii}${jj}.nc
       ncks -A CAT.ERA5.${zz}.${ii}${jj}.nc ${TMPFILE}
@@ -61,7 +63,7 @@ do
 
   mkdir -p $H1DIR/$YYYY/
 
-  mv ERA5.h1.${YYYY}*nc $H1DIR/$YYYY/
+  mv -v ERA5.h1.${YYYY}*nc $H1DIR/$YYYY/
 
   # Compression
   cd $H1DIR/$YYYY/
