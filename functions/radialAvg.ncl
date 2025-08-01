@@ -63,7 +63,7 @@ if (psminLocY+loopWidthN .ge. nlat) then
 end if
 if (psminLocX-loopWidthW .lt. 0) then
   print("Correcting loopWidthW")
-  loopWidthW = 0
+  loopWidthW = psminLocX
 end if
 if (psminLocX+loopWidthE .ge. nlon) then
   print("Correcting loopWidthE")
@@ -117,18 +117,25 @@ rad_thevar_cum&lev = lev
 rad_thevar_hit = 0
 rad_thevar_cum = 0
 
+total_hits = 0
+total_loops = 0
+
 ; NEED TO CORRECT NLEV
 print("Starting loop")
 do i = psminLocY-loopWidthS,psminLocY+loopWidthN
   print("Doing outer loop #: "+(i-psminLocY+loopWidthS)+" of "+(loopWidthS*2)+"   ("+((tofloat(i-psminLocY+loopWidthS)/tofloat(loopWidthS*2))*100.)+"%)")
   do j = psminLocX-loopWidthW,psminLocX+loopWidthE
+
+    total_loops = total_loops+1
     gcdist = tofloat(gc_latlon(psminlat,psminlon,lat(i),lon(j),2,4))
     if (gcdist .le. outerRad)
+
       ;do k = 0,dimsizes(lev)-1
       ;  rad_thevar_hit(k,{gcdist}) = rad_thevar_hit(k,{gcdist}) + 1
       ;  rad_thevar_cum(k,{gcdist}) = rad_thevar_cum(k,{gcdist}) + data(k,i,j)
       ;end do
       ;if (.not. any(ismissing(data(:,i,j)))) then
+        total_hits = total_hits+1
         rad_thevar_hit(:,{gcdist}) = rad_thevar_hit(:,{gcdist}) + 1
         rad_thevar_cum(:,{gcdist}) = rad_thevar_cum(:,{gcdist}) + data(:,i,j)
       ;end if
@@ -141,6 +148,9 @@ rad_thevar_hit = where(rad_thevar_hit.eq.0,rad_thevar_hit@_FillValue,rad_thevar_
 
 print("Minimum number of hits per gridbox: "+min(rad_thevar_hit))
 print("Maximum number of hits per gridbox: "+max(rad_thevar_hit))
+print("Total hits: "+total_hits)
+print("Total loops: "+total_loops)
+
 rad_thevar = rad_thevar_cum/rad_thevar_hit
 
 copy_VarCoords(rad_thevar_hit,rad_thevar)
