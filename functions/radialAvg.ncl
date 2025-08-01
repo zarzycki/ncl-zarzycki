@@ -377,6 +377,15 @@ begin
 ; NOTE, MOVESPD is M/S
 ; NOTE, MOVEDIR is METEO DEG, 0 = N, 90 = E, 180 = S, 270 = W
 
+num_dims_U = dimsizes(dimsizes(U))
+if (num_dims_U .eq. 1) then
+  conform_index = 0
+  has_lev = False
+else
+  conform_index = 1
+  has_lev = True
+end if
+
 pi = 3.14159
 d2r = pi/180.
 r2d = 180./pi
@@ -387,8 +396,8 @@ copy_VarCoords(lat,latr)
 
 deltalong = lonr(:)-(psminlon*d2r)
 
-arr1 = conform(U,sin(deltalong),1) * conform(U,cos(latr),1)
-arr2 = cos(psminlat*d2r)*conform(U,sin(latr),1) - sin(psminlat*d2r)*conform(U,cos(latr),1)*conform(U,cos(deltalong),1)
+arr1 = conform(U,sin(deltalong),conform_index) * conform(U,cos(latr),conform_index)
+arr2 = cos(psminlat*d2r)*conform(U,sin(latr),conform_index) - sin(psminlat*d2r)*conform(U,cos(latr),conform_index)*conform(U,cos(deltalong),conform_index)
 dir_angle_r = atan2(arr1,arr2)
 ; need to conform here
 dir_angle_d = dir_angle_r*r2d
@@ -523,21 +532,39 @@ end
 
 undef ( "calc_vertmax_from_rad" )
 function calc_vertmax_from_rad ( \
-  vrad[*][*]       : numeric \
+  vrad      : numeric \
 )
 local None
 
 begin
 
-lev = vrad&lev
-nlev = dimsizes(lev)
+num_dims_U = dimsizes(dimsizes(vrad))
+if (num_dims_U .eq. 1) then
+  has_lev = False
+  lev = 10.0   ; 10m
+  nlev = 1
+else if (num_dims_U .eq. 2) then
+  has_lev = True
+  lev = vrad&lev
+  nlev = dimsizes(lev)
+else
+  print("unexpected number of dimensions in calc_vertmax_from_rad")
+  print("got "+num_dims_U+" and expected 1 or 2")
+  exit
+end if
+end if
+
 rad = vrad&radius
 nrad = dimsizes(rad)
 
 rmw = new((/nlev/),"float")
 
 do k = 0,dimsizes(lev)-1
-  maxix = maxind(vrad(k,:))
+  if has_lev then
+    maxix = maxind(vrad(k,:))
+  else
+    maxix = maxind(vrad(:))
+  end if
   rmw(k) = tofloat(rad(maxix))
 end do
 
